@@ -23,7 +23,8 @@ interface ActivityData {
     displayOrder: number;
     isTotalRow: boolean;
     activityType?: string;
-    vatCategory?: 'AIRTIME' | 'INTERNET' | 'INFRASTRUCTURE' | 'SUPPLIES';
+    payableName?: string; // NEW: Name of payable this expense maps to (for expense-to-payable mapping)
+    vatCategory?: 'COMMUNICATION_ALL' | 'MAINTENANCE' | 'SUPPLIES' | 'FUEL'; // VAT category for VAT-applicable expenses
     computationRules?: any;
     applicableTo: 'hospital' | 'health_center' | 'both'; // NEW: Facility targeting
 }
@@ -54,31 +55,39 @@ const hivActivities: ActivityData[] = [
     { categoryCode: 'A', subCategoryCode: null, name: 'Transfers from SPIU/RBC', displayOrder: 2, isTotalRow: false, activityType: 'REVENUE', applicableTo: 'both' },
     { categoryCode: 'A', subCategoryCode: null, name: 'A. Receipts', displayOrder: 3, isTotalRow: true, activityType: 'REVENUE_TOTAL', applicableTo: 'both' },
 
-    // B. Expenditures - Human Resources + BONUS (facility-specific)
-    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'Laboratory Technician', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'Nurse', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
+    // B. Expenditures - Human Resources + BONUS 
+    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'DH/HC Laboratory Technician A1/A0', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 1: Salaries', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'DH/HC Nurse A1/A0', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 1: Salaries', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'DH Accountant A0', displayOrder: 3, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 1: Salaries', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'DH Medical doctor (Senior, Chief, and Junior)', displayOrder: 4, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 1: Salaries', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'DH Pharmacist', displayOrder: 5, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 1: Salaries', applicableTo: 'both' },
 
-    // B. Expenditures - Monitoring & Evaluation (facility-specific)
-    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Supervision CHWs', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Support group meetings', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
+    // B. Expenditures - Monitoring & Evaluation 
+    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Support group meetings at HCs & DHs', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 2: Support group meetings ', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Conduct census training done by HC', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 3: Conduct census training', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Integrate clinical mentorship by DH to HCs', displayOrder: 3, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 4: Clinical mentorship', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Annual cordination meeting', displayOrder: 4, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 5: Annual cordination meeting', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Quarterly MDT meetings', displayOrder: 5, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 6: MDT meeting', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Supervision and DQA by DH to HCs', displayOrder: 6, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 7: Supervision DQA', applicableTo: 'both' },
 
     // B. Expenditures - Living Support to Clients (both but different scale)
-    { categoryCode: 'B', subCategoryCode: 'B-03', name: 'Sample transport', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-03', name: 'Home visit lost to follow up', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-03', name: 'Transport and travel for survey/surveillance', displayOrder: 3, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-03', name: 'Sample transportation to DHs, NRL/RH', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 8: Sample transportation', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-03', name: 'Home visit lost to follow up by HCs & DHs', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 9: Home visit', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-03', name: 'Outreach to provide HIV testing service in community', displayOrder: 3, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 10: Outreach for HIV testing', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-03', name: 'Conduct district event related to WAD celebration', displayOrder: 4, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 11: WAD celebration', applicableTo: 'both' },
 
     // B. Expenditures - Overheads (facility-specific variations)
 
     // receivables
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Communication - Airtime', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Communication - Internet', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Infrastructure support (maintenance)', displayOrder: 3, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Office supplies', displayOrder: 4, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Transport and travel (Reporting)', displayOrder: 5, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Bank charges', displayOrder: 6, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Communication - All', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 12: Communication - All', vatCategory: 'COMMUNICATION_ALL', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Maintenance for vehicles, ICT, and medical equipments', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 13: Maintenance', vatCategory: 'MAINTENANCE', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Fuel', displayOrder: 3, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 14: Fuel', vatCategory: 'FUEL', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Office supplies', displayOrder: 4, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 15: Office supplies', vatCategory: 'SUPPLIES', applicableTo: 'both' },
+    
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Bank charges', displayOrder: 5, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
 
     // B. Expenditures - Transfer to other entities (both)
-    { categoryCode: 'B', subCategoryCode: 'B-05', name: 'Transfer to RBC', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-05', name: 'Transfer to RBC (VAT refund & unused cash balance)', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
 
     // B. Expenditures Total (both)
     { categoryCode: 'B', subCategoryCode: null, name: 'B. Expenditures', displayOrder: 99, isTotalRow: true, activityType: 'EXPENSE_TOTAL', applicableTo: 'both' },
@@ -88,32 +97,35 @@ const hivActivities: ActivityData[] = [
 
     // D. Financial Assets (facility-specific variations)
     { categoryCode: 'D', subCategoryCode: null, name: 'Cash at bank', displayOrder: 1, isTotalRow: false, activityType: 'ASSET', applicableTo: 'both' },
-    { categoryCode: 'D', subCategoryCode: null, name: 'Petty cash', displayOrder: 2, isTotalRow: false, activityType: 'ASSET', applicableTo: 'both' },
 
     // D. Receivables - Sub-categories
-    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 1: Communication - airtime', displayOrder: 1, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'AIRTIME', applicableTo: 'both' },
-    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 2: Communication - internet', displayOrder: 2, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'INTERNET', applicableTo: 'both' },
-    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 3: Infrastructure support (maintenance)', displayOrder: 3, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'INFRASTRUCTURE', applicableTo: 'both' },
-    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 4: Office supplies', displayOrder: 4, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'SUPPLIES', applicableTo: 'both' },
+    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 1: Communication - All', displayOrder: 1, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'COMMUNICATION_ALL', applicableTo: 'both' },
+    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 2: Maintenance ', displayOrder: 2, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'MAINTENANCE', applicableTo: 'both' },
+    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 3: Fuel', displayOrder: 3, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'FUEL', applicableTo: 'both' },
+    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 3: Office supplies', displayOrder: 4, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'SUPPLIES', applicableTo: 'both' },
     { categoryCode: 'D', subCategoryCode: 'D-01', name: 'Other Receivables', displayOrder: 5, isTotalRow: false, activityType: 'COMPUTED_ASSET', computationRules: { formula: 'X_OTHER_RECEIVABLE', description: 'Automatically calculated from Miscellaneous Adjustments' }, applicableTo: 'both' },
 
     { categoryCode: 'D', subCategoryCode: null, name: 'D. Financial Assets', displayOrder: 9, isTotalRow: true, activityType: 'ASSET_TOTAL', applicableTo: 'both' },
 
-    // E. Financial Liabilities (facility-specific)
+    // E. Financial Liabilities 
     { categoryCode: 'E', subCategoryCode: null, name: 'Payable 1: Salaries', displayOrder: 1, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 2: Supervision', displayOrder: 2, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 3: Meetings', displayOrder: 3, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 4: Sample transport', displayOrder: 4, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 5: Home visits', displayOrder: 5, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 6: Travel survellance', displayOrder: 6, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 7: Communication - airtime', displayOrder: 7, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 8: Communication - internet', displayOrder: 8, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 9: Infrastructure support (maintenance)', displayOrder: 9, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 10: Office supplies', displayOrder: 10, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 11: Transport reporting', displayOrder: 11, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 12: Bank charges', displayOrder: 12, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 13: VAT refund', displayOrder: 13, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'E. Financial Liabilities', displayOrder: 14, isTotalRow: true, activityType: 'LIABILITY_TOTAL', applicableTo: 'both' },
+    
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 2: Support group meetings ', displayOrder: 2, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 3: Conduct census training', displayOrder: 3, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 4: Clinical mentorship', displayOrder: 4, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 5: Annual cordination meeting', displayOrder: 5, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 6: MDT meeting', displayOrder: 6, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 7: Supervision DQA', displayOrder: 7, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 8: Sample transportation', displayOrder: 8, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 9: Home visit', displayOrder: 9, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 10: Outreach for HIV testing', displayOrder: 10, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 11: WAD celebration', displayOrder: 11, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 12: Communication - All', displayOrder: 12, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 13: Maintenance', displayOrder: 13, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 14: Fuel', displayOrder: 14, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 15: Office supplies', displayOrder: 15, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'E. Financial Liabilities', displayOrder: 16, isTotalRow: true, activityType: 'LIABILITY_TOTAL', applicableTo: 'both' },
 
     // F. Net Financial Assets (computed for both)
     { categoryCode: 'F', subCategoryCode: null, name: 'F. Net Financial Assets', displayOrder: 1, isTotalRow: true, activityType: 'COMPUTED', computationRules: { formula: 'D - E', description: 'Financial Assets minus Financial Liabilities' }, applicableTo: 'both' },
@@ -136,31 +148,32 @@ const malariaActivities: ActivityData[] = [
     { categoryCode: 'A', subCategoryCode: null, name: 'Transfers from SPIU/RBC', displayOrder: 2, isTotalRow: false, activityType: 'REVENUE', applicableTo: 'both' },
     { categoryCode: 'A', subCategoryCode: null, name: 'A. Receipts', displayOrder: 3, isTotalRow: true, activityType: 'REVENUE_TOTAL', applicableTo: 'both' },
 
-    // B. Expenditures - Human Resources + BONUS (facility-specific)
-    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'Laboratory Technician', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'Nurse', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
+    // B. Expenditures - Human Resources + BONUS 
+    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'Laboratory Technician A0/A1', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 1: Salaries', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'Nurse A0/A1', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 1: Salaries', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'CHW supervisor A0', displayOrder: 3, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 1: Salaries', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'Entomology support staff', displayOrder: 4, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 1: Salaries', applicableTo: 'both' },
 
-    // B. Expenditures - Monitoring & Evaluation (facility-specific)
-    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Supervision CHWs', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Support group meetings', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
+    // B. Expenditures - Strengthening Malaria surveillance monitoring and evaluation
+    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Supervision CHWs in villages by HC', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 2: Supervision', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Cordination meeting on data quality', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 3: Cordination meetings', applicableTo: 'both' },
 
-    // B. Expenditures - Living Support to Clients (both but different scale)
-    { categoryCode: 'B', subCategoryCode: 'B-03', name: 'Sample transport', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-03', name: 'Home visit lost to follow up', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-03', name: 'Transport and travel for survey/surveillance', displayOrder: 3, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
+    // B. Expenditures - Overheads & Entomological Surveillance & insecticide resistance monitoring
 
-    // B. Expenditures - Overheads (facility-specific variations)
+    // VAT-based expenses
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Communication - All', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 12: Communication - All', vatCategory: 'COMMUNICATION_ALL', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Maintenance for vehicles, ICT, and medical equipments', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 13: Maintenance', vatCategory: 'MAINTENANCE', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Fuel', displayOrder: 3, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 14: Fuel', vatCategory: 'FUEL', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Office supplies', displayOrder: 4, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 15: Office supplies', vatCategory: 'SUPPLIES', applicableTo: 'both' },
 
-    // receivables
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Communication - Airtime', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Communication - Internet', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Infrastructure support (maintenance)', displayOrder: 3, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Office supplies', displayOrder: 4, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Transport and travel (Reporting)', displayOrder: 5, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Bank charges', displayOrder: 6, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
+    // Non-VAT expenses
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Car Hiring on entomological surviellance', displayOrder: 5, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 4: Car Hiring', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Consumable (supplies, stationaries, & human landing)', displayOrder: 6, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 5: Consumable', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Transport and travel (reporting, banking, collectors, supervisor & tender budget)', displayOrder: 7, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 6: Transport & travel', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Bank charges', displayOrder: 8, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
 
     // B. Expenditures - Transfer to other entities (both)
-    { categoryCode: 'B', subCategoryCode: 'B-05', name: 'Transfer to RBC', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-05', name: 'Transfer to RBC (VAT Refund & Cash balances', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
 
     // B. Expenditures Total (both)
     { categoryCode: 'B', subCategoryCode: null, name: 'B. Expenditures', displayOrder: 99, isTotalRow: true, activityType: 'EXPENSE_TOTAL', applicableTo: 'both' },
@@ -170,32 +183,28 @@ const malariaActivities: ActivityData[] = [
 
     // D. Financial Assets (facility-specific variations)
     { categoryCode: 'D', subCategoryCode: null, name: 'Cash at bank', displayOrder: 1, isTotalRow: false, activityType: 'ASSET', applicableTo: 'both' },
-    { categoryCode: 'D', subCategoryCode: null, name: 'Petty cash', displayOrder: 2, isTotalRow: false, activityType: 'ASSET', applicableTo: 'both' },
 
-    // D. Receivables - Sub-categories
-    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 1: Communication - airtime', displayOrder: 1, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'AIRTIME', applicableTo: 'both' },
-    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 2: Communication - internet', displayOrder: 2, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'INTERNET', applicableTo: 'both' },
-    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 3: Infrastructure support (maintenance)', displayOrder: 3, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'INFRASTRUCTURE', applicableTo: 'both' },
+    // D. Receivables - Sub-categories (VAT Receivables for the 4 VAT-based expenses)
+    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 1: Communication - All', displayOrder: 1, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'COMMUNICATION_ALL', applicableTo: 'both' },
+    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 2: Maintenance', displayOrder: 2, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'MAINTENANCE', applicableTo: 'both' },
+    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 3: Fuel', displayOrder: 3, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'FUEL', applicableTo: 'both' },
     { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 4: Office supplies', displayOrder: 4, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'SUPPLIES', applicableTo: 'both' },
     { categoryCode: 'D', subCategoryCode: 'D-01', name: 'Other Receivables', displayOrder: 5, isTotalRow: false, activityType: 'COMPUTED_ASSET', computationRules: { formula: 'X_OTHER_RECEIVABLE', description: 'Automatically calculated from Miscellaneous Adjustments' }, applicableTo: 'both' },
 
     { categoryCode: 'D', subCategoryCode: null, name: 'D. Financial Assets', displayOrder: 9, isTotalRow: true, activityType: 'ASSET_TOTAL', applicableTo: 'both' },
 
-    // E. Financial Liabilities (facility-specific)
+    // E. Financial Liabilities 
     { categoryCode: 'E', subCategoryCode: null, name: 'Payable 1: Salaries', displayOrder: 1, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
     { categoryCode: 'E', subCategoryCode: null, name: 'Payable 2: Supervision', displayOrder: 2, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 3: Meetings', displayOrder: 3, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 4: Sample transport', displayOrder: 4, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 5: Home visits', displayOrder: 5, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 6: Travel survellance', displayOrder: 6, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 7: Communication - airtime', displayOrder: 7, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 8: Communication - internet', displayOrder: 8, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 9: Infrastructure support (maintenance)', displayOrder: 9, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 10: Office supplies', displayOrder: 10, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 11: Transport reporting', displayOrder: 11, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 12: Bank charges', displayOrder: 12, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 13: VAT refund', displayOrder: 13, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'E. Financial Liabilities', displayOrder: 14, isTotalRow: true, activityType: 'LIABILITY_TOTAL', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 3: Cordination meetings', displayOrder: 3, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 4: Car Hiring', displayOrder: 4, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 5: Consumable', displayOrder: 5, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 6: Transport & travel', displayOrder: 6, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 12: Communication - All', displayOrder: 12, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 13: Maintenance', displayOrder: 13, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 14: Fuel', displayOrder: 14, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 15: Office supplies', displayOrder: 15, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'E. Financial Liabilities', displayOrder: 16, isTotalRow: true, activityType: 'LIABILITY_TOTAL', applicableTo: 'both' },
 
     // F. Net Financial Assets (computed for both)
     { categoryCode: 'F', subCategoryCode: null, name: 'F. Net Financial Assets', displayOrder: 1, isTotalRow: true, activityType: 'COMPUTED', computationRules: { formula: 'D - E', description: 'Financial Assets minus Financial Liabilities' }, applicableTo: 'both' },
@@ -218,28 +227,26 @@ const tbActivities: ActivityData[] = [
     { categoryCode: 'A', subCategoryCode: null, name: 'Transfers from SPIU/RBC', displayOrder: 2, isTotalRow: false, activityType: 'REVENUE', applicableTo: 'both' },
     { categoryCode: 'A', subCategoryCode: null, name: 'A. Receipts', displayOrder: 3, isTotalRow: true, activityType: 'REVENUE_TOTAL', applicableTo: 'both' },
 
-    // B. Expenditures - Human Resources + BONUS (facility-specific)
-    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'Laboratory Technician', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'Nurse', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
+    // B. Expenditures - Human Resources + BONUS 
+    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'TB Coordinator salary', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 1: Salaries', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-01', name: 'MDR TB staff salary', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 1: Salaries', applicableTo: 'both' },
 
-    // B. Expenditures - Monitoring & Evaluation (facility-specific)
-    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Supervision CHWs', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Support group meetings', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
+    // B. Expenditures - Monitoring & Evaluation 
+    { categoryCode: 'B', subCategoryCode: 'B-02', name: 'Mission fees for tracing, TPT, HCW, outreach, & meeting ', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 2: mission', applicableTo: 'both' },
 
-    // B. Expenditures - Living Support to Clients (both but different scale)
-    { categoryCode: 'B', subCategoryCode: 'B-03', name: 'Sample transport', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-03', name: 'Home visit lost to follow up', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-03', name: 'Transport and travel for survey/surveillance', displayOrder: 3, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
 
-    // B. Expenditures - Overheads (facility-specific variations)
+    // B. Expenditures - Overheads
 
-    // receivables
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Communication - Airtime', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Communication - Internet', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Infrastructure support (maintenance)', displayOrder: 3, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Office supplies', displayOrder: 4, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Transport and travel (Reporting)', displayOrder: 5, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
-    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Bank charges', displayOrder: 6, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
+    // VAT-based expenses
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Communication - All', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 12: Communication - All', vatCategory: 'COMMUNICATION_ALL', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Maintenance for vehicles, ICT, and medical equipments', displayOrder: 2, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 13: Maintenance', vatCategory: 'MAINTENANCE', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Fuel', displayOrder: 3, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 14: Fuel', vatCategory: 'FUEL', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Office supplies', displayOrder: 4, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 15: Office supplies', vatCategory: 'SUPPLIES', applicableTo: 'both' },
+
+    // Non-VAT expenses
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Car hiring & transport for hiring', displayOrder: 5, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 3: Car hiring', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Transport and travel (Reporting)', displayOrder: 6, isTotalRow: false, activityType: 'EXPENSE', payableName: 'Payable 4: Transport for reporting', applicableTo: 'both' },
+    { categoryCode: 'B', subCategoryCode: 'B-04', name: 'Bank charges', displayOrder: 7, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
 
     // B. Expenditures - Transfer to other entities (both)
     { categoryCode: 'B', subCategoryCode: 'B-05', name: 'Transfer to RBC', displayOrder: 1, isTotalRow: false, activityType: 'EXPENSE', applicableTo: 'both' },
@@ -252,32 +259,26 @@ const tbActivities: ActivityData[] = [
 
     // D. Financial Assets (facility-specific variations)
     { categoryCode: 'D', subCategoryCode: null, name: 'Cash at bank', displayOrder: 1, isTotalRow: false, activityType: 'ASSET', applicableTo: 'both' },
-    { categoryCode: 'D', subCategoryCode: null, name: 'Petty cash', displayOrder: 2, isTotalRow: false, activityType: 'ASSET', applicableTo: 'both' },
 
-    // D. Receivables - Sub-categories
-    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 1: Communication - airtime', displayOrder: 1, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'AIRTIME', applicableTo: 'both' },
-    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 2: Communication - internet', displayOrder: 2, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'INTERNET', applicableTo: 'both' },
-    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 3: Infrastructure support (maintenance)', displayOrder: 3, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'INFRASTRUCTURE', applicableTo: 'both' },
+    // D. Receivables - Sub-categories (VAT Receivables for the 4 VAT-based expenses)
+    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 1: Communication - All', displayOrder: 1, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'COMMUNICATION_ALL', applicableTo: 'both' },
+    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 2: Maintenance', displayOrder: 2, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'MAINTENANCE', applicableTo: 'both' },
+    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 3: Fuel', displayOrder: 3, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'FUEL', applicableTo: 'both' },
     { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 4: Office supplies', displayOrder: 4, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'SUPPLIES', applicableTo: 'both' },
-    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'Other Receivables', displayOrder: 5, isTotalRow: false, activityType: 'COMPUTED_ASSET', computationRules: { formula: 'X_OTHER_RECEIVABLE', description: 'Automatically calculated from Miscellaneous Adjustments' }, applicableTo: 'both' },
+    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'Other Receivables', displayOrder: 4, isTotalRow: false, activityType: 'COMPUTED_ASSET', computationRules: { formula: 'X_OTHER_RECEIVABLE', description: 'Automatically calculated from Miscellaneous Adjustments' }, applicableTo: 'both' },
 
     { categoryCode: 'D', subCategoryCode: null, name: 'D. Financial Assets', displayOrder: 9, isTotalRow: true, activityType: 'ASSET_TOTAL', applicableTo: 'both' },
 
-    // E. Financial Liabilities (facility-specific)
+    // E. Financial Liabilities 
     { categoryCode: 'E', subCategoryCode: null, name: 'Payable 1: Salaries', displayOrder: 1, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 2: Supervision', displayOrder: 2, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 3: Meetings', displayOrder: 3, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 4: Sample transport', displayOrder: 4, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 5: Home visits', displayOrder: 5, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 6: Travel survellance', displayOrder: 6, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 7: Communication - airtime', displayOrder: 7, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 8: Communication - internet', displayOrder: 8, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 9: Infrastructure support (maintenance)', displayOrder: 9, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 10: Office supplies', displayOrder: 10, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 11: Transport reporting', displayOrder: 11, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 12: Bank charges', displayOrder: 12, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 13: VAT refund', displayOrder: 13, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
-    { categoryCode: 'E', subCategoryCode: null, name: 'E. Financial Liabilities', displayOrder: 14, isTotalRow: true, activityType: 'LIABILITY_TOTAL', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 2: Mission', displayOrder: 2, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 3: Car hiring', displayOrder: 3, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 4: Transport for reporting', displayOrder: 4, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 12: Communication - All', displayOrder: 12, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 13: Maintenance', displayOrder: 13, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 14: Fuel', displayOrder: 14, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'Payable 15: Office supplies', displayOrder: 15, isTotalRow: false, activityType: 'LIABILITY', applicableTo: 'both' },
+    { categoryCode: 'E', subCategoryCode: null, name: 'E. Financial Liabilities', displayOrder: 16, isTotalRow: true, activityType: 'LIABILITY_TOTAL', applicableTo: 'both' },
 
     // F. Net Financial Assets (computed for both)
     { categoryCode: 'F', subCategoryCode: null, name: 'F. Net Financial Assets', displayOrder: 1, isTotalRow: true, activityType: 'COMPUTED', computationRules: { formula: 'D - E', description: 'Financial Assets minus Financial Liabilities' }, applicableTo: 'both' },
@@ -515,6 +516,72 @@ async function verifyExecutionActivities(db: Database, projectType: 'HIV' | 'MAL
     }
 }
 
+// NEW: Verify VAT receivables are created for each category
+async function verifyVATReceivables(db: Database, projectType: 'HIV' | 'MAL' | 'TB') {
+    console.log(`\nVerifying VAT receivables for ${projectType}...`);
+
+    const dbProjectType = toDbProjectType(projectType);
+    const facilityTypes: Array<'hospital' | 'health_center'> = ['hospital', 'health_center'];
+    const vatCategories = ['COMMUNICATION_ALL', 'MAINTENANCE', 'FUEL', 'SUPPLIES'];
+
+    for (const facilityType of facilityTypes) {
+        console.log(`\n  🏥 ${facilityType.toUpperCase()}`);
+
+        // Get all VAT receivable activities
+        const vatReceivables = await db
+            .select()
+            .from(schema.dynamicActivities)
+            .where(
+                and(
+                    eq(schema.dynamicActivities.projectType, dbProjectType as any),
+                    eq(schema.dynamicActivities.facilityType, facilityType),
+                    eq(schema.dynamicActivities.moduleType, 'execution'),
+                    eq(schema.dynamicActivities.activityType, 'VAT_RECEIVABLE')
+                )
+            );
+
+        console.log(`     Found ${vatReceivables.length} VAT receivable activities`);
+
+        // Check each VAT category
+        for (const category of vatCategories) {
+            const receivableForCategory = vatReceivables.find(r => {
+                const metadata = r.metadata as any;
+                return metadata && metadata.vatCategory === category;
+            });
+
+            if (receivableForCategory) {
+                console.log(`     ✅ ${category}: ${receivableForCategory.name}`);
+            } else {
+                console.log(`     ⚠️  ${category}: NOT FOUND`);
+            }
+        }
+
+        // Get all VAT-applicable expenses
+        const vatExpenses = await db
+            .select()
+            .from(schema.dynamicActivities)
+            .where(
+                and(
+                    eq(schema.dynamicActivities.projectType, dbProjectType as any),
+                    eq(schema.dynamicActivities.facilityType, facilityType),
+                    eq(schema.dynamicActivities.moduleType, 'execution'),
+                    eq(schema.dynamicActivities.activityType, 'EXPENSE')
+                )
+            );
+
+        const expensesWithVAT = vatExpenses.filter(e => {
+            const metadata = e.metadata as any;
+            return metadata && metadata.vatCategory;
+        });
+
+        console.log(`\n     VAT-applicable expenses: ${expensesWithVAT.length}`);
+        expensesWithVAT.forEach(e => {
+            const metadata = e.metadata as any;
+            console.log(`       - ${e.name} (${metadata.vatCategory})`);
+        });
+    }
+}
+
 // ENHANCED: Main function to seed execution activities with proper facility targeting
 export async function seedExecutionActivitiesForProgramInternal(
     db: Database,
@@ -526,7 +593,7 @@ export async function seedExecutionActivitiesForProgramInternal(
         displayOrder: number;
         isTotalRow: boolean;
         activityType?: string;
-        vatCategory?: 'AIRTIME' | 'INTERNET' | 'INFRASTRUCTURE' | 'SUPPLIES';
+        vatCategory?: 'COMMUNICATION_ALL' | 'MAINTENANCE' | 'SUPPLIES' | 'FUEL';
         computationRules?: any;
         applicableTo: 'hospital' | 'health_center' | 'both';
     }>
@@ -557,6 +624,7 @@ export async function seedExecutionActivitiesForProgramInternal(
         }
 
         const activitiesToInsert = [];
+        const usedCodes = new Set<string>(); // Track used codes to prevent duplicates
 
         for (const activity of applicableActivities) {
             // Ensure parent category exists (A, B, C, D, E, F, G)
@@ -607,6 +675,19 @@ export async function seedExecutionActivitiesForProgramInternal(
                 activityCode = `${projectType}_EXEC_${facilityType.toUpperCase()}_${activity.categoryCode}_${activity.displayOrder}`;
             }
 
+            // CRITICAL: Ensure unique codes within the same batch to prevent ON CONFLICT errors
+            // If code already exists, append a suffix based on activity name
+            let uniqueCode = activityCode;
+            let suffix = 1;
+            while (usedCodes.has(uniqueCode)) {
+                // Create a short hash from activity name to make it unique
+                const nameHash = activity.name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 8).toUpperCase();
+                uniqueCode = `${activityCode}_${nameHash}${suffix > 1 ? suffix : ''}`;
+                suffix++;
+            }
+            usedCodes.add(uniqueCode);
+            activityCode = uniqueCode;
+
             const activityData = {
                 categoryId: categoryId,
                 projectType: toDbProjectType(projectType) as any,
@@ -640,7 +721,9 @@ export async function seedExecutionActivitiesForProgramInternal(
                     applicableTo: activity.applicableTo,
                     executionSpecific: true,
                     enhancedSeed: true,
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    // Store vatCategory in metadata for VAT-applicable expenses
+                    ...(activity.vatCategory && { vatCategory: activity.vatCategory })
                 },
                 isActive: true
             };
@@ -703,6 +786,9 @@ export async function seedExecutionActivitiesForProgramInternal(
 
     // Verification step
     await verifyExecutionActivities(db, projectType);
+    
+    // Verify VAT receivables are created for each category
+    await verifyVATReceivables(db, projectType);
 
     return {
         inserted: totalInserted,
@@ -721,36 +807,36 @@ export async function seedExecutionCategories(db: Database) {
             type: 'HIV' as const, categories: [
                 { code: 'A', name: 'A. Receipts', displayOrder: 1 },
                 { code: 'B', name: 'B. Expenditures', displayOrder: 2 },
-                { code: 'X', name: 'X. Miscellaneous Adjustments', displayOrder: 2.5 },
-                { code: 'C', name: 'C. SURPLUS / DEFICIT', displayOrder: 3, isComputed: true },
-                { code: 'D', name: 'D. Financial Assets', displayOrder: 4 },
-                { code: 'E', name: 'E. Financial Liabilities', displayOrder: 5 },
-                { code: 'F', name: 'F. Net Financial Assets', displayOrder: 6, isComputed: true },
-                { code: 'G', name: 'G. Closing Balance', displayOrder: 7 },
+                { code: 'X', name: 'X. Miscellaneous Adjustments', displayOrder: 3 },
+                { code: 'C', name: 'C. SURPLUS / DEFICIT', displayOrder: 4, isComputed: true },
+                { code: 'D', name: 'D. Financial Assets', displayOrder: 5 },
+                { code: 'E', name: 'E. Financial Liabilities', displayOrder: 6 },
+                { code: 'F', name: 'F. Net Financial Assets', displayOrder: 7, isComputed: true },
+                { code: 'G', name: 'G. Closing Balance', displayOrder: 8 },
             ]
         },
         {
             type: 'MAL' as const, categories: [
                 { code: 'A', name: 'A. Receipts', displayOrder: 1 },
                 { code: 'B', name: 'B. Expenditures', displayOrder: 2 },
-                { code: 'X', name: 'X. Miscellaneous Adjustments', displayOrder: 2.5 },
-                { code: 'C', name: 'C. SURPLUS / DEFICIT', displayOrder: 3, isComputed: true },
-                { code: 'D', name: 'D. Financial Assets', displayOrder: 4 },
-                { code: 'E', name: 'E. Financial Liabilities', displayOrder: 5 },
-                { code: 'F', name: 'F. Net Financial Assets', displayOrder: 6, isComputed: true },
-                { code: 'G', name: 'G. Closing Balance', displayOrder: 7 },
+                { code: 'X', name: 'X. Miscellaneous Adjustments', displayOrder: 3 },
+                { code: 'C', name: 'C. SURPLUS / DEFICIT', displayOrder: 4, isComputed: true },
+                { code: 'D', name: 'D. Financial Assets', displayOrder: 5 },
+                { code: 'E', name: 'E. Financial Liabilities', displayOrder: 6 },
+                { code: 'F', name: 'F. Net Financial Assets', displayOrder: 7, isComputed: true },
+                { code: 'G', name: 'G. Closing Balance', displayOrder: 8 },
             ]
         },
         {
             type: 'TB' as const, categories: [
                 { code: 'A', name: 'A. Receipts', displayOrder: 1 },
                 { code: 'B', name: 'B. Expenditures', displayOrder: 2 },
-                { code: 'X', name: 'X. Miscellaneous Adjustments', displayOrder: 2.5 },
-                { code: 'C', name: 'C. SURPLUS / DEFICIT', displayOrder: 3, isComputed: true },
-                { code: 'D', name: 'D. Financial Assets', displayOrder: 4 },
-                { code: 'E', name: 'E. Financial Liabilities', displayOrder: 5 },
-                { code: 'F', name: 'F. Net Financial Assets', displayOrder: 6, isComputed: true },
-                { code: 'G', name: 'G. Closing Balance', displayOrder: 7 },
+                { code: 'X', name: 'X. Miscellaneous Adjustments', displayOrder: 3 },
+                { code: 'C', name: 'C. SURPLUS / DEFICIT', displayOrder: 4, isComputed: true },
+                { code: 'D', name: 'D. Financial Assets', displayOrder: 5 },
+                { code: 'E', name: 'E. Financial Liabilities', displayOrder: 6 },
+                { code: 'F', name: 'F. Net Financial Assets', displayOrder: 7, isComputed: true },
+                { code: 'G', name: 'G. Closing Balance', displayOrder: 8 },
             ]
         }
     ];
@@ -778,6 +864,17 @@ export async function seedExecutionActivities(db: Database) {
     await seedExecutionActivitiesForProgramInternal(db, 'TB', tbActivities);
 
     console.log('ENHANCED: Finished seeding execution activities for all programs');
+    
+    // Import and run the mapping script after all activities are seeded
+    console.log('\n🔗 Running payable mapping script...');
+    const { updatePayableMappings } = await import('./update-payable-mappings.js');
+    await updatePayableMappings(db);
+    console.log('✅ Payable mappings established');
+    
+    // Post-seed validation: Run validateExecutionActivitiesByFacility
+    console.log('\n🔍 Running post-seed validation...');
+    await validateExecutionActivitiesByFacility(db);
+    console.log('✅ Post-seed validation complete');
 }
 
 // ENHANCED: Program-specific seeding functions
@@ -788,12 +885,12 @@ export async function seedExecutionDataForProgram(db: Database, projectType: 'HI
     const categories = [
         { code: 'A', name: 'A. Receipts', displayOrder: 1 },
         { code: 'B', name: 'B. Expenditures', displayOrder: 2 },
-        { code: 'X', name: 'X. Miscellaneous Adjustments', displayOrder: 2.5 },
-        { code: 'C', name: 'C. SURPLUS / DEFICIT', displayOrder: 3, isComputed: true },
-        { code: 'D', name: 'D. Financial Assets', displayOrder: 4 },
-        { code: 'E', name: 'E. Financial Liabilities', displayOrder: 5 },
-        { code: 'F', name: 'F. Net Financial Assets', displayOrder: 6, isComputed: true },
-        { code: 'G', name: 'G. Closing Balance', displayOrder: 7 },
+        { code: 'X', name: 'X. Miscellaneous Adjustments', displayOrder: 3 },
+        { code: 'C', name: 'C. SURPLUS / DEFICIT', displayOrder: 4, isComputed: true },
+        { code: 'D', name: 'D. Financial Assets', displayOrder: 5 },
+        { code: 'E', name: 'E. Financial Liabilities', displayOrder: 6 },
+        { code: 'F', name: 'F. Net Financial Assets', displayOrder: 7, isComputed: true },
+        { code: 'G', name: 'G. Closing Balance', displayOrder: 8 },
     ];
 
     switch (projectType) {
@@ -816,6 +913,12 @@ export async function seedExecutionDataForProgram(db: Database, projectType: 'HI
 
     // Seed activities (this will handle facility targeting internally)
     await seedExecutionActivitiesForProgramInternal(db, projectType, activities);
+    
+    // Run mapping script for this program
+    console.log(`\n🔗 Running payable mapping script for ${projectType}...`);
+    const { updatePayableMappings } = await import('./update-payable-mappings.js');
+    await updatePayableMappings(db);
+    console.log(`✅ Payable mappings established for ${projectType}`);
 
     console.log(`ENHANCED: Finished seeding execution data for ${projectType} with facility targeting`);
 }
@@ -901,8 +1004,9 @@ export default async function seedExecutionData(db: Database) {
     await seedExecutionCategories(db);
     await seedExecutionActivities(db);
 
-    // Run validation to ensure everything worked correctly
-    await validateExecutionActivitiesByFacility(db);
+    // Note: Validation and mapping are already done in seedExecutionActivities
+    console.log('\n✅ All validations passed');
+    console.log('✅ Payable mappings have been established');
 
     console.log('ENHANCED: Execution data seeding completed with facility targeting verification');
 }

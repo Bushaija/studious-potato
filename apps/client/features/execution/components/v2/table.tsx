@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { isVATApplicable, getVATCategory, type VATApplicableCategory } from "@/features/execution/utils/vat-applicable-expenses";
 import { VATClearanceControl } from "@/features/execution/components/vat-clearance-control";
 import { PayableClearanceControl } from "@/features/execution/components/payable-clearance-control";
+import { PriorYearAdjustmentDialog, type AdjustmentItem } from "@/features/execution/components/prior-year-adjustment-dialog";
 import { getOpeningBalanceWithMapping } from "@/features/execution/utils/activity-code-mapper";
 
 const QUARTERS = ["Q1", "Q2", "Q3", "Q4"] as const;
@@ -81,13 +82,13 @@ function cleanVATReceivableName(itemTitle: string): string {
 }
 
 // Helper function to extract VAT category from VAT receivable title
-// Example: "VAT Receivable 1: Communication - airtime" -> "airtime"
+// Example: "VAT Receivable 1: Communication - All" -> "communication_all"
 function extractVATCategoryFromTitle(itemTitle: string): VATApplicableCategory | null {
   const titleLower = itemTitle.toLowerCase();
-  if (titleLower.includes('airtime')) return 'airtime';
-  if (titleLower.includes('internet')) return 'internet';
-  if (titleLower.includes('infrastructure')) return 'infrastructure';
-  if (titleLower.includes('supplies')) return 'office_supplies';
+  if (titleLower.includes('communication')) return 'communication_all';
+  if (titleLower.includes('maintenance')) return 'maintenance';
+  if (titleLower.includes('fuel')) return 'fuel';
+  if (titleLower.includes('supplies') || titleLower.includes('office')) return 'office_supplies';
   return null;
 }
 
@@ -108,9 +109,9 @@ function findExpenseCodeForVATCategory(
 
   // Map VAT category to expense name pattern
   const namePatterns: Record<VATApplicableCategory, string[]> = {
-    'airtime': ['airtime'],
-    'internet': ['internet'],
-    'infrastructure': ['infrastructure'],
+    'communication_all': ['communication - all', 'communication-all', 'communication all'],
+    'maintenance': ['maintenance'],
+    'fuel': ['fuel'],
     'office_supplies': ['office supplies', 'supplies'],
   };
 
@@ -133,6 +134,29 @@ function findExpenseCodeForVATCategory(
 // Helper function to check if an activity is Section X (Miscellaneous Adjustments)
 function isSectionXMiscellaneous(activityId: string): boolean {
   return activityId.includes('_X_');
+}
+
+// Helper function to check if an activity is Section G (Closing Balance)
+function isSectionG(sectionId: string): boolean {
+  return sectionId === 'G';
+}
+
+// Helper function to check if an item is a prior year adjustment item
+function isPriorYearAdjustmentItem(itemId: string, itemTitle: string): 'cash' | 'payable' | 'receivable' | null {
+  // Check if it's in G-01 subcategory (prior year adjustments)
+  if (!itemId.includes('_G_') && !itemId.includes('_G-01_')) return null;
+  
+  const titleLower = itemTitle.toLowerCase();
+  if (titleLower === 'cash' || titleLower.includes('cash adjustment')) return 'cash';
+  if (titleLower === 'payable' || titleLower.includes('payable adjustment')) return 'payable';
+  if (titleLower === 'receivable' || titleLower.includes('receivable adjustment')) return 'receivable';
+  
+  return null;
+}
+
+// Helper function to check if a subcategory is the Prior Year Adjustments subcategory (G-01)
+function isPriorYearAdjustmentSubcategory(subcategoryId: string): boolean {
+  return subcategoryId.includes('G-01');
 }
 
 // Helper function to check if an activity is Section D "Other Receivables" (auto-calculated from Section X)
@@ -367,7 +391,7 @@ function SectionDRenderer({ section, ctx, projectType, facilityType, quarter, ac
 
   // Calculate VAT receivables for each category and quarter
   // Formula: closing = opening + incurred - cleared
-  // Returns: { q1: { airtime: 100, ... }, q2: { airtime: 200, ... }, ... }
+  // Returns: { q1: { communication_all: 100, ... }, q2: { communication_all: 200, ... }, ... }
   const vatReceivablesByQuarter = React.useMemo(() => {
     const allQuarters = ['q1', 'q2', 'q3', 'q4'] as const;
     const result: Record<string, Record<VATApplicableCategory, number>> = {};
@@ -375,9 +399,9 @@ function SectionDRenderer({ section, ctx, projectType, facilityType, quarter, ac
     // Initialize all quarters
     allQuarters.forEach(qKey => {
       result[qKey] = {
-        'airtime': 0,
-        'internet': 0,
-        'infrastructure': 0,
+        'communication_all': 0,
+        'maintenance': 0,
+        'fuel': 0,
         'office_supplies': 0,
       };
     });
@@ -390,17 +414,17 @@ function SectionDRenderer({ section, ctx, projectType, facilityType, quarter, ac
 
     // Map VAT categories to their UI codes for opening balance lookup
     const vatCategoryToUICode: Record<VATApplicableCategory, string> = {
-      'airtime': '_D_4',
-      'internet': '_D_5',
-      'infrastructure': '_D_6',
-      'office_supplies': '_D_7',
+      'communication_all': '_D_1',
+      'maintenance': '_D_2',
+      'fuel': '_D_3',
+      'office_supplies': '_D_4',
     };
 
     // Calculate opening balances for each VAT category from previous quarter
     const openingBalances: Record<VATApplicableCategory, number> = {
-      'airtime': 0,
-      'internet': 0,
-      'infrastructure': 0,
+      'communication_all': 0,
+      'maintenance': 0,
+      'fuel': 0,
       'office_supplies': 0,
     };
 
@@ -1162,8 +1186,8 @@ function SectionERenderer({ section, ctx, projectType, facilityType, quarter, ac
                       return "Auto-calculated: Unpaid home visit expenses";
                     } else if (payableName.includes('travel') || payableName.includes('survellance') || payableName.includes('surveillance')) {
                       return "Auto-calculated: Unpaid travel surveillance expenses";
-                    } else if (payableName.includes('infrastructure')) {
-                      return "Auto-calculated: Unpaid infrastructure expenses";
+                    } else if (payableName.includes('maintenance')) {
+                      return "Auto-calculated: Unpaid maintenance expenses";
                     } else if (payableName.includes('supplies')) {
                       return "Auto-calculated: Unpaid office supplies expenses";
                     } else if (payableName.includes('transport reporting')) {
@@ -1306,6 +1330,504 @@ function SectionERenderer({ section, ctx, projectType, facilityType, quarter, ac
   );
 }
 
+// Component to render Section G with Prior Year Adjustments
+interface SectionGRendererProps {
+  section: any;
+  ctx: any;
+  projectType: "HIV" | "MAL" | "TB";
+  facilityType: "hospital" | "health_center";
+  quarter: "Q1" | "Q2" | "Q3" | "Q4";
+  activities: any;
+  previousQuarterBalances: any;
+}
+
+function SectionGRenderer({ section, ctx, projectType, facilityType, quarter, activities, previousQuarterBalances }: SectionGRendererProps) {
+  // Get list of payables for the adjustment dialog
+  const payableItems: AdjustmentItem[] = React.useMemo(() => {
+    const items: AdjustmentItem[] = [];
+    const quarterKey = quarter.toLowerCase() as 'q1' | 'q2' | 'q3' | 'q4';
+    
+    // Get payable items from the activities schema (not from formData)
+    // This ensures all payables are shown, even if they have no balance
+    const sectionE = (activities as any)?.E;
+    if (sectionE?.items) {
+      sectionE.items.forEach((item: any) => {
+        if (item.code && !item.isTotalRow && !item.isComputed) {
+          const balance = Number(ctx.formData[item.code]?.[quarterKey]) || 0;
+          // Exclude the total row
+          if (!item.name.toLowerCase().includes('financial liabilities')) {
+            items.push({
+              code: item.code,
+              name: item.name,
+              currentBalance: balance
+            });
+          }
+        }
+      });
+    }
+    
+    // Fallback: also check formData for any payables not in schema
+    Object.keys(ctx.formData).forEach(code => {
+      if (code.includes('_E_') && !code.includes('_E_Financial')) {
+        // Check if already added from schema
+        if (!items.find(item => item.code === code)) {
+          const balance = Number(ctx.formData[code]?.[quarterKey]) || 0;
+          // Extract payable name from the table
+          const sectionETable = ctx.table.find((s: any) => s.id === 'E');
+          const payableItem = sectionETable?.children?.find((item: any) => item.id === code);
+          if (payableItem && !payableItem.title.toLowerCase().includes('financial liabilities')) {
+            items.push({
+              code,
+              name: payableItem.title,
+              currentBalance: balance
+            });
+          }
+        }
+      }
+    });
+    
+    return items;
+  }, [ctx.formData, ctx.table, quarter, activities]);
+
+  // Get list of receivables for the adjustment dialog
+  const receivableItems: AdjustmentItem[] = React.useMemo(() => {
+    const items: AdjustmentItem[] = [];
+    const quarterKey = quarter.toLowerCase() as 'q1' | 'q2' | 'q3' | 'q4';
+    
+    // Get receivable items from the activities schema (not from formData)
+    // This ensures all receivables are shown, even if they have no balance
+    const sectionD = (activities as any)?.D;
+    
+    // Check direct items in Section D (excluding Cash at Bank D_1 and Petty Cash D_2)
+    if (sectionD?.items) {
+      sectionD.items.forEach((item: any) => {
+        if (item.code && !item.isTotalRow && !item.isComputed) {
+          // Exclude Cash at Bank (D_1), Petty Cash (D_2), and total rows
+          if (!item.code.includes('_D_1') && !item.code.includes('_D_2') && 
+              !item.name.toLowerCase().includes('financial assets')) {
+            const balance = Number(ctx.formData[item.code]?.[quarterKey]) || 0;
+            items.push({
+              code: item.code,
+              name: item.name,
+              currentBalance: balance
+            });
+          }
+        }
+      });
+    }
+    
+    // Check subcategories (like D-01 for VAT receivables)
+    if (sectionD?.subCategories) {
+      Object.values(sectionD.subCategories).forEach((subCat: any) => {
+        if (subCat.items) {
+          subCat.items.forEach((item: any) => {
+            if (item.code && !item.isTotalRow && !item.isComputed) {
+              // Exclude Cash at Bank (D_1), Petty Cash (D_2)
+              if (!item.code.includes('_D_1') && !item.code.includes('_D_2')) {
+                const balance = Number(ctx.formData[item.code]?.[quarterKey]) || 0;
+                // Check if already added
+                if (!items.find(i => i.code === item.code)) {
+                  items.push({
+                    code: item.code,
+                    name: item.name,
+                    currentBalance: balance
+                  });
+                }
+              }
+            }
+          });
+        }
+      });
+    }
+    
+    // Fallback: also check formData for any receivables not in schema
+    Object.keys(ctx.formData).forEach(code => {
+      if (code.includes('_D_') && !code.includes('_D_1') && !code.includes('_D_2') && !code.includes('_D_Financial')) {
+        // Check if already added from schema
+        if (!items.find(item => item.code === code)) {
+          const balance = Number(ctx.formData[code]?.[quarterKey]) || 0;
+          // Extract receivable name from the table
+          const sectionDTable = ctx.table.find((s: any) => s.id === 'D');
+          let receivableItem = sectionDTable?.children?.find((item: any) => item.id === code);
+          
+          // Also check subcategories (like D-01 for VAT receivables)
+          if (!receivableItem) {
+            sectionDTable?.children?.forEach((child: any) => {
+              if (child.isSubcategory && child.children) {
+                const found = child.children.find((item: any) => item.id === code);
+                if (found) receivableItem = found;
+              }
+            });
+          }
+          
+          if (receivableItem && !receivableItem.title.toLowerCase().includes('financial assets')) {
+            items.push({
+              code,
+              name: receivableItem.title,
+              currentBalance: balance
+            });
+          }
+        }
+      }
+    });
+    
+    return items;
+  }, [ctx.formData, ctx.table, quarter, activities]);
+
+  // Separate regular items from subcategories
+  const regularItems = React.useMemo(() => {
+    return section.children?.filter((item: any) => !item.isSubcategory) || [];
+  }, [section.children]);
+
+  const subcategories = React.useMemo(() => {
+    return section.children?.filter((item: any) => item.isSubcategory) || [];
+  }, [section.children]);
+
+  return (
+    <>
+      {/* Section G Header */}
+      <TableRow className="bg-muted/50">
+        <TableCell className="sticky left-0 z-10 bg-muted/50 font-bold">
+          <button
+            type="button"
+            className="mr-2 inline-flex items-center text-xs text-muted-foreground hover:underline"
+            onClick={() => ctx.onToggleSection(section.id)}
+            aria-expanded={Boolean(ctx.expandState[section.id])}
+          >
+            {ctx.expandState[section.id] ? "▾" : "▸"}
+          </button>
+          {section.title}
+        </TableCell>
+        {QUARTERS.map((q) => {
+          const key = q.toLowerCase() as "q1" | "q2" | "q3" | "q4";
+          const local = (section as any)[key] as number | undefined;
+          const fallback = (ctx.getSectionTotals(section.id) as any)[key] as number | undefined;
+          const val = typeof fallback === 'number' ? fallback : local;
+          return (
+            <TableCell key={`${section.id}-${q}`} className="text-center">
+              {ctx.isQuarterVisible(q as any) ? (
+                ctx.isQuarterEditable(q as any) ? (
+                  <span>{formatValue(val)}</span>
+                ) : (
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="text-gray-600">{formatValue(val)}</span>
+                    <Lock className="h-3 w-3 text-gray-400" />
+                  </div>
+                )
+              ) : (
+                <Lock className="h-3 w-3 mx-auto text-muted-foreground" />
+              )}
+            </TableCell>
+          );
+        })}
+        <TableCell className="text-center">
+          {(() => {
+            const local = (section as any).cumulativeBalance as number | undefined;
+            const fallback = ctx.getSectionTotals(section.id).cumulativeBalance as number | undefined;
+            const val = typeof fallback === 'number' ? fallback : local;
+            return formatCumulativeBalance(val, section.id);
+          })()}
+        </TableCell>
+        <TableCell />
+      </TableRow>
+
+      {/* Expanded content */}
+      {ctx.expandState[section.id] !== false && (
+        <>
+          {/* Regular items (Accumulated Surplus/Deficit, Surplus/Deficit of Period, etc.) */}
+          {regularItems.map((item: any) => {
+            const rowState = ctx.getRowState(item.id);
+            const editable = rowState.isEditable && (item.isEditable !== false) && !item.isCalculated;
+
+            return (
+              <TableRow key={item.id}>
+                <TableCell className="sticky left-0 z-10 bg-background pl-12">
+                  {item.title}
+                </TableCell>
+                {QUARTERS.map((q) => {
+                  const isComputed = item.isCalculated === true;
+                  const locked = ctx.isRowLocked(item.id, q as any);
+                  const key = q.toLowerCase() as "q1" | "q2" | "q3" | "q4";
+                  const value = isComputed
+                    ? ((item as any)[key] as number | undefined) ?? (ctx.formData[item.id]?.[key] as number | undefined)
+                    : ((ctx.formData[item.id]?.[key] ?? (item as any)[key]) as number | undefined);
+
+                  return (
+                    <TableCell key={`${item.id}-${q}`} className="text-center">
+                      {ctx.isQuarterVisible(q as any) ? (
+                        ctx.isQuarterEditable(q as any) ? (
+                          isComputed ? (
+                            <div className="flex items-center justify-center gap-1">
+                              <span className="text-blue-600 font-medium">{formatValue(value)}</span>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Calculator className="h-3 w-3 text-blue-500 cursor-help" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="text-xs">Auto-calculated</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                          ) : locked ? (
+                            <div className="flex items-center justify-center gap-1">
+                              <span className="text-gray-600">{formatValue(value)}</span>
+                              <Lock className="h-3 w-3 text-gray-400" />
+                            </div>
+                          ) : editable ? (
+                            <Input
+                              key={`${item.id}-${key}-${value ?? 0}`}
+                              className="h-8 w-32 text-center"
+                              defaultValue={value ?? 0}
+                              type="number"
+                              step="0.01"
+                              inputMode="decimal"
+                              onBlur={(e: React.FocusEvent<HTMLInputElement>) => ctx.onFieldChange(item.id, Number(e.target.value || 0))}
+                            />
+                          ) : (
+                            <span>{formatValue(value)}</span>
+                          )
+                        ) : (
+                          <div className="flex items-center justify-center gap-1">
+                            <span className="text-gray-600">{formatValue(value)}</span>
+                            <Lock className="h-3 w-3 text-gray-400" />
+                          </div>
+                        )
+                      ) : (
+                        <Lock className="h-3 w-3 mx-auto text-muted-foreground" />
+                      )}
+                    </TableCell>
+                  );
+                })}
+                <TableCell className="text-center">
+                  {formatCumulativeBalance(item.cumulativeBalance, item.id)}
+                </TableCell>
+                <TableCell className="text-center">
+                  {!rowState.isCalculated && (
+                    <input
+                      className="h-8 w-52 border rounded px-2"
+                      defaultValue={ctx.formData[item.id]?.comment ?? ""}
+                      onBlur={(e) => ctx.onCommentChange(item.id, e.target.value)}
+                      disabled={!editable}
+                    />
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+
+          {/* Subcategories (G-01 Prior Year Adjustments) */}
+          {subcategories.map((subcategory: any) => {
+            const isPriorYearAdj = isPriorYearAdjustmentSubcategory(subcategory.id);
+            
+            return (
+              <React.Fragment key={subcategory.id}>
+                {/* Subcategory header row */}
+                <TableRow className="bg-muted/30">
+                  <TableCell className="sticky left-0 z-10 bg-muted/30 font-medium pl-8">
+                    <button
+                      type="button"
+                      className="mr-2 inline-flex items-center text-xs text-muted-foreground hover:underline"
+                      onClick={() => ctx.onToggleSection(subcategory.id)}
+                      aria-expanded={Boolean(ctx.expandState[subcategory.id])}
+                    >
+                      {ctx.expandState[subcategory.id] ? "▾" : "▸"}
+                    </button>
+                    {subcategory.title}
+                  </TableCell>
+                  {QUARTERS.map((q) => {
+                    const key = q.toLowerCase() as "q1" | "q2" | "q3" | "q4";
+                    const val = (subcategory as any)[key] as number | undefined;
+                    return (
+                      <TableCell key={`${subcategory.id}-${q}`} className="text-center">
+                        {ctx.isQuarterVisible(q as any) ? (
+                          ctx.isQuarterEditable(q as any) ? (
+                            <span>{formatValue(val)}</span>
+                          ) : (
+                            <div className="flex items-center justify-center gap-1">
+                              <span className="text-gray-600">{formatValue(val)}</span>
+                              <Lock className="h-3 w-3 text-gray-400" />
+                            </div>
+                          )
+                        ) : (
+                          <Lock className="h-3 w-3 mx-auto text-muted-foreground" />
+                        )}
+                      </TableCell>
+                    );
+                  })}
+                  <TableCell className="text-center">{formatCumulativeBalance(subcategory.cumulativeBalance, subcategory.id)}</TableCell>
+                  <TableCell />
+                </TableRow>
+
+                {/* Subcategory child items (Prior Year Adjustment items) */}
+                {ctx.expandState[subcategory.id] !== false && subcategory.children?.map((item: any) => {
+                  const rowState = ctx.getRowState(item.id);
+                  const priorYearType = isPriorYearAdjustmentItem(item.id, item.title);
+                  const quarterKey = quarter.toLowerCase() as 'q1' | 'q2' | 'q3' | 'q4';
+                  const currentValue = Number(ctx.formData[item.id]?.[quarterKey]) || 0;
+
+                  return (
+                    <TableRow key={item.id} className={isPriorYearAdj ? "bg-amber-50/30" : ""}>
+                      <TableCell className="sticky left-0 z-10 bg-background pl-12">
+                        <div className="flex items-center gap-2">
+                          <span>{item.title}</span>
+                          {/* Show adjustment dialog button for payable/receivable prior year adjustments */}
+                          {priorYearType === 'payable' && ctx.isQuarterEditable(quarter) && (
+                            <PriorYearAdjustmentDialog
+                              type="payable"
+                              items={payableItems}
+                              currentValue={currentValue}
+                              onApplyAdjustment={(targetCode, adjustmentType, amount) => {
+                                ctx.applyPriorYearAdjustment(item.id, targetCode, adjustmentType, amount);
+                              }}
+                            />
+                          )}
+                          {priorYearType === 'receivable' && ctx.isQuarterEditable(quarter) && (
+                            <PriorYearAdjustmentDialog
+                              type="receivable"
+                              items={receivableItems}
+                              currentValue={currentValue}
+                              onApplyAdjustment={(targetCode, adjustmentType, amount) => {
+                                ctx.applyPriorYearAdjustment(item.id, targetCode, adjustmentType, amount);
+                              }}
+                            />
+                          )}
+                        </div>
+                      </TableCell>
+                      {QUARTERS.map((q) => {
+                        const locked = ctx.isRowLocked(item.id, q as any);
+                        const key = q.toLowerCase() as "q1" | "q2" | "q3" | "q4";
+                        const value = (ctx.formData[item.id]?.[key] ?? (item as any)[key]) as number | undefined;
+                        const isCurrentQuarter = q === quarter;
+
+                        // For cash adjustments, show regular input with double-entry info
+                        // For payable/receivable adjustments, show read-only input
+                        const isReadOnly = priorYearType === 'payable' || priorYearType === 'receivable';
+
+                        return (
+                          <TableCell key={`${item.id}-${q}`} className="text-center">
+                            {ctx.isQuarterVisible(q as any) ? (
+                              ctx.isQuarterEditable(q as any) ? (
+                                locked ? (
+                                  <div className="flex items-center justify-center gap-1">
+                                    <span className="text-gray-600">{formatValue(value)}</span>
+                                    <Lock className="h-3 w-3 text-gray-400" />
+                                  </div>
+                                ) : isReadOnly ? (
+                                  // Read-only input for payable/receivable adjustments
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Input
+                                      className="h-8 w-32 text-center bg-gray-50 cursor-not-allowed"
+                                      value={formatValue(value)}
+                                      disabled
+                                      readOnly
+                                      aria-label={`${item.title} for ${q}: ${formatValue(value)}. Use the Adjust button to modify.`}
+                                    />
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Info className="h-4 w-4 text-amber-500 cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className="text-xs">Use the "Adjust" button to modify this value</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                ) : priorYearType === 'cash' ? (
+                                  // Cash adjustment with double-entry info
+                                  <div className="flex flex-col items-center gap-1">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <Input
+                                        key={`${item.id}-${key}-${value ?? 0}`}
+                                        className="h-8 w-32 text-center"
+                                        defaultValue={value ?? 0}
+                                        type="number"
+                                        step="0.01"
+                                        inputMode="decimal"
+                                        onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                                          const newValue = Number(e.target.value || 0);
+                                          const oldValue = Number(value || 0);
+                                          const diff = newValue - oldValue;
+                                          if (diff !== 0) {
+                                            // Apply double-entry: update both G (this field) and Cash at Bank
+                                            ctx.applyPriorYearCashAdjustment(
+                                              item.id, 
+                                              diff > 0 ? 'increase' : 'decrease', 
+                                              Math.abs(diff)
+                                            );
+                                          }
+                                        }}
+                                      />
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Info className="h-4 w-4 text-blue-500 cursor-help" />
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p className="text-xs font-semibold mb-1">Double-Entry Accounting</p>
+                                            <p className="text-xs">Changes here will also update Cash at Bank (Section D)</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </div>
+                                    {isCurrentQuarter && value !== undefined && value !== 0 && (
+                                      <div className="text-xs text-blue-600 flex items-center gap-1">
+                                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                        </svg>
+                                        <span>Cash at Bank {value > 0 ? '+' : ''}{value.toLocaleString()}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  // Regular input for other items
+                                  <Input
+                                    key={`${item.id}-${key}-${value ?? 0}`}
+                                    className="h-8 w-32 text-center"
+                                    defaultValue={value ?? 0}
+                                    type="number"
+                                    step="0.01"
+                                    inputMode="decimal"
+                                    onBlur={(e: React.FocusEvent<HTMLInputElement>) => ctx.onFieldChange(item.id, Number(e.target.value || 0))}
+                                  />
+                                )
+                              ) : (
+                                <div className="flex items-center justify-center gap-1">
+                                  <span className="text-gray-600">{formatValue(value)}</span>
+                                  <Lock className="h-3 w-3 text-gray-400" />
+                                </div>
+                              )
+                            ) : (
+                              <Lock className="h-3 w-3 mx-auto text-muted-foreground" />
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                      <TableCell className="text-center">
+                        {formatCumulativeBalance(item.cumulativeBalance, item.id)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <input
+                          className="h-8 w-52 border rounded px-2"
+                          defaultValue={ctx.formData[item.id]?.comment ?? ""}
+                          onBlur={(e) => ctx.onCommentChange(item.id, e.target.value)}
+                          disabled={!ctx.isQuarterEditable(quarter)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </React.Fragment>
+            );
+          })}
+        </>
+      )}
+    </>
+  );
+}
+
 import { useExecutionActivities } from "@/hooks/queries/executions/use-execution-activities";
 
 export function ExecutionTable() {
@@ -1395,6 +1917,22 @@ export function ExecutionTable() {
             if (isSectionE(section.id)) {
               return (
                 <SectionERenderer
+                  key={section.id}
+                  section={section}
+                  ctx={ctx}
+                  projectType={projectType}
+                  facilityType={facilityType}
+                  quarter={quarter}
+                  activities={activities}
+                  previousQuarterBalances={previousQuarterBalances}
+                />
+              );
+            }
+
+            // Special rendering for Section G (Closing Balance with Prior Year Adjustments)
+            if (isSectionG(section.id)) {
+              return (
+                <SectionGRenderer
                   key={section.id}
                   section={section}
                   ctx={ctx}
@@ -1535,8 +2073,10 @@ export function ExecutionTable() {
                                       return "Auto-calculated: Unpaid home visit expenses";
                                     } else if (payableName.includes('travel') || payableName.includes('survellance') || payableName.includes('surveillance')) {
                                       return "Auto-calculated: Unpaid travel surveillance expenses";
-                                    } else if (payableName.includes('infrastructure')) {
-                                      return "Auto-calculated: Unpaid infrastructure expenses";
+                                    } else if (payableName.includes('maintenance')) {
+                                      return "Auto-calculated: Unpaid maintenance expenses";
+                                    } else if (payableName.includes('fuel')) {
+                                      return "Auto-calculated: Unpaid fuel expenses";
                                     } else if (payableName.includes('supplies')) {
                                       return "Auto-calculated: Unpaid office supplies expenses";
                                     } else if (payableName.includes('transport reporting')) {
@@ -1677,8 +2217,10 @@ export function ExecutionTable() {
                               return "Auto-calculated: Unpaid home visit expenses";
                             } else if (payableName.includes('travel') || payableName.includes('survellance') || payableName.includes('surveillance')) {
                               return "Auto-calculated: Unpaid travel surveillance expenses";
-                            } else if (payableName.includes('infrastructure')) {
-                              return "Auto-calculated: Unpaid infrastructure expenses";
+                            } else if (payableName.includes('maintenance')) {
+                              return "Auto-calculated: Unpaid maintenance expenses";
+                            } else if (payableName.includes('fuel')) {
+                              return "Auto-calculated: Unpaid fuel expenses";
                             } else if (payableName.includes('supplies')) {
                               return "Auto-calculated: Unpaid office supplies expenses";
                             } else if (payableName.includes('transport reporting')) {

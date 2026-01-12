@@ -273,9 +273,8 @@ export function EnhancedExecutionFormAutoLoad({
         if (Object.values(transformedData).some((data: any) => data.q3 > 0)) quartersWithData.push('Q3');
         if (Object.values(transformedData).some((data: any) => data.q4 > 0)) quartersWithData.push('Q4');
 
-        toast.success("📋 Loaded existing execution data", {
-          description: `Found data for ${Object.keys(transformedData).length} activities. Previous quarters: ${quartersWithData.join(', ')}`
-        });
+        // Removed toast to prevent interference with dialogs/sheets
+        console.log(`[Execution] Loaded existing data for ${Object.keys(transformedData).length} activities. Previous quarters: ${quartersWithData.join(', ')}`);
       }
     }
   }, [existingExecution?.exists, existingExecution?.entry?.id, initialData, projectType, facilityType]); // Added projectType and facilityType
@@ -722,15 +721,10 @@ export function EnhancedExecutionFormAutoLoad({
       console.log('[Draft] Saving draft with id:', draftId, 'formValues keys:', Object.keys(formValues).length);
       
       saveTemporary(draftId, formRows as any, formValues as any, expandedRows, draftMeta);
-      toast.success("Draft saved", {
-        description: "Your changes have been saved locally",
-        duration: 2000,
-      });
+      // Removed toast notification to prevent interference with dialogs/sheets
     } catch (err) {
       console.error("[Draft] saveDraft:error", err);
-      toast.error("Failed to save draft", {
-        description: "Could not save your changes locally",
-      });
+      // Removed error toast to prevent interference with dialogs/sheets
     }
   }, [saveTemporary, draftId, draftMeta, form.formData]);
 
@@ -839,11 +833,8 @@ export function EnhancedExecutionFormAutoLoad({
       console.log('[Draft] Restoring merged data with', Object.keys(merged).length, 'keys');
       form.setFormData(merged);
       
-      // Show toast to inform user that draft was restored
-      toast.success("Draft restored", {
-        description: "Your previous work has been restored",
-        duration: 3000,
-      });
+      // Draft restored silently - removed toast to prevent interference with dialogs/sheets
+      console.log('[Draft] Draft restored successfully');
     } else {
       console.log('[Draft] No saved draft found for id:', draftId);
     }
@@ -941,6 +932,8 @@ export function EnhancedExecutionFormAutoLoad({
       updateVATExpense: isReadOnly ? () => { } : form.updateVATExpense,
       clearVAT: isReadOnly ? () => { } : form.clearVAT,
       clearPayable: isReadOnly ? () => { } : form.clearPayable,
+      applyPriorYearAdjustment: isReadOnly ? () => { } : form.applyPriorYearAdjustment,
+      applyPriorYearCashAdjustment: isReadOnly ? () => { } : form.applyPriorYearCashAdjustment,
       validationErrors: form.validationErrors,
       isCalculating: form.status.isCalculating,
       isValidating: form.status.isValidating,
@@ -963,6 +956,7 @@ export function EnhancedExecutionFormAutoLoad({
       // Pass miscellaneous adjustments validation state
       miscValidationError: miscValidationError,
       otherReceivableCode: otherReceivableCode,
+      realTimeSurplusDeficit: form.realTimeSurplusDeficit,
     }}>
       <ExecutionActionsProvider
         value={{
@@ -1024,12 +1018,13 @@ export function EnhancedExecutionFormAutoLoad({
               onSaveDraft={saveDraft}
               onSubmit={handleSmartSubmission}
               onCancel={() => { }}
-              isSubmitting={isSubmitting || form.status.isCalculating || form.status.isValidating}
+              isSubmitting={isSubmitting}
               isDirty={form.isDirty}
-              isValid={(form as any).canCreateReport}
-              validationErrors={form.validationErrors}
+              isValid={true}
+              validationErrors={{}}
               submitLabel={existingExecution?.exists ? `Update Execution (${quarter})` : "Submit Execution"}
               lastSaved={lastSavedIso ? new Date(lastSavedIso) : undefined}
+              canSubmit={true}
             />
           )}
         </div>

@@ -526,6 +526,8 @@ export function EnhancedExecutionForm({ projectType, facilityType, quarter, mode
       updateVATExpense: isReadOnly ? () => {} : form.updateVATExpense,
       clearVAT: isReadOnly ? () => {} : form.clearVAT,
       clearPayable: isReadOnly ? () => {} : form.clearPayable,
+      applyPriorYearAdjustment: isReadOnly ? () => {} : form.applyPriorYearAdjustment,
+      applyPriorYearCashAdjustment: isReadOnly ? () => {} : form.applyPriorYearCashAdjustment,
       validationErrors: form.validationErrors,
       clientValidationErrors: form.clientValidationErrors,  // NEW: Client-side validation errors
       isCalculating: form.status.isCalculating,
@@ -549,6 +551,7 @@ export function EnhancedExecutionForm({ projectType, facilityType, quarter, mode
       previousQuarterBalances: form.previousQuarterBalances,
       miscValidationError: null,
       otherReceivableCode: null,
+      realTimeSurplusDeficit: form.realTimeSurplusDeficit,
     }}>
       <ExecutionActionsProvider
         value={{

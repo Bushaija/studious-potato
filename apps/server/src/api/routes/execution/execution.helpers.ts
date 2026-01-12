@@ -250,6 +250,20 @@ export function toKeyedActivities(activities: any[]): Record<string, any> {
  * @param keyed - Activities object with cumulative_balance already calculated
  * @returns Rollups by section and subsection
  */
+/**
+ * Checks if an activity is the "Surplus/Deficit of the Period" computed item
+ * This item should be excluded from G section rollups because it's computed as A - B
+ * and added separately in toBalances to avoid double-counting
+ */
+function isSurplusDeficitOfPeriod(activity: any): boolean {
+  const name = (activity.name || activity.label || '').toLowerCase();
+  // Match "Surplus/Deficit of the Period" but NOT "Accumulated Surplus/Deficit"
+  return name.includes('surplus') && 
+         name.includes('deficit') && 
+         name.includes('period') && 
+         !name.includes('accumulated');
+}
+
 export function computeRollups(keyed: Record<string, any>) {
   const bySection: Record<string, any> = {};
   const bySubSection: Record<string, any> = {};
@@ -260,6 +274,14 @@ export function computeRollups(keyed: Record<string, any>) {
   for (const k in keyed) {
     const a = keyed[k];
     console.log(`[computeRollups] DEBUG: Activity ${k} -> section: ${a.section}, subSection: ${a.subSection}`);
+    
+    // CRITICAL: Skip "Surplus/Deficit of the Period" from G section rollups
+    // This item is computed as A - B and added separately in toBalances
+    // Including it here would cause double-counting
+    if (a.section === 'G' && isSurplusDeficitOfPeriod(a)) {
+      console.log(`[computeRollups] DEBUG: Skipping "Surplus/Deficit of the Period" from G rollup to avoid double-counting`);
+      continue;
+    }
     
     const q1 = Number(a.q1 || 0), q2 = Number(a.q2 || 0),
       q3 = Number(a.q3 || 0), q4 = Number(a.q4 || 0);

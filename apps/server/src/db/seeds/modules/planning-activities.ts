@@ -37,7 +37,10 @@ function deriveCategoryDescription(categoryCode: string): string {
     HPE: 'Health Products & Equipment - Equipment and infrastructure',
     PA: 'Program Administration Costs - Administrative expenses',
     EPID: 'Epidemiology - Epidemiological activities and training',
-    PM: 'Program Management - Program administration and management'
+    PM: 'Program Management - Program administration and management',
+    NG: 'Normal Grant',
+    IRM: 'Insecticide Resistance Monitoring',
+    ES: 'Entomological Surveillance',
   };
   
   return descriptions[categoryCode] || `${categoryCode} activities`;
@@ -59,28 +62,35 @@ const programActivities: Record<string, PlanningActivityData[]> = {
   // ================== HIV PROGRAM ==================
 HIV: [
     // Hospital Activities
+
     // Human Resources (HR)
-    { facilityType: 'hospital', categoryCode: 'HR', name: 'DH Medical Dr. Salary', displayOrder: 1 },
-    { facilityType: 'hospital', categoryCode: 'HR', name: 'Senior Medical Dr. Salary', displayOrder: 2 },
-    { facilityType: 'hospital', categoryCode: 'HR', name: 'Chief Medical Dr. Salary', displayOrder: 3 },
-    { facilityType: 'hospital', categoryCode: 'HR', name: 'Junior Medical Dr. or Mentor Salary', displayOrder: 4 },
-    { facilityType: 'hospital', categoryCode: 'HR', name: 'Pharmacist Salary', displayOrder: 5 },
-    { facilityType: 'hospital', categoryCode: 'HR', name: 'Nurse Salary', displayOrder: 6 },
-    { facilityType: 'hospital', categoryCode: 'HR', name: 'CHW supervisor Salary', displayOrder: 7 },
-    { facilityType: 'hospital', categoryCode: 'HR', name: 'Accountant Salary', displayOrder: 8 },
-    { facilityType: 'hospital', categoryCode: 'HR', name: 'All Staff Bonus', displayOrder: 9 },
+    { facilityType: 'hospital', categoryCode: 'HR', name: 'DH Accountant', displayOrder: 1 },
+    { facilityType: 'hospital', categoryCode: 'HR', name: 'DH Chief Medical Doctor or Mentor Doctor', displayOrder: 2 },
+    { facilityType: 'hospital', categoryCode: 'HR', name: 'DH Senior Medical Doctor or Mentor Doctor', displayOrder: 3 },
+    { facilityType: 'hospital', categoryCode: 'HR', name: 'DH Medical Doctor or Mentor Doctor', displayOrder: 4 },
+    { facilityType: 'hospital', categoryCode: 'HR', name: 'DH Junior Medical Doctor or Mentor Doctor', displayOrder: 5 },
+    { facilityType: 'hospital', categoryCode: 'HR', name: 'DH Pharmacist', displayOrder: 6 },
+    { facilityType: 'hospital', categoryCode: 'HR', name: 'DH Clinical Mentor/Nurse', displayOrder: 7 },
+    { facilityType: 'hospital', categoryCode: 'HR', name: 'All Staff Bonus', displayOrder: 8 },
 
     // Travel Related Costs (TRC)
-    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Campaign for HIV testing', displayOrder: 1 },
-    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Campaign (All)', displayOrder: 2 },
-    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Training', displayOrder: 3 },
-    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Supervision (All)', displayOrder: 4 },
-    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Workshop (Transport & Perdiem)', displayOrder: 5 },
-    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Meeting', displayOrder: 6 },
-    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Transport', displayOrder: 7 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct outreach to provide HIV Testing service in community', displayOrder: 1 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct outreach VMMC provision at the centralized level', displayOrder: 2 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct district event related to WAD celebration', displayOrder: 3 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct census training (mission & transport for HC staff)', displayOrder: 4 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct integrated clinical mentorship from DH to HCs (mission)', displayOrder: 5 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct integrated clinical mentorship from DH to HCs (transport)', displayOrder: 6 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct annual cordination meeting at district level', displayOrder: 7 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct quarterly MTD meetings (mission)', displayOrder: 8 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct quarterly MTD meetings (transport)', displayOrder: 9 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct support group meetings', displayOrder: 10 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct home visit for lost to followup', displayOrder: 11 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct supervision & DQA from DH to HCs (mission)', displayOrder: 12 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct supervision & DQA from DH to HCs (transport)', displayOrder: 13 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Conduct sample transportation from DH to RH/NRL', displayOrder: 14 },
 
     // Health Products & Equipment (HPE)
-    { facilityType: 'hospital', categoryCode: 'HPE', name: 'Maintenance', displayOrder: 1 },
+    { facilityType: 'hospital', categoryCode: 'HPE', name: 'Maintenance for motor car vehicles/medical equipments', displayOrder: 1 },
 
     // Program Administration Costs (PA)
     { facilityType: 'hospital', categoryCode: 'PA', name: 'Bank charges & commissions', displayOrder: 1 },
@@ -89,59 +99,76 @@ HIV: [
     { facilityType: 'hospital', categoryCode: 'PA', name: 'Communication (Internet)', displayOrder: 4 },
 
     // Health Center Activities
+
     // Human Resources
     { facilityType: 'health_center', categoryCode: 'HR', name: 'HC Nurses (A1) Salary', displayOrder: 1 },
     { facilityType: 'health_center', categoryCode: 'HR', name: 'HC Lab Technician (A1) Salary', displayOrder: 2 },
     { facilityType: 'health_center', categoryCode: 'HR', name: 'Bonus (All staff paid on GF)', displayOrder: 3 },
 
     // TRC
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Workshop', displayOrder: 1 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Supervision (CHWs)', displayOrder: 2 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Supervision (Home Visit)', displayOrder: 3 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Transport', displayOrder: 4 },
+    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Conduct support group meetings', displayOrder: 1 },
+    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Conduct sample transportation from HC to DH and Supervision for CHWs & Home visit for lost followup', displayOrder: 2 },
 
-    // HPE
-    { facilityType: 'health_center', categoryCode: 'HPE', name: 'Maintenance and Repair', displayOrder: 1 },
+    // // HPE
+    // { facilityType: 'health_center', categoryCode: 'HPE', name: 'Maintenance and Repair', displayOrder: 1 },
 
     // PA
-    { facilityType: 'health_center', categoryCode: 'PA', name: 'Communication', displayOrder: 1 },
-    { facilityType: 'health_center', categoryCode: 'PA', name: 'Office Supplies', displayOrder: 2 },
-    { facilityType: 'health_center', categoryCode: 'PA', name: 'Transport (Mission & Reporting Fee)', displayOrder: 3 },
-    { facilityType: 'health_center', categoryCode: 'PA', name: 'Bank charges', displayOrder: 4 },
+    { facilityType: 'health_center', categoryCode: 'PA', name: 'Maintenance for motor car vehicles/medical equipments', displayOrder: 1 },
+    { facilityType: 'health_center', categoryCode: 'PA', name: 'Communication (Airtime)', displayOrder: 2 },
+    { facilityType: 'health_center', categoryCode: 'PA', name: 'Transport for reporting', displayOrder: 3 },
+    { facilityType: 'health_center', categoryCode: 'PA', name: 'Office supplies', displayOrder: 4 },
+    { facilityType: 'health_center', categoryCode: 'PA', name: 'Bank charges', displayOrder: 5 },
   ],
 
   // ---------------- MALARIA PROGRAM ----------------
   MAL: [
-    // Hospital & Health Center Activities (Malaria program doesn't distinguish by facility type in the frontend)
+    // Hospital 
+
     // Epidemiology
-    { facilityType: 'hospital', categoryCode: 'EPID', name: 'Participants at DHs staff', displayOrder: 1 },
-    { facilityType: 'health_center', categoryCode: 'EPID', name: 'Participants at DHs staff', displayOrder: 1 },
-    { facilityType: 'hospital', categoryCode: 'EPID', name: 'Provide Perdiem to Health Centers staff', displayOrder: 2 },
-    { facilityType: 'health_center', categoryCode: 'EPID', name: 'Provide Perdiem to Health Centers staff', displayOrder: 2 },
-    { facilityType: 'hospital', categoryCode: 'EPID', name: 'Provide Mineral water to participants', displayOrder: 3 },
-    { facilityType: 'health_center', categoryCode: 'EPID', name: 'Provide Mineral water to participants', displayOrder: 3 },
-    { facilityType: 'hospital', categoryCode: 'EPID', name: 'Transport fees for remote distance based HCs staff', displayOrder: 4 },
-    { facilityType: 'health_center', categoryCode: 'EPID', name: 'Transport fees for remote distance based HCs staff', displayOrder: 4 },
-    { facilityType: 'hospital', categoryCode: 'EPID', name: 'Bank Charges', displayOrder: 5 },
-    { facilityType: 'health_center', categoryCode: 'EPID', name: 'Bank Charges', displayOrder: 5 },
+    { facilityType: 'hospital', categoryCode: 'EPID', name: 'Provide perdiem to DH staff - quarterly cordination meeting', displayOrder: 1 },
+    { facilityType: 'hospital', categoryCode: 'EPID', name: 'Provide perdiem to HCs staff - quarterly cordination meeting', displayOrder: 2 },
+    { facilityType: 'hospital', categoryCode: 'EPID', name: 'Provide Mineral water to participants - quarterly cordination meeting', displayOrder: 3 },
+    { facilityType: 'hospital', categoryCode: 'EPID', name: 'Provide transport to HCs staff - quarterly cordination meeting', displayOrder: 4 },
+    { facilityType: 'hospital', categoryCode: 'EPID', name: 'Running costs - mission fees for report submission, office supplies', displayOrder: 5 },
+    { facilityType: 'hospital', categoryCode: 'EPID', name: 'Bank Charges', displayOrder: 6 },
+    { facilityType: 'hospital', categoryCode: 'EPID', name: 'DH CHW supervisor A0 salary', displayOrder: 7 },
+    { facilityType: 'hospital', categoryCode: 'EPID', name: 'DH Lab technicians A0 salary', displayOrder: 8 },
+    { facilityType: 'hospital', categoryCode: 'EPID', name: 'DH Nurses A1/A0 salary', displayOrder: 9 },
+    { facilityType: 'hospital', categoryCode: 'EPID', name: 'Bonus for all Malaria staff', displayOrder: 10 },
 
     // Program Management
-    { facilityType: 'hospital', categoryCode: 'PM', name: 'Running costs', displayOrder: 1 },
-    { facilityType: 'health_center', categoryCode: 'PM', name: 'Running costs', displayOrder: 1 },
+    // { facilityType: 'hospital', categoryCode: 'PM', name: 'Running costs', displayOrder: 1 },
 
     // Human Resources
     // { facilityType: 'hospital', categoryCode: 'HR', name: 'Supervisor Salary', displayOrder: 1 },
-    { facilityType: 'hospital', categoryCode: 'HR', name: 'DH CHWs supervisors A0', displayOrder: 1 },
-    { facilityType: 'hospital', categoryCode: 'HR', name: 'DH Lab technicians', displayOrder: 2 },
-    { facilityType: 'hospital', categoryCode: 'HR', name: 'DH Nurses A1', displayOrder: 3 },
-    { facilityType: 'hospital', categoryCode: 'HR', name: 'Provide Bonus', displayOrder: 4 },
+    // { facilityType: 'hospital', categoryCode: 'HR', name: 'DH CHWs supervisors A0', displayOrder: 1 },
+    // { facilityType: 'hospital', categoryCode: 'HR', name: 'DH Lab technicians', displayOrder: 2 },
+    // { facilityType: 'hospital', categoryCode: 'HR', name: 'DH Nurses A1', displayOrder: 3 },
+    // { facilityType: 'hospital', categoryCode: 'HR', name: 'Provide Bonus', displayOrder: 4 },
     
-    // { facilityType: 'health_center', categoryCode: 'HR', name: 'Supervisor Salary', displayOrder: 1 },
-    { facilityType: 'health_center', categoryCode: 'HR', name: 'DH CHWs supervisors A0', displayOrder: 1 },
-    { facilityType: 'health_center', categoryCode: 'HR', name: 'DH Lab technicians', displayOrder: 2 },
-    { facilityType: 'health_center', categoryCode: 'HR', name: 'DH Nurses A1', displayOrder: 3 },
-    { facilityType: 'health_center', categoryCode: 'HR', name: 'Provide Bonus', displayOrder: 4 },
+    // Human Resources
+    { facilityType: 'health_center', categoryCode: 'HR', name: 'Entomology technician team leaders', displayOrder: 1 },
+    { facilityType: 'health_center', categoryCode: 'HR', name: 'Head of HC', displayOrder: 2 },
+    { facilityType: 'health_center', categoryCode: 'HR', name: 'Entomology technicians collectors of LARVAE', displayOrder: 3 },
+    { facilityType: 'health_center', categoryCode: 'HR', name: 'Support to CHWs', displayOrder: 4 },
+    { facilityType: 'health_center', categoryCode: 'HR', name: 'Sentinel site accountant', displayOrder: 5 },
     
+    // Insecticide resistance monitoring
+    { facilityType: 'health_center', categoryCode: 'IRM', name: 'Communication for technician, head of HC, and accountant', displayOrder: 1 },
+    { facilityType: 'health_center', categoryCode: 'IRM', name: 'Consumable for wild mosquito rearing', displayOrder: 2 },
+    
+    // Entomological Surveillance
+    { facilityType: 'health_center', categoryCode: 'ES', name: 'Consumable for spraying catching', displayOrder: 1 },
+    { facilityType: 'health_center', categoryCode: 'ES', name: 'Consumables for human landing catching', displayOrder: 2 },
+    { facilityType: 'health_center', categoryCode: 'ES', name: 'Consumables for monitoring of breeding sites', displayOrder: 3 },
+    { facilityType: 'health_center', categoryCode: 'ES', name: 'Equipments and other consumables (supplies, hiring, and internet)', displayOrder: 4 },
+    { facilityType: 'health_center', categoryCode: 'ES', name: 'Perdeims and travel allowances (for entomological surveillance)', displayOrder: 5 },
+    { facilityType: 'health_center', categoryCode: 'ES', name: 'Perdeims and travel allowances (tender budgets)', displayOrder: 6 },
+    { facilityType: 'health_center', categoryCode: 'ES', name: 'Bank charges for entomology budgets', displayOrder: 7 },
+    
+    // Normal Grant
+    { facilityType: 'health_center', categoryCode: 'NG', name: 'Supervision for CHW by HC in village per quarter', displayOrder: 1 },
+    { facilityType: 'health_center', categoryCode: 'NG', name: 'Bank charges', displayOrder: 2 },
   ],
 
   // ---------------- TB PROGRAM ----------------
@@ -149,8 +176,10 @@ HIV: [
     // Human Resources (HR)
     { facilityType: 'hospital', categoryCode: 'HR', name: 'Provincial TB Coordinator Salary', displayOrder: 1 },
     { facilityType: 'hospital', categoryCode: 'HR', name: 'Provincial TB Coordinator Bonus', displayOrder: 2 },
-    { facilityType: 'health_center', categoryCode: 'HR', name: 'Provincial TB Coordinator Salary', displayOrder: 1 },
-    { facilityType: 'health_center', categoryCode: 'HR', name: 'Provincial TB Coordinator Bonus', displayOrder: 2 },
+    { facilityType: 'hospital', categoryCode: 'HR', name: 'Salary for MDR TB staff (1MD/TB center for 2 MDR TB centers)', displayOrder: 3 },
+    { facilityType: 'hospital', categoryCode: 'HR', name: 'Bonus for MDR TB staff (1MD/TB center for 2 MDR TB centers)', displayOrder: 4 },
+    { facilityType: 'hospital', categoryCode: 'HR', name: 'Salary for MDR TB staff (5 nurses/TB center for 2 MDR TB centers)', displayOrder: 5 },
+    { facilityType: 'hospital', categoryCode: 'HR', name: 'Bonus for MDR TB staff (5 nurses/TB center for 2 MDR TB centers)', displayOrder: 6 },
 
     // Travel Related Costs (TRC)
     { facilityType: 'hospital', categoryCode: 'TRC', name: 'Contact Tracing (Perdiem)', displayOrder: 1 },
@@ -162,28 +191,14 @@ HIV: [
     { facilityType: 'hospital', categoryCode: 'TRC', name: 'HCW Mentorship HC Level (Transport)', displayOrder: 7 },
     { facilityType: 'hospital', categoryCode: 'TRC', name: 'HCW Mentorship Community (Mission)', displayOrder: 8 },
     { facilityType: 'hospital', categoryCode: 'TRC', name: 'HCW Mentorship Community (Transport)', displayOrder: 9 },
-    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Quarterly Evaluation Meetings (Transport)', displayOrder: 10 },
-    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Quarterly Evaluation Meetings (Allowance)', displayOrder: 11 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Outreach activity in slums, hotspots see HRG (HCs)', displayOrder: 10 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Quarterly Evaluation Meetings (Transport)', displayOrder: 11 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Quarterly Evaluation Meetings (Allowance)', displayOrder: 12 },
+    { facilityType: 'hospital', categoryCode: 'TRC', name: 'Communication fees for MDR TB activities', displayOrder: 13 },
     
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Contact Tracing (Perdiem)', displayOrder: 1 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Contact Tracing (Transport)', displayOrder: 2 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Contact Tracing (General)', displayOrder: 3 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'TPT Guidelines Mentoring (Mission)', displayOrder: 4 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'TPT Guidelines Mentoring (Transport)', displayOrder: 5 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'HCW Mentorship HC Level (Mission)', displayOrder: 6 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'HCW Mentorship HC Level (Transport)', displayOrder: 7 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'HCW Mentorship Community (Mission)', displayOrder: 8 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'HCW Mentorship Community (Transport)', displayOrder: 9 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Quarterly Evaluation Meetings (Transport)', displayOrder: 10 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Quarterly Evaluation Meetings (Allowance)', displayOrder: 11 },
-
     // Program Administration Costs (PA)
-    { facilityType: 'hospital', categoryCode: 'PA', name: 'Hospital Running Costs', displayOrder: 1 },
-    { facilityType: 'health_center', categoryCode: 'PA', name: 'Hospital Running Costs', displayOrder: 1 },
-    { facilityType: 'hospital', categoryCode: 'PA', name: 'Bank charges', displayOrder: 2 },
-    { facilityType: 'health_center', categoryCode: 'PA', name: 'Bank charges', displayOrder: 2 },
-    { facilityType: 'hospital', categoryCode: 'PA', name: 'Office Supplies', displayOrder: 3 },
-    { facilityType: 'health_center', categoryCode: 'PA', name: 'Office Supplies', displayOrder: 3 },
+    { facilityType: 'hospital', categoryCode: 'PA', name: 'Communication for TB provincial cordinator (Airtime)', displayOrder: 1 },
+    { facilityType: 'hospital', categoryCode: 'PA', name: 'Running cost for hospital (reporting, mission and transport, office supplies and bank charges)', displayOrder: 2 },
   ]
 };
 
@@ -196,9 +211,11 @@ const categoryDisplayNames: Record<string, Record<string, string>> = {
     'PA': 'Program Administration Costs (PA)'
   },
   MALARIA: {
-    'EPID': 'Epidemiology',
-    'PM': 'Program Management',
-    'HR': 'Human Resources'
+    'HR': 'Human Resources (HR)',
+    'EPID': 'Epidemiology (EPID)',
+    'IRM': 'Insecticide Resistance Monitoring (IRM)',
+    'ES': 'Entomological Surveillance (ES)',
+    'NG': 'Normal Grant (NG)'
   },
   TB: {
     'HR': 'Human Resources (HR)',
@@ -629,6 +646,9 @@ async function seedDynamicActivities(db: Database) {
       PA: 'PROGRAM_ADMIN',
       EPID: 'EPIDEMIOLOGY',
       PM: 'PROGRAM_MANAGEMENT',
+      NG: 'NORMAL_GRANT',
+      IRM: 'INSECTICIDE_RESISTANCE_MONITORING',
+      ES: 'ENTOMOLOGICAL_SURVEILLANCE',
     };
     return map[categoryCode] || (fallback ?? null);
   };

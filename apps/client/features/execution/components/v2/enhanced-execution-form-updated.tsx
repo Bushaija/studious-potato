@@ -222,6 +222,9 @@ export function EnhancedExecutionFormUpdated({
       updateExpensePayment: isReadOnly ? () => {} : form.updateExpensePayment,
       updateVATExpense: isReadOnly ? () => {} : form.updateVATExpense,
       clearVAT: isReadOnly ? () => {} : form.clearVAT,
+      clearPayable: isReadOnly ? () => {} : form.clearPayable,
+      applyPriorYearAdjustment: isReadOnly ? () => {} : form.applyPriorYearAdjustment,
+      applyPriorYearCashAdjustment: isReadOnly ? () => {} : form.applyPriorYearCashAdjustment,
       validationErrors: form.validationErrors,
       isCalculating: form.status.isCalculating,
       isValidating: form.status.isValidating,
@@ -229,6 +232,7 @@ export function EnhancedExecutionFormUpdated({
       difference: form.difference,
       table: form.table,
       isQuarterEditable: (q) => isReadOnly ? true : form.isQuarterEditable(q),
+      isQuarterVisible: form.isQuarterVisible,
       getSectionTotals: form.getSectionTotals,
       getRowState: (code) => {
         const originalState = form.getRowState(code);
@@ -240,6 +244,7 @@ export function EnhancedExecutionFormUpdated({
       isRowLocked: (code, q) => isReadOnly ? false : form.isRowLocked(code, q),
       expandState: form.expandState,
       onToggleSection: form.onToggleSection,
+      realTimeSurplusDeficit: form.realTimeSurplusDeficit,
     }}>
       <ExecutionActionsProvider
         value={{

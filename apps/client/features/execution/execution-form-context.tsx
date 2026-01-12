@@ -40,6 +40,12 @@ interface ExecutionFormContextValue {
   /** Clear (pay) a portion of payable (liability) */
   clearPayable: (payableCode: string, clearAmount: number) => void;
   
+  /** Apply prior year adjustment for payable or receivable */
+  applyPriorYearAdjustment: (priorYearAdjustmentCode: string, targetItemCode: string, adjustmentType: 'increase' | 'decrease', amount: number) => void;
+  
+  /** Apply prior year cash adjustment with double-entry (Cash at Bank and G both change) */
+  applyPriorYearCashAdjustment: (cashAdjustmentCode: string, adjustmentType: 'increase' | 'decrease', amount: number) => void;
+  
   /** Validation errors for form fields */
   validationErrors: Record<string, any>;
   
@@ -112,6 +118,18 @@ interface ExecutionFormContextValue {
    * Used to initialize opening balances for VAT receivables, other receivables, and payables
    */
   previousQuarterBalances?: PreviousQuarterBalances | null;
+  
+  /**
+   * Real-time calculated Surplus/Deficit (A - B)
+   * This is optimized for faster UI updates when Section A or B values change
+   */
+  realTimeSurplusDeficit?: {
+    q1: number;
+    q2: number;
+    q3: number;
+    q4: number;
+    cumulativeBalance: number;
+  };
 }
 
 const ExecutionFormContext = createContext<ExecutionFormContextValue | null>(null);

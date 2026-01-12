@@ -284,13 +284,15 @@ function calculateCumulativeBalance(
 
 /**
  * Helper function to check if an activity is VAT-applicable based on its title
+ * VAT-applicable expenses: Communication - All, Maintenance, Fuel, Office Supplies
  */
 function isVATApplicableActivity(title: string): boolean {
   const titleLower = title.toLowerCase();
   return (
-    (titleLower.includes('communication') && titleLower.includes('airtime')) ||
-    (titleLower.includes('communication') && titleLower.includes('internet')) ||
-    titleLower.includes('infrastructure support') ||
+    (titleLower.includes('communication') && titleLower.includes('all')) ||
+    titleLower.includes('maintenance') ||
+    titleLower === 'fuel' ||
+    titleLower.includes('fuel') ||
     titleLower.includes('office supplies')
   );
 }

@@ -207,7 +207,7 @@ export function UserForm<T extends FieldValues>({
           )}
         />
 
-        <FormField
+        {/* <FormField
           control={form.control}
           name={"projectAccess" as FieldPath<T>}
           render={({ field }) => (
@@ -234,10 +234,10 @@ export function UserForm<T extends FieldValues>({
               <FormMessage />
             </FormItem>
           )}
-        />
+        /> */}
 
 
-        <FormField
+        {/* <FormField
           control={form.control}
           name={"isActive" as FieldPath<T>}
           render={({ field }) => (
@@ -256,7 +256,7 @@ export function UserForm<T extends FieldValues>({
               </FormControl>
             </FormItem>
           )}
-        />
+        /> */}
 
         {children}
       </form>

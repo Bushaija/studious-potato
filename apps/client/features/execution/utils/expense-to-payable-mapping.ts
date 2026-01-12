@@ -109,19 +109,25 @@ export function generateExpenseToPayableMapping(
           }
           break;
 
-        case 'B-04': // Overheads
-          if (expenseNameLower.includes('communication') && expenseNameLower.includes('airtime')) {
-            payableCode = findPayableByPattern(payablesByName, ['communication - airtime', 'airtime']);
-          } else if (expenseNameLower.includes('communication') && expenseNameLower.includes('internet')) {
-            payableCode = findPayableByPattern(payablesByName, ['communication - internet', 'internet']);
-          } else if (expenseNameLower.includes('infrastructure')) {
-            payableCode = findPayableByPattern(payablesByName, ['infrastructure']);
+        case 'B-04': // Overheads - VAT-based expenses use Payable 12-15
+          if (expenseNameLower.includes('communication') && expenseNameLower.includes('all')) {
+            payableCode = findPayableByPattern(payablesByName, ['payable 12', 'communication - all', 'communication all']);
+          } else if (expenseNameLower.includes('maintenance')) {
+            payableCode = findPayableByPattern(payablesByName, ['payable 13', 'maintenance']);
+          } else if (expenseNameLower === 'fuel' || (expenseNameLower.includes('fuel') && !expenseNameLower.includes('refund'))) {
+            payableCode = findPayableByPattern(payablesByName, ['payable 14', 'fuel']);
           } else if (expenseNameLower.includes('office') && expenseNameLower.includes('supplies')) {
-            payableCode = findPayableByPattern(payablesByName, ['supplies']);
+            payableCode = findPayableByPattern(payablesByName, ['payable 15', 'office supplies', 'supplies']);
           } else if (expenseNameLower.includes('transport') && expenseNameLower.includes('reporting')) {
             payableCode = findPayableByPattern(payablesByName, ['transport reporting']);
           } else if (expenseNameLower.includes('bank') && expenseNameLower.includes('charges')) {
             payableCode = findPayableByPattern(payablesByName, ['bank charges']);
+          } else if (expenseNameLower.includes('car') && expenseNameLower.includes('hiring')) {
+            payableCode = findPayableByPattern(payablesByName, ['car hiring']);
+          } else if (expenseNameLower.includes('consumable')) {
+            payableCode = findPayableByPattern(payablesByName, ['consumable']);
+          } else if (expenseNameLower.includes('transport') && expenseNameLower.includes('travel')) {
+            payableCode = findPayableByPattern(payablesByName, ['transport', 'travel']);
           }
           break;
 

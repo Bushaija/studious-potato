@@ -30,22 +30,12 @@ import type {
   CompiledRoute,
 } from "./execution.routes";
 import { BalancesResponse, executionListQuerySchema, compiledExecutionQuerySchema, type CompiledExecutionResponse, type FacilityColumn, type ActivityRow, type SectionSummary, type FacilityTotals, type AppliedFilters, type ActivityCatalogMap, type FacilityCatalogMapping } from "./execution.types";
-import { toBalances, parseCode, calculateCumulativeBalance } from "./execution.helpers";
+import { toBalances, parseCode, calculateCumulativeBalance, enrichFormData } from "./execution.helpers";
 import { recalculateExecutionData, validateRecalculation } from "./execution.recalculations";
 import { ApprovalError, ApprovalErrorFactory, isApprovalError } from "@/lib/errors/approval.errors";
 import { ExecutionErrorHandler } from "@/lib/utils/execution-error-handler";
 import { fetchPreviousQuarterExecution, buildQuarterSequence, type Quarter } from "@/lib/utils/quarter-helpers";
 import { buildPreviousQuarterBalances, extractClosingBalances } from "@/lib/utils/balance-extractor";
-import { year } from "drizzle-orm/mysql-core";
-import { year } from "drizzle-orm/mysql-core";
-import { year } from "drizzle-orm/mysql-core";
-import { year } from "drizzle-orm/mysql-core";
-import { year } from "drizzle-orm/mysql-core";
-import { year } from "drizzle-orm/mysql-core";
-import { year } from "drizzle-orm/mysql-core";
-import { year } from "drizzle-orm/mysql-core";
-import { year } from "drizzle-orm/mysql-core";
-import { year } from "drizzle-orm/mysql-core";
 
 /**
  * Migrate old numeric VAT codes to new descriptive codes for backward compatibility
@@ -2090,9 +2080,15 @@ export const calculateBalances: AppRouteHandler<CalculateBalancesRoute> = async 
   const body = await c.req.json();
 
   try {
-    const balances = await computationService.calculateExecutionBalances(
-      body.data
-    );
+    // Use enrichFormData and toBalances for consistent calculation
+    // This ensures the same logic is used for both form submission and balance calculation
+    const normalizedFormData = enrichFormData(body.data, {
+      projectType: 'HIV', // Default, will be overridden by activity codes
+      facilityType: 'hospital', // Default, will be overridden by activity codes
+      quarter: body.data?.quarter || 'Q1',
+    });
+
+    const balances = toBalances(normalizedFormData.rollups);
 
     // Validate accounting equation
     const accountingValidation = await validationService.validateAccountingEquation(
@@ -2932,13 +2928,14 @@ export const checkExisting: AppRouteHandler<CheckExistingRoute> = async (c) => {
             // Check if already added from catalog
             const alreadyExists = D_items.some(item => item.code === code);
             if (!alreadyExists) {
-              // Extract VAT category from code (e.g., "HIV_EXEC_HOSPITAL_D_VAT_AIRTIME" -> "airtime")
+              // Extract VAT category from code (e.g., "HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL" -> "communication_all")
               const vatCategory = code.split('_D_VAT_')[1]?.toLowerCase() || '';
               const categoryLabels: Record<string, string> = {
-                'airtime': 'VAT Receivable: Communication - airtime',
-                'internet': 'VAT Receivable: Communication - internet',
-                'infrastructure': 'VAT Receivable: Infrastructure support (maintenance)',
-                'supplies': 'VAT Receivable: Office supplies',
+                'communication_all': 'VAT Receivable 1: Communication - All',
+                'maintenance': 'VAT Receivable 2: Maintenance',
+                'fuel': 'VAT Receivable 3: Fuel',
+                'supplies': 'VAT Receivable 4: Office supplies',
+                'office_supplies': 'VAT Receivable 4: Office supplies',
               };
               const label = categoryLabels[vatCategory] || `VAT Receivable: ${vatCategory}`;
 
@@ -3597,13 +3594,14 @@ export const compiled: AppRouteHandler<CompiledRoute> = async (c) => {
       );
 
       // Extract VAT receivables from form data and add to aggregated data
-      // VAT receivables are dynamically created with codes like HIV_EXEC_HOSPITAL_E_VAT_AIRTIME
-      // They need to be mapped to catalog codes like HIV_EXEC_HOSPITAL_E_14
+      // VAT receivables are dynamically created with codes like HIV_EXEC_HOSPITAL_E_VAT_COMMUNICATION_ALL
+      // They need to be mapped to catalog codes like HIV_EXEC_HOSPITAL_E_12
       const vatCategoryMapping: Record<string, string> = {
-        'AIRTIME': '_E_14',
-        'INTERNET': '_E_15',
-        'INFRASTRUCTURE': '_E_16',
-        'SUPPLIES': '_E_17'
+        'COMMUNICATION_ALL': '_E_12',
+        'MAINTENANCE': '_E_13',
+        'FUEL': '_E_14',
+        'SUPPLIES': '_E_15',
+        'OFFICE_SUPPLIES': '_E_15'
       };
 
       for (const entry of aggregatedExecutionData) {

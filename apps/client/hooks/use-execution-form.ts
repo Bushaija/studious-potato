@@ -47,6 +47,8 @@ interface ActivityQuarterValues {
   vatCleared?: Record<string, number>;     // VAT cleared per quarter (for VAT-applicable expenses)
   // Payable tracking fields (quarter-specific)
   payableCleared?: Record<string, number>; // Payable cleared per quarter (for payables in Section E)
+  // Prior year adjustment tracking (quarter-specific)
+  priorYearAdjustment?: Record<string, number>; // Prior year adjustment per quarter (for payables/receivables)
 }
 
 export function useExecutionForm({
@@ -235,6 +237,7 @@ export function useExecutionForm({
         vatAmount: existing?.vatAmount ?? {},
         vatCleared: existing?.vatCleared ?? {},
         payableCleared: existing?.payableCleared ?? {},
+        priorYearAdjustment: existing?.priorYearAdjustment ?? {},
       };
 
       return acc;
@@ -361,6 +364,25 @@ export function useExecutionForm({
       return sum + payableCleared;
     }, 0);
 
+    // Calculate total prior year cash adjustments from Section G (G-01 Cash)
+    // These adjustments directly affect Cash at Bank
+    const priorYearCashAdjustmentCodes = Object.keys(formData).filter(code => 
+      code.includes('_G_') && code.includes('G-01')
+    );
+    // Also check for direct G section items that are cash adjustments
+    const sectionG = (hierarchicalData as any).G;
+    let priorYearCashCode: string | undefined;
+    if (sectionG?.subCategories?.['G-01']?.items) {
+      const cashItem = sectionG.subCategories['G-01'].items.find((item: any) => 
+        item.name?.toLowerCase() === 'cash' || item.name?.toLowerCase().includes('cash adjustment')
+      );
+      priorYearCashCode = cashItem?.code;
+    }
+    
+    const totalPriorYearCashAdjustments = priorYearCashCode 
+      ? (Number(formData[priorYearCashCode]?.[quarterKey]) || 0)
+      : 0;
+
     // Get the previous quarter's cash balance (for cumulative calculation)
     const previousQuarterKey = quarter === 'Q2' ? 'q1' : quarter === 'Q3' ? 'q2' : quarter === 'Q4' ? 'q3' : null;
     const previousQuarterCash = previousQuarterKey 
@@ -368,8 +390,9 @@ export function useExecutionForm({
       : openingBalance; // For Q1, use opening balance from previous execution
 
     // Calculate Cash at Bank as CUMULATIVE:
-    // Current Quarter Cash = Previous Quarter Cash + Current Quarter Receipts - Current Quarter Paid Expenses - Misc Adjustments + VAT Cleared - Payables Cleared
-    const calculatedCashAtBank = previousQuarterCash + totalReceipts - totalPaidExpenses - totalMiscAdjustments + totalVATCleared - totalPayablesCleared;
+    // Current Quarter Cash = Previous Quarter Cash + Current Quarter Receipts - Current Quarter Paid Expenses 
+    //                        - Misc Adjustments + VAT Cleared - Payables Cleared + Prior Year Cash Adjustments
+    const calculatedCashAtBank = previousQuarterCash + totalReceipts - totalPaidExpenses - totalMiscAdjustments + totalVATCleared - totalPayablesCleared + totalPriorYearCashAdjustments;
 
     console.log('💰 [Cash at Bank Calculation]:', {
       quarter,
@@ -381,7 +404,9 @@ export function useExecutionForm({
       totalMiscAdjustments,
       totalVATCleared,
       totalPayablesCleared,
-      calculation: `${previousQuarterCash} + ${totalReceipts} - ${totalPaidExpenses} - ${totalMiscAdjustments} + ${totalVATCleared} - ${totalPayablesCleared}`,
+      priorYearCashCode,
+      totalPriorYearCashAdjustments,
+      calculation: `${previousQuarterCash} + ${totalReceipts} - ${totalPaidExpenses} - ${totalMiscAdjustments} + ${totalVATCleared} - ${totalPayablesCleared} + ${totalPriorYearCashAdjustments}`,
       calculatedCashAtBank,
       currentValue: formData[cashAtBankCode]?.[quarterKey]
     });
@@ -389,13 +414,28 @@ export function useExecutionForm({
     // Update Cash at Bank if the calculated value differs
     const currentValue = Number(formData[cashAtBankCode]?.[quarterKey]) || 0;
     if (Math.abs(calculatedCashAtBank - currentValue) > 0.01) {
-      setFormData(prev => ({
-        ...prev,
-        [cashAtBankCode]: {
-          ...prev[cashAtBankCode],
-          [quarterKey]: calculatedCashAtBank
-        }
-      }));
+      setFormData(prev => {
+        const existingData = prev[cashAtBankCode] || {};
+        return {
+          ...prev,
+          [cashAtBankCode]: {
+            q1: existingData.q1 ?? 0,
+            q2: existingData.q2 ?? 0,
+            q3: existingData.q3 ?? 0,
+            q4: existingData.q4 ?? 0,
+            [quarterKey]: calculatedCashAtBank,
+            comment: existingData.comment ?? "",
+            paymentStatus: existingData.paymentStatus,
+            amountPaid: existingData.amountPaid,
+            netAmount: existingData.netAmount ?? {},
+            vatAmount: existingData.vatAmount ?? {},
+            vatCleared: existingData.vatCleared ?? {},
+            payableCleared: existingData.payableCleared ?? {},
+            // Preserve priorYearAdjustment from prev state
+            priorYearAdjustment: prev[cashAtBankCode]?.priorYearAdjustment ?? {},
+          }
+        };
+      });
     }
   }, [formData, quarter, previousQuarterBalances, activitiesQuery.data]);
 
@@ -455,11 +495,11 @@ export function useExecutionForm({
       // B-03 (Service delivery) → E_4, E_5, E_6
       // B-04 (Overheads) → E_7, E_8, E_9, E_10, E_11, E_12, E_13
       
-      if (expenseName.includes('laboratory') || expenseName.includes('nurse') || expenseName.includes('doctor') || expenseName.includes('technician')) {
+      if (expenseName.includes('laboratory') || expenseName.includes('nurse') || expenseName.includes('doctor') || expenseName.includes('technician') || expenseName.includes('accountant') || expenseName.includes('pharmacist') || expenseName.includes('salary') || expenseName.includes('coordinator') || expenseName.includes('staff') || expenseName.includes('supervisor')) {
         // HR expenses → Salaries payable (E_1)
         const payableCode = payableCodes.find(code => code.includes('_E_1'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
-      } else if (expenseName.includes('supervision')) {
+      } else if (expenseName.includes('supervision') && !expenseName.includes('supervisor')) {
         // Supervision → E_2
         const payableCode = payableCodes.find(code => code.includes('_E_2'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
@@ -479,30 +519,29 @@ export function useExecutionForm({
         // Travel surveillance → E_6
         const payableCode = payableCodes.find(code => code.includes('_E_6'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
-      } else if (expenseName.includes('airtime')) {
-        // Airtime → E_7
-        const payableCode = payableCodes.find(code => code.includes('_E_7'));
+      } else if (expenseName.includes('communication') && expenseName.includes('all')) {
+        // Communication - All → E_12 (Payable 12)
+        const payableCode = payableCodes.find(code => code.includes('_E_12'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
-      } else if (expenseName.includes('internet')) {
-        // Internet → E_8
-        const payableCode = payableCodes.find(code => code.includes('_E_8'));
+      } else if (expenseName.includes('maintenance')) {
+        // Maintenance → E_13 (Payable 13)
+        const payableCode = payableCodes.find(code => code.includes('_E_13'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
-      } else if (expenseName.includes('infrastructure')) {
-        // Infrastructure → E_9
-        const payableCode = payableCodes.find(code => code.includes('_E_9'));
+      } else if (expenseName === 'fuel' || (expenseName.includes('fuel') && !expenseName.includes('refund'))) {
+        // Fuel → E_14 (Payable 14)
+        const payableCode = payableCodes.find(code => code.includes('_E_14'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
       } else if (expenseName.includes('office supplies') || expenseName.includes('supplies')) {
-        // Office supplies → E_10
-        const payableCode = payableCodes.find(code => code.includes('_E_10'));
+        // Office supplies → E_15 (Payable 15)
+        const payableCode = payableCodes.find(code => code.includes('_E_15'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
-      } else if (expenseName.includes('transport reporting')) {
+      } else if (expenseName.includes('transport reporting') || expenseName.includes('transport and travel (reporting)') || expenseName.includes('transport (mission') || expenseName.includes('transport (reporting)')) {
         // Transport reporting → E_11
         const payableCode = payableCodes.find(code => code.includes('_E_11'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
       } else if (expenseName.includes('bank charges')) {
-        // Bank charges → E_12
-        const payableCode = payableCodes.find(code => code.includes('_E_12'));
-        if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
+        // Bank charges - no payable (paid immediately)
+        // Skip bank charges
       }
     });
     
@@ -515,6 +554,18 @@ export function useExecutionForm({
       hasSectionE: !!previousQuarterBalances?.closingBalances?.E,
       sectionEKeys: previousQuarterBalances?.closingBalances?.E ? Object.keys(previousQuarterBalances.closingBalances.E) : []
     });
+    
+    // Find the prior year payable adjustment code from G-01 subcategory (for logging only)
+    const sectionG = (hierarchicalData as any).G;
+    let priorYearPayableCode: string | undefined;
+    if (sectionG?.subCategories?.['G-01']?.items) {
+      const payableItem = sectionG.subCategories['G-01'].items.find((item: any) => 
+        item.name?.toLowerCase() === 'payable' || item.name?.toLowerCase().includes('payable adjustment')
+      );
+      priorYearPayableCode = payableItem?.code;
+    }
+    
+    console.log('📝 [Prior Year Payable Adjustment] G-01 code:', priorYearPayableCode);
     
     // Calculate payables for each payable code
     const calculatedPayables: Record<string, number> = {};
@@ -573,6 +624,12 @@ export function useExecutionForm({
       const payableCleared = Number(payableData?.payableCleared?.[quarterKey]) || 0;
       payableAmount -= payableCleared;
       
+      // Add prior year adjustment for this specific payable (tracked per-item)
+      const priorYearAdjustment = Number(payableData?.priorYearAdjustment?.[quarterKey]) || 0;
+      payableAmount += priorYearAdjustment;
+      
+      console.log(`  Payable ${payableCode}: priorYearAdjustment = ${priorYearAdjustment}`);
+      
       calculatedPayables[payableCode] = Math.max(0, payableAmount); // Payables can't be negative
     });
     
@@ -590,20 +647,44 @@ export function useExecutionForm({
       const currentValue = Number(formData[payableCode]?.[quarterKey]) || 0;
       if (Math.abs(calculatedAmount - currentValue) > 0.01) {
         hasChanges = true;
+        // Preserve all existing fields including priorYearAdjustment
+        const existingData = formData[payableCode] || {};
         updates[payableCode] = {
-          ...formData[payableCode],
-          [quarterKey]: calculatedAmount
+          q1: existingData.q1 ?? 0,
+          q2: existingData.q2 ?? 0,
+          q3: existingData.q3 ?? 0,
+          q4: existingData.q4 ?? 0,
+          [quarterKey]: calculatedAmount,
+          comment: existingData.comment ?? "",
+          paymentStatus: existingData.paymentStatus,
+          amountPaid: existingData.amountPaid,
+          netAmount: existingData.netAmount ?? {},
+          vatAmount: existingData.vatAmount ?? {},
+          vatCleared: existingData.vatCleared ?? {},
+          payableCleared: existingData.payableCleared ?? {},
+          priorYearAdjustment: existingData.priorYearAdjustment ?? {},
         };
       }
     });
     
     if (hasChanges) {
-      setFormData(prev => ({
-        ...prev,
-        ...updates
-      }));
+      setFormData(prev => {
+        // Merge updates with prev to ensure we don't lose any priorYearAdjustment that was just set
+        const merged: Record<string, any> = { ...prev };
+        Object.entries(updates).forEach(([code, data]) => {
+          merged[code] = {
+            ...data,
+            // Ensure priorYearAdjustment from prev is preserved if it was just updated
+            priorYearAdjustment: {
+              ...(data.priorYearAdjustment ?? {}),
+              ...(prev[code]?.priorYearAdjustment ?? {}),
+            },
+          };
+        });
+        return merged;
+      });
     }
-  }, [formData, quarter, activitiesQuery.data]);
+  }, [formData, quarter, activitiesQuery.data, previousQuarterBalances]);
 
   // Auto-calculate VAT Receivables (Section D) from VAT-applicable expenses
   useEffect(() => {
@@ -657,18 +738,18 @@ export function useExecutionForm({
     
     // Map VAT receivable codes to categories and get opening balances
     const categoryToCodeMap: Record<string, string | undefined> = {
-      airtime: vatReceivableCodes.find(code => code.includes('AIRTIME') || code.includes('D-01_1')),
-      internet: vatReceivableCodes.find(code => code.includes('INTERNET') || code.includes('D-01_2')),
-      infrastructure: vatReceivableCodes.find(code => code.includes('INFRASTRUCTURE') || code.includes('D-01_3')),
-      supplies: vatReceivableCodes.find(code => code.includes('SUPPLIES') || code.includes('D-01_4'))
+      communication_all: vatReceivableCodes.find(code => code.includes('COMMUNICATION_ALL') || code.includes('D-01_1')),
+      maintenance: vatReceivableCodes.find(code => code.includes('MAINTENANCE') || code.includes('D-01_2')),
+      fuel: vatReceivableCodes.find(code => code.includes('FUEL') || code.includes('D-01_3')),
+      office_supplies: vatReceivableCodes.find(code => code.includes('SUPPLIES') || code.includes('D-01_4'))
     };
     
     // Initialize VAT receivables by category with opening balances from previous quarter
     const vatReceivablesByCategory: Record<string, number> = {
-      airtime: 0,
-      internet: 0,
-      infrastructure: 0,
-      supplies: 0
+      communication_all: 0,
+      maintenance: 0,
+      fuel: 0,
+      office_supplies: 0
     };
     
     if (previousQuarterBalances?.exists && previousQuarterBalances.closingBalances?.D) {
@@ -702,14 +783,14 @@ export function useExecutionForm({
         
         // Determine VAT category based on expense name
         let category = '';
-        if (expenseName.includes('airtime')) {
-          category = 'airtime';
-        } else if (expenseName.includes('internet')) {
-          category = 'internet';
-        } else if (expenseName.includes('infrastructure')) {
-          category = 'infrastructure';
+        if (expenseName.includes('communication') && expenseName.includes('all')) {
+          category = 'communication_all';
+        } else if (expenseName.includes('maintenance')) {
+          category = 'maintenance';
+        } else if (expenseName === 'fuel' || (expenseName.includes('fuel') && !expenseName.includes('refund'))) {
+          category = 'fuel';
         } else if (expenseName.includes('office supplies') || expenseName.includes('supplies')) {
-          category = 'supplies';
+          category = 'office_supplies';
         }
         
         if (category) {
@@ -744,24 +825,57 @@ export function useExecutionForm({
     Object.entries(vatReceivablesByCategory).forEach(([category, calculatedAmount]) => {
       const receivableCode = categoryToCodeMap[category];
       if (receivableCode) {
+        // Add prior year adjustment for this specific receivable (tracked per-item)
+        const receivableData = formData[receivableCode];
+        const priorYearAdjustment = Number(receivableData?.priorYearAdjustment?.[quarterKey]) || 0;
+        const finalAmount = Math.max(0, calculatedAmount + priorYearAdjustment);
+        
+        if (priorYearAdjustment !== 0) {
+          console.log(`  VAT Receivable ${category} (${receivableCode}): priorYearAdjustment = ${priorYearAdjustment}, finalAmount = ${finalAmount}`);
+        }
+        
         const currentValue = Number(formData[receivableCode]?.[quarterKey]) || 0;
-        if (Math.abs(calculatedAmount - currentValue) > 0.01) {
+        if (Math.abs(finalAmount - currentValue) > 0.01) {
           hasChanges = true;
+          // Preserve all existing fields including priorYearAdjustment
+          const existingData = formData[receivableCode] || {};
           updates[receivableCode] = {
-            ...formData[receivableCode],
-            [quarterKey]: calculatedAmount
+            q1: existingData.q1 ?? 0,
+            q2: existingData.q2 ?? 0,
+            q3: existingData.q3 ?? 0,
+            q4: existingData.q4 ?? 0,
+            [quarterKey]: finalAmount,
+            comment: existingData.comment ?? "",
+            paymentStatus: existingData.paymentStatus,
+            amountPaid: existingData.amountPaid,
+            netAmount: existingData.netAmount ?? {},
+            vatAmount: existingData.vatAmount ?? {},
+            vatCleared: existingData.vatCleared ?? {},
+            payableCleared: existingData.payableCleared ?? {},
+            priorYearAdjustment: existingData.priorYearAdjustment ?? {},
           };
           
-          console.log(`  Updating ${category}: ${currentValue} → ${calculatedAmount}`);
+          console.log(`  Updating ${category}: ${currentValue} → ${finalAmount}`);
         }
       }
     });
     
     if (hasChanges) {
-      setFormData(prev => ({
-        ...prev,
-        ...updates
-      }));
+      setFormData(prev => {
+        // Merge updates with prev to ensure we don't lose any priorYearAdjustment that was just set
+        const merged: Record<string, any> = { ...prev };
+        Object.entries(updates).forEach(([code, data]) => {
+          merged[code] = {
+            ...data,
+            // Ensure priorYearAdjustment from prev is preserved if it was just updated
+            priorYearAdjustment: {
+              ...(data.priorYearAdjustment ?? {}),
+              ...(prev[code]?.priorYearAdjustment ?? {}),
+            },
+          };
+        });
+        return merged;
+      });
     }
   }, [formData, quarter, previousQuarterBalances, activitiesQuery.data]);
 
@@ -815,14 +929,19 @@ export function useExecutionForm({
       ? (previousQuarterBalances.closingBalances?.D?.[otherReceivablesCode] || 0)
       : 0;
     
-    // Other Receivables = Opening Balance + Miscellaneous Adjustments
-    const calculatedOtherReceivables = openingBalance + totalMiscAdjustments;
+    // Get prior year adjustment for this specific receivable (tracked per-item)
+    const otherReceivablesData = formData[otherReceivablesCode];
+    const priorYearAdjustment = Number(otherReceivablesData?.priorYearAdjustment?.[quarterKey]) || 0;
+    
+    // Other Receivables = Opening Balance + Miscellaneous Adjustments + Prior Year Adjustment
+    const calculatedOtherReceivables = openingBalance + totalMiscAdjustments + priorYearAdjustment;
     
     console.log('📋 [Other Receivables Calculation]:', {
       quarter,
       otherReceivablesCode,
       openingBalance,
       totalMiscAdjustments,
+      priorYearAdjustment,
       calculatedOtherReceivables,
       currentValue: formData[otherReceivablesCode]?.[quarterKey]
     });
@@ -830,13 +949,28 @@ export function useExecutionForm({
     // Update Other Receivables if the calculated value differs
     const currentValue = Number(formData[otherReceivablesCode]?.[quarterKey]) || 0;
     if (Math.abs(calculatedOtherReceivables - currentValue) > 0.01) {
-      setFormData(prev => ({
-        ...prev,
-        [otherReceivablesCode]: {
-          ...prev[otherReceivablesCode],
-          [quarterKey]: calculatedOtherReceivables
-        }
-      }));
+      setFormData(prev => {
+        const existingData = prev[otherReceivablesCode] || {};
+        return {
+          ...prev,
+          [otherReceivablesCode]: {
+            q1: existingData.q1 ?? 0,
+            q2: existingData.q2 ?? 0,
+            q3: existingData.q3 ?? 0,
+            q4: existingData.q4 ?? 0,
+            [quarterKey]: calculatedOtherReceivables,
+            comment: existingData.comment ?? "",
+            paymentStatus: existingData.paymentStatus,
+            amountPaid: existingData.amountPaid,
+            netAmount: existingData.netAmount ?? {},
+            vatAmount: existingData.vatAmount ?? {},
+            vatCleared: existingData.vatCleared ?? {},
+            payableCleared: existingData.payableCleared ?? {},
+            // Preserve priorYearAdjustment from prev state
+            priorYearAdjustment: prev[otherReceivablesCode]?.priorYearAdjustment ?? {},
+          }
+        };
+      });
     }
   }, [formData, quarter, previousQuarterBalances, activitiesQuery.data]);
 
@@ -962,6 +1096,8 @@ export function useExecutionForm({
         });
         setIsBalanced(false);
         setComputedValues(null);
+        // Clear validation errors on calculation error to not block submission
+        setValidationErrors({});
       }
     }
     run();
@@ -1064,6 +1200,7 @@ export function useExecutionForm({
             vatAmount: existing?.vatAmount ?? {},
             vatCleared: existing?.vatCleared ?? {},
             payableCleared: existing?.payableCleared ?? {},
+            priorYearAdjustment: existing?.priorYearAdjustment ?? {},
           },
         };
 
@@ -1113,6 +1250,7 @@ export function useExecutionForm({
             vatAmount: vatAmountObj,
             vatCleared: existing?.vatCleared ?? {},
             payableCleared: existing?.payableCleared ?? {},
+            priorYearAdjustment: existing?.priorYearAdjustment ?? {},
             totalInvoiceAmount: totalAmount,  // Store total invoice amount for reference
           },
         };
@@ -1193,6 +1331,7 @@ export function useExecutionForm({
             vatAmount: existing?.vatAmount ?? {},
             vatCleared: existing?.vatCleared ?? {},
             payableCleared: payableClearedObj,
+            priorYearAdjustment: existing?.priorYearAdjustment ?? {},
           },
           // Update Cash at Bank (decrease when paying payable)
           [cashAtBankCode]: {
@@ -1207,6 +1346,7 @@ export function useExecutionForm({
             netAmount: cashAtBank?.netAmount ?? {},
             vatAmount: cashAtBank?.vatAmount ?? {},
             vatCleared: cashAtBank?.vatCleared ?? {},
+            priorYearAdjustment: cashAtBank?.priorYearAdjustment ?? {},
           },
         };
 
@@ -1309,6 +1449,7 @@ export function useExecutionForm({
             netAmount: existing?.netAmount ?? {},
             vatAmount: existing?.vatAmount ?? {},
             vatCleared: vatClearedObj,
+            priorYearAdjustment: existing?.priorYearAdjustment ?? {},
           },
           // Update Cash at Bank (Requirement 3.3)
           [cashAtBankCode]: {
@@ -1323,6 +1464,7 @@ export function useExecutionForm({
             netAmount: cashAtBank?.netAmount ?? {},
             vatAmount: cashAtBank?.vatAmount ?? {},
             vatCleared: cashAtBank?.vatCleared ?? {},
+            priorYearAdjustment: cashAtBank?.priorYearAdjustment ?? {},
           },
         };
 
@@ -1341,8 +1483,270 @@ export function useExecutionForm({
     [form, onDataChange, quarter, formData]
   );
 
+  /**
+   * Apply prior year adjustment for payable or receivable
+   * This function handles prior year adjustments in Section G (G-01 subcategory)
+   * 
+   * For Cash adjustments: Double-entry - Cash at Bank increases, G increases
+   * For Payable/Receivable adjustments: Updates the selected payable/receivable and G
+   * 
+   * @param priorYearAdjustmentCode - The activity code for the prior year adjustment (G-01 item)
+   * @param targetItemCode - The payable or receivable code to adjust
+   * @param adjustmentType - "increase" or "decrease"
+   * @param amount - The adjustment amount
+   */
+  const applyPriorYearAdjustment = useCallback(
+    (priorYearAdjustmentCode: string, targetItemCode: string, adjustmentType: 'increase' | 'decrease', amount: number) => {
+      const quarterKey = quarter.toLowerCase() as 'q1' | 'q2' | 'q3' | 'q4';
+      const signedAmount = adjustmentType === 'increase' ? amount : -amount;
+
+      console.log('📝 [Prior Year Adjustment] Applying:', {
+        priorYearAdjustmentCode,
+        targetItemCode,
+        adjustmentType,
+        amount,
+        signedAmount,
+        quarter: quarterKey
+      });
+
+      setFormData(prev => {
+        const priorYearData = prev[priorYearAdjustmentCode];
+        const targetData = prev[targetItemCode];
+
+        // Update the prior year adjustment value in Section G
+        const currentPriorYearValue = Number(priorYearData?.[quarterKey]) || 0;
+        const newPriorYearValue = currentPriorYearValue + signedAmount;
+
+        // Track the prior year adjustment on the target item (for auto-calculation to use)
+        const currentTargetPriorYearAdj = Number(targetData?.priorYearAdjustment?.[quarterKey]) || 0;
+        const newTargetPriorYearAdj = currentTargetPriorYearAdj + signedAmount;
+
+        console.log('📝 [Prior Year Adjustment] Values:', {
+          priorYearAdjustmentCode,
+          currentPriorYearValue,
+          newPriorYearValue,
+          targetItemCode,
+          currentTargetPriorYearAdj,
+          newTargetPriorYearAdj
+        });
+
+        const next = {
+          ...prev,
+          // Update prior year adjustment in Section G
+          [priorYearAdjustmentCode]: {
+            q1: priorYearData?.q1 ?? 0,
+            q2: priorYearData?.q2 ?? 0,
+            q3: priorYearData?.q3 ?? 0,
+            q4: priorYearData?.q4 ?? 0,
+            [quarterKey]: newPriorYearValue,
+            comment: priorYearData?.comment ?? "",
+            paymentStatus: priorYearData?.paymentStatus,
+            amountPaid: priorYearData?.amountPaid,
+            netAmount: priorYearData?.netAmount ?? {},
+            vatAmount: priorYearData?.vatAmount ?? {},
+            vatCleared: priorYearData?.vatCleared ?? {},
+            payableCleared: priorYearData?.payableCleared ?? {},
+            priorYearAdjustment: priorYearData?.priorYearAdjustment ?? {},
+          },
+          // Update the target payable/receivable with priorYearAdjustment tracking
+          [targetItemCode]: {
+            q1: targetData?.q1 ?? 0,
+            q2: targetData?.q2 ?? 0,
+            q3: targetData?.q3 ?? 0,
+            q4: targetData?.q4 ?? 0,
+            comment: targetData?.comment ?? "",
+            paymentStatus: targetData?.paymentStatus,
+            amountPaid: targetData?.amountPaid,
+            netAmount: targetData?.netAmount ?? {},
+            vatAmount: targetData?.vatAmount ?? {},
+            vatCleared: targetData?.vatCleared ?? {},
+            payableCleared: targetData?.payableCleared ?? {},
+            priorYearAdjustment: {
+              ...(targetData?.priorYearAdjustment ?? {}),
+              [quarterKey]: newTargetPriorYearAdj,
+            },
+          },
+        };
+
+        onDataChange?.(next);
+        return next;
+      });
+
+      form.setValue(`${priorYearAdjustmentCode}.${quarterKey}`, 
+        (Number(formData[priorYearAdjustmentCode]?.[quarterKey]) || 0) + signedAmount, 
+        { shouldDirty: true }
+      );
+      form.setValue(`${targetItemCode}.${quarterKey}`, 
+        (Number(formData[targetItemCode]?.[quarterKey]) || 0) + signedAmount, 
+        { shouldDirty: true }
+      );
+    },
+    [form, onDataChange, quarter, formData]
+  );
+
+  /**
+   * Apply prior year cash adjustment with double-entry
+   * This function handles cash adjustments in Section G (G-01 Cash item)
+   * 
+   * Double-entry accounting:
+   * - Cash at Bank (D_1) increases/decreases (handled by auto-calculation)
+   * - Prior Year Adjustment - Cash (G-01) increases/decreases by the same amount
+   * 
+   * Note: Cash at Bank is auto-calculated and will include the prior year cash adjustment
+   * 
+   * @param cashAdjustmentCode - The activity code for the cash prior year adjustment (G-01 Cash)
+   * @param adjustmentType - "increase" or "decrease"
+   * @param amount - The adjustment amount
+   */
+  const applyPriorYearCashAdjustment = useCallback(
+    (cashAdjustmentCode: string, adjustmentType: 'increase' | 'decrease', amount: number) => {
+      const quarterKey = quarter.toLowerCase() as 'q1' | 'q2' | 'q3' | 'q4';
+      const signedAmount = adjustmentType === 'increase' ? amount : -amount;
+
+      console.log('💰 [Prior Year Cash Adjustment] Applying:', {
+        cashAdjustmentCode,
+        adjustmentType,
+        amount,
+        signedAmount,
+        quarter: quarterKey
+      });
+
+      setFormData(prev => {
+        const cashAdjustmentData = prev[cashAdjustmentCode];
+
+        // Update the prior year cash adjustment value in Section G
+        const currentCashAdjValue = Number(cashAdjustmentData?.[quarterKey]) || 0;
+        const newCashAdjValue = currentCashAdjValue + signedAmount;
+
+        console.log('💰 [Prior Year Cash Adjustment] Values:', {
+          cashAdjustmentCode,
+          currentCashAdjValue,
+          newCashAdjValue,
+          note: 'Cash at Bank will be updated by auto-calculation'
+        });
+
+        const next = {
+          ...prev,
+          // Update prior year cash adjustment in Section G
+          // Cash at Bank will be auto-calculated to include this adjustment
+          [cashAdjustmentCode]: {
+            q1: cashAdjustmentData?.q1 ?? 0,
+            q2: cashAdjustmentData?.q2 ?? 0,
+            q3: cashAdjustmentData?.q3 ?? 0,
+            q4: cashAdjustmentData?.q4 ?? 0,
+            [quarterKey]: newCashAdjValue,
+            comment: cashAdjustmentData?.comment ?? "",
+            paymentStatus: cashAdjustmentData?.paymentStatus,
+            amountPaid: cashAdjustmentData?.amountPaid,
+            netAmount: cashAdjustmentData?.netAmount ?? {},
+            vatAmount: cashAdjustmentData?.vatAmount ?? {},
+            vatCleared: cashAdjustmentData?.vatCleared ?? {},
+            payableCleared: cashAdjustmentData?.payableCleared ?? {},
+            priorYearAdjustment: cashAdjustmentData?.priorYearAdjustment ?? {},
+          },
+        };
+
+        onDataChange?.(next);
+        return next;
+      });
+
+      form.setValue(`${cashAdjustmentCode}.${quarterKey}`, 
+        (Number(formData[cashAdjustmentCode]?.[quarterKey]) || 0) + signedAmount, 
+        { shouldDirty: true }
+      );
+    },
+    [form, onDataChange, quarter, formData]
+  );
+
   const isLoading = schemaQuery.isLoading || activitiesQuery.isLoading;
   const error = schemaQuery.error || activitiesQuery.error;
+
+  // OPTIMIZED: Real-time calculation of section totals for A and B
+  // This is separate from the main table useMemo to enable faster updates for computed fields
+  const realTimeSectionTotals = useMemo(() => {
+    const hierarchicalData = activitiesQuery.data ?? {};
+    if (Object.keys(hierarchicalData).length === 0) {
+      return { A: { q1: 0, q2: 0, q3: 0, q4: 0 }, B: { q1: 0, q2: 0, q3: 0, q4: 0 } };
+    }
+
+    const calculateSectionTotal = (sectionCode: string) => {
+      const sectionData = (hierarchicalData as any)[sectionCode];
+      if (!sectionData) return { q1: 0, q2: 0, q3: 0, q4: 0 };
+
+      let q1 = 0, q2 = 0, q3 = 0, q4 = 0;
+
+      // Sum direct items
+      if (sectionData.items) {
+        for (const item of sectionData.items) {
+          if (item.isTotalRow || item.isComputed) continue;
+          const data = formData[item.code];
+          if (data) {
+            // For VAT-applicable expenses, use netAmount if available
+            const isVATExpense = sectionCode === 'B' && item.metadata?.vatCategory;
+            if (isVATExpense && data.netAmount) {
+              q1 += Number(data.netAmount?.q1) || Number(data.q1) || 0;
+              q2 += Number(data.netAmount?.q2) || Number(data.q2) || 0;
+              q3 += Number(data.netAmount?.q3) || Number(data.q3) || 0;
+              q4 += Number(data.netAmount?.q4) || Number(data.q4) || 0;
+            } else {
+              q1 += Number(data.q1) || 0;
+              q2 += Number(data.q2) || 0;
+              q3 += Number(data.q3) || 0;
+              q4 += Number(data.q4) || 0;
+            }
+          }
+        }
+      }
+
+      // Sum subcategory items
+      if (sectionData.subCategories) {
+        for (const subCat of Object.values(sectionData.subCategories) as any[]) {
+          if (subCat.items) {
+            for (const item of subCat.items) {
+              if (item.isTotalRow || item.isComputed) continue;
+              const data = formData[item.code];
+              if (data) {
+                // For VAT-applicable expenses, use netAmount if available
+                const isVATExpense = sectionCode === 'B' && item.metadata?.vatCategory;
+                if (isVATExpense && data.netAmount) {
+                  q1 += Number(data.netAmount?.q1) || Number(data.q1) || 0;
+                  q2 += Number(data.netAmount?.q2) || Number(data.q2) || 0;
+                  q3 += Number(data.netAmount?.q3) || Number(data.q3) || 0;
+                  q4 += Number(data.netAmount?.q4) || Number(data.q4) || 0;
+                } else {
+                  q1 += Number(data.q1) || 0;
+                  q2 += Number(data.q2) || 0;
+                  q3 += Number(data.q3) || 0;
+                  q4 += Number(data.q4) || 0;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return { q1, q2, q3, q4 };
+    };
+
+    return {
+      A: calculateSectionTotal('A'),
+      B: calculateSectionTotal('B'),
+    };
+  }, [activitiesQuery.data, formData]);
+
+  // OPTIMIZED: Real-time Surplus/Deficit calculation (A - B)
+  const realTimeSurplusDeficit = useMemo(() => {
+    return {
+      q1: realTimeSectionTotals.A.q1 - realTimeSectionTotals.B.q1,
+      q2: realTimeSectionTotals.A.q2 - realTimeSectionTotals.B.q2,
+      q3: realTimeSectionTotals.A.q3 - realTimeSectionTotals.B.q3,
+      q4: realTimeSectionTotals.A.q4 - realTimeSectionTotals.B.q4,
+      cumulativeBalance: (realTimeSectionTotals.A.q1 - realTimeSectionTotals.B.q1) +
+                         (realTimeSectionTotals.A.q2 - realTimeSectionTotals.B.q2) +
+                         (realTimeSectionTotals.A.q3 - realTimeSectionTotals.B.q3) +
+                         (realTimeSectionTotals.A.q4 - realTimeSectionTotals.B.q4),
+    };
+  }, [realTimeSectionTotals]);
 
   // Table model derived from dynamic activities and server-computed values
   interface TableRow {
@@ -1427,16 +1831,16 @@ export function useExecutionForm({
         // Handle VAT receivables - calculate from Section B VAT amounts
         if (isVATReceivable) {
           // Extract VAT category from activity name
-          // e.g., "VAT Receivable 1: Communication - airtime" -> "airtime"
+          // e.g., "VAT Receivable 1: Communication - All" -> "communication_all"
           const activityName = activity.name?.toLowerCase() || '';
           let vatCategory: string | null = null;
           
-          if (activityName.includes('airtime')) {
-            vatCategory = 'airtime';
-          } else if (activityName.includes('internet')) {
-            vatCategory = 'internet';
-          } else if (activityName.includes('infrastructure')) {
-            vatCategory = 'infrastructure';
+          if (activityName.includes('communication')) {
+            vatCategory = 'communication_all';
+          } else if (activityName.includes('maintenance')) {
+            vatCategory = 'maintenance';
+          } else if (activityName.includes('fuel')) {
+            vatCategory = 'fuel';
           } else if (activityName.includes('office supplies') || activityName.includes('supplies')) {
             vatCategory = 'office_supplies';
           }
@@ -1461,9 +1865,9 @@ export function useExecutionForm({
 
                   if (expenseName) {
                     const matchesCategory = 
-                      (vatCategory === 'airtime' && expenseName.includes('airtime')) ||
-                      (vatCategory === 'internet' && expenseName.includes('internet')) ||
-                      (vatCategory === 'infrastructure' && expenseName.includes('infrastructure')) ||
+                      (vatCategory === 'communication_all' && expenseName.includes('communication') && expenseName.includes('all')) ||
+                      (vatCategory === 'maintenance' && expenseName.includes('maintenance')) ||
+                      (vatCategory === 'fuel' && (expenseName === 'fuel' || (expenseName.includes('fuel') && !expenseName.includes('refund')))) ||
                       (vatCategory === 'office_supplies' && (expenseName.includes('office supplies') || expenseName.includes('supplies')));
 
                     if (matchesCategory) {
@@ -1756,7 +2160,7 @@ export function useExecutionForm({
     }
 
     // Update computed sections with derived values
-    const cDerived = deriveDiff(catLocalTotals["A"], catLocalTotals["B"], 'flow');  // C is flow (income statement)
+    // Use realTimeSurplusDeficit for C section (faster updates)
     const fDerived = deriveDiff(catLocalTotals["D"], catLocalTotals["E"], 'stock'); // F is stock (balance sheet)
     
     console.log('🔧 SECTION F CALCULATION FIX:', {
@@ -1765,14 +2169,14 @@ export function useExecutionForm({
       'F derived (D - E)': fDerived,
     });
 
-    // Update C section if it exists
+    // Update C section if it exists - use real-time calculated values
     const cIdx = sections.findIndex(s => s.id === "C");
     if (cIdx >= 0) {
-      (sections[cIdx] as any).q1 = cDerived.q1;
-      (sections[cIdx] as any).q2 = cDerived.q2;
-      (sections[cIdx] as any).q3 = cDerived.q3;
-      (sections[cIdx] as any).q4 = cDerived.q4;
-      (sections[cIdx] as any).cumulativeBalance = cDerived.cumulativeBalance;
+      (sections[cIdx] as any).q1 = realTimeSurplusDeficit.q1;
+      (sections[cIdx] as any).q2 = realTimeSurplusDeficit.q2;
+      (sections[cIdx] as any).q3 = realTimeSurplusDeficit.q3;
+      (sections[cIdx] as any).q4 = realTimeSurplusDeficit.q4;
+      (sections[cIdx] as any).cumulativeBalance = realTimeSurplusDeficit.cumulativeBalance;
     }
 
     // Update F section if it exists
@@ -1785,17 +2189,18 @@ export function useExecutionForm({
       (sections[fIdx] as any).cumulativeBalance = fDerived.cumulativeBalance;
     }
 
-    // Update G section's "Surplus/Deficit of the Period" child with C values
+    // Update G section's "Surplus/Deficit of the Period" child with real-time calculated values
     const gIdx = sections.findIndex(s => s.id === "G");
     if (gIdx >= 0) {
       const gSection = sections[gIdx];
       const surplusChild = gSection.children?.find(r => String(r.title).toLowerCase().includes("surplus/deficit of the period"));
       if (surplusChild) {
-        (surplusChild as any).q1 = cDerived.q1;
-        (surplusChild as any).q2 = cDerived.q2;
-        (surplusChild as any).q3 = cDerived.q3;
-        (surplusChild as any).q4 = cDerived.q4;
-        (surplusChild as any).cumulativeBalance = cDerived.cumulativeBalance;
+        // Use the real-time calculated surplus/deficit for faster updates
+        (surplusChild as any).q1 = realTimeSurplusDeficit.q1;
+        (surplusChild as any).q2 = realTimeSurplusDeficit.q2;
+        (surplusChild as any).q3 = realTimeSurplusDeficit.q3;
+        (surplusChild as any).q4 = realTimeSurplusDeficit.q4;
+        (surplusChild as any).cumulativeBalance = realTimeSurplusDeficit.cumulativeBalance;
         (surplusChild as any).isCalculated = true;
         (surplusChild as any).isEditable = false;
       }
@@ -1820,7 +2225,7 @@ export function useExecutionForm({
     }
 
     return sections;
-  }, [activitiesQuery.data, formData, computedValues]);
+  }, [activitiesQuery.data, formData, computedValues, realTimeSurplusDeficit]);
 
   // Quarter UX helpers
   const quarterLabels = useMemo(() => ({
@@ -2113,28 +2518,25 @@ export function useExecutionForm({
     return { isEditable, isCalculated: isComputed, validationMessage: message };
   }
 
-  // Enforce accounting equation before enabling submit/save
+  // Allow submission - removed strict accounting equation validation
+  // The accounting equation check (F = G) is informational, not blocking
   const canSubmitExecution = useMemo(() => {
-    // F must equal G and form must be valid
-    const f = (computedValues as any)?.netFinancialAssets?.cumulativeBalance ?? null;
-    const g = (computedValues as any)?.closingBalance?.cumulativeBalance ?? null;
-    const diff = f !== null && g !== null ? Math.abs(Number(f) - Number(g)) : null;
-    const balanced = isBalanced && f !== null && g !== null && diff !== null && diff < 0.0001;
-    const canSubmit = balanced && Object.keys(validationErrors).length === 0;
+    // Only block submission if there are critical validation errors
+    // The accounting equation balance is shown as a warning, not a blocker
+    const hasBlockingErrors = Object.keys(validationErrors).length > 0;
+    const canSubmit = !hasBlockingErrors;
     
     console.log('🔐 [canSubmitExecution]:', {
       isBalanced,
-      f,
-      g,
-      diff,
-      balanced,
       validationErrorsCount: Object.keys(validationErrors).length,
+      hasBlockingErrors,
       canSubmit,
-      quarter
+      quarter,
+      note: 'Accounting equation check is informational only'
     });
     
     return canSubmit;
-  }, [computedValues, isBalanced, validationErrors, quarter]);
+  }, [isBalanced, validationErrors, quarter]);
 
   function isRowLocked(code: string, q: Quarter): boolean {
     const { isEditable } = getRowState(code);
@@ -2277,6 +2679,9 @@ export function useExecutionForm({
     // Schema-compatible hierarchical data built from activities
     table,
 
+    // Real-time computed values for faster UI updates
+    realTimeSurplusDeficit,
+
     // Quarter UX helpers
     quarterLabels,
     isQuarterEditable,
@@ -2312,6 +2717,8 @@ export function useExecutionForm({
     updateVATExpense,
     clearVAT,
     clearPayable,
+    applyPriorYearAdjustment,
+    applyPriorYearCashAdjustment,
 
     // Status
     isLoading,

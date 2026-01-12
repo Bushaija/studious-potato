@@ -100,13 +100,15 @@ export class AggregationService {
   /**
    * Determines if an expense is VAT-applicable (receivable)
    * These expenses should use net amount (excluding VAT) for expense calculations
+   * VAT-applicable expenses: Communication - All, Maintenance, Fuel, Office Supplies
    */
   private isVATApplicableExpense(activityName: string): boolean {
     const nameLower = activityName.toLowerCase();
     return (
-      (nameLower.includes('communication') && nameLower.includes('airtime')) ||
-      (nameLower.includes('communication') && nameLower.includes('internet')) ||
-      nameLower.includes('infrastructure support') ||
+      (nameLower.includes('communication') && nameLower.includes('all')) ||
+      nameLower.includes('maintenance') ||
+      nameLower === 'fuel' ||
+      nameLower.includes('fuel') ||
       nameLower.includes('office supplies')
     );
   }
