@@ -3,7 +3,6 @@
 import * as React from "react"
 import { Check, X, Minus } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Switch } from "@/components/ui/switch"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -153,22 +152,33 @@ export function PaymentStatusControl({
   const getStatusIcon = () => {
     switch (paymentStatus) {
       case "paid":
-        return <Check className="size-4 text-green-600" aria-hidden="true" />
+        return <Check className="size-3 text-green-600" aria-hidden="true" />
       case "unpaid":
-        return <X className="size-4 text-red-600" aria-hidden="true" />
+        return <X className="size-3 text-red-600" aria-hidden="true" />
       case "partial":
-        return <Minus className="size-4 text-orange-600" aria-hidden="true" />
+        return <Minus className="size-3 text-orange-600" aria-hidden="true" />
     }
   }
 
   const getStatusColor = () => {
     switch (paymentStatus) {
       case "paid":
-        return "text-green-600 bg-green-50"
+        return "text-green-700 bg-green-100 hover:bg-green-200 border-green-300"
       case "unpaid":
-        return "text-red-600 bg-red-50"
+        return "text-red-700 bg-red-100 hover:bg-red-200 border-red-300"
       case "partial":
-        return "text-orange-600 bg-orange-50"
+        return "text-orange-700 bg-orange-100 hover:bg-orange-200 border-orange-300"
+    }
+  }
+
+  const getStatusText = () => {
+    switch (paymentStatus) {
+      case "paid":
+        return "Paid"
+      case "unpaid":
+        return "Unpaid"
+      case "partial":
+        return "Partial"
     }
   }
 
@@ -205,10 +215,10 @@ export function PaymentStatusControl({
                 type="button"
                 disabled={disabled}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-md px-2 py-1 text-sm transition-colors",
-                  "hover:bg-accent hover:text-accent-foreground",
+                  "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium transition-colors",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                   "disabled:pointer-events-none disabled:opacity-50",
+                  "cursor-pointer",
                   getStatusColor()
                 )}
                 aria-label={`Payment status for ${expenseCode}: ${getStatusLabel()}. Press Enter or Space to change payment status.`}
@@ -223,13 +233,7 @@ export function PaymentStatusControl({
                 }}
               >
                 {getStatusIcon()}
-                <Switch
-                  checked={paymentStatus === "paid"}
-                  disabled={disabled}
-                  className="pointer-events-none"
-                  aria-hidden="true"
-                  tabIndex={-1}
-                />
+                <span>{getStatusText()}</span>
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
