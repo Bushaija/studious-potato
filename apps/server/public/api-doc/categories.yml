@@ -1,0 +1,593 @@
+/api/categories:
+    get:
+      tags:
+        - categories
+      parameters:
+        - schema:
+            type: string
+            enum:
+              - HIV
+              - Malaria
+              - TB
+          required: false
+          name: projectType
+          in: query
+        - schema:
+            type: string
+            enum:
+              - hospital
+              - health_center
+          required: false
+          name: facilityType
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: parentCategoryId
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: isActive
+          in: query
+        - schema:
+            type: string
+            enum:
+              - "true"
+              - "false"
+            default: "false"
+          required: false
+          name: includeHierarchy
+          in: query
+        - schema:
+            type: string
+            default: "1"
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: string
+            default: "20"
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: List of categories with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        projectType:
+                          type: string
+                          nullable: true
+                          enum:
+                            - HIV
+                            - Malaria
+                            - TB
+                        facilityType:
+                          type: string
+                          nullable: true
+                          enum:
+                            - hospital
+                            - health_center
+                        code:
+                          type: string
+                        name:
+                          type: string
+                        description:
+                          type: string
+                          nullable: true
+                        displayOrder:
+                          type: integer
+                        parentCategoryId:
+                          type: integer
+                          nullable: true
+                        isComputed:
+                          type: boolean
+                        computationFormula:
+                          type: string
+                          nullable: true
+                        metadata:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        isActive:
+                          type: boolean
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - projectType
+                        - facilityType
+                        - code
+                        - name
+                        - description
+                        - displayOrder
+                        - parentCategoryId
+                        - isComputed
+                        - computationFormula
+                        - metadata
+                        - isActive
+                        - createdAt
+                        - updatedAt
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      total:
+                        type: number
+                      pages:
+                        type: number
+                    required:
+                      - page
+                      - limit
+                      - total
+                      - pages
+                required:
+                  - data
+                  - pagination
+    post:
+      tags:
+        - categories
+      requestBody:
+        description: The category to create
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectType:
+                  type: string
+                  enum:
+                    - HIV
+                    - Malaria
+                    - TB
+                facilityType:
+                  type: string
+                  enum:
+                    - hospital
+                    - health_center
+                code:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                description:
+                  type: string
+                displayOrder:
+                  type: integer
+                parentCategoryId:
+                  type: integer
+                isComputed:
+                  type: boolean
+                  default: false
+                computationFormula:
+                  type: string
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                isActive:
+                  type: boolean
+                  default: true
+              required:
+                - code
+                - name
+                - displayOrder
+      responses:
+        "201":
+          description: The created category
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  projectType:
+                    type: string
+                    nullable: true
+                    enum:
+                      - HIV
+                      - Malaria
+                      - TB
+                  facilityType:
+                    type: string
+                    nullable: true
+                    enum:
+                      - hospital
+                      - health_center
+                  code:
+                    type: string
+                  name:
+                    type: string
+                  description:
+                    type: string
+                    nullable: true
+                  displayOrder:
+                    type: integer
+                  parentCategoryId:
+                    type: integer
+                    nullable: true
+                  isComputed:
+                    type: boolean
+                  computationFormula:
+                    type: string
+                    nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  isActive:
+                    type: boolean
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - projectType
+                  - facilityType
+                  - code
+                  - name
+                  - description
+                  - displayOrder
+                  - parentCategoryId
+                  - isComputed
+                  - computationFormula
+                  - metadata
+                  - isActive
+                  - createdAt
+                  - updatedAt
+        "400":
+          description: Invalid category data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+  /api/categories/{id}:
+    get:
+      tags:
+        - categories
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: The category
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  projectType:
+                    type: string
+                    nullable: true
+                    enum:
+                      - HIV
+                      - Malaria
+                      - TB
+                  facilityType:
+                    type: string
+                    nullable: true
+                    enum:
+                      - hospital
+                      - health_center
+                  code:
+                    type: string
+                  name:
+                    type: string
+                  description:
+                    type: string
+                    nullable: true
+                  displayOrder:
+                    type: integer
+                  parentCategoryId:
+                    type: integer
+                    nullable: true
+                  isComputed:
+                    type: boolean
+                  computationFormula:
+                    type: string
+                    nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  isActive:
+                    type: boolean
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - projectType
+                  - facilityType
+                  - code
+                  - name
+                  - description
+                  - displayOrder
+                  - parentCategoryId
+                  - isComputed
+                  - computationFormula
+                  - metadata
+                  - isActive
+                  - createdAt
+                  - updatedAt
+        "404":
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    patch:
+      tags:
+        - categories
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: The category data to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectType:
+                  type: string
+                  enum:
+                    - HIV
+                    - Malaria
+                    - TB
+                facilityType:
+                  type: string
+                  enum:
+                    - hospital
+                    - health_center
+                code:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                description:
+                  type: string
+                displayOrder:
+                  type: integer
+                parentCategoryId:
+                  type: integer
+                isComputed:
+                  type: boolean
+                  default: false
+                computationFormula:
+                  type: string
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                isActive:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: The updated category
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  projectType:
+                    type: string
+                    nullable: true
+                    enum:
+                      - HIV
+                      - Malaria
+                      - TB
+                  facilityType:
+                    type: string
+                    nullable: true
+                    enum:
+                      - hospital
+                      - health_center
+                  code:
+                    type: string
+                  name:
+                    type: string
+                  description:
+                    type: string
+                    nullable: true
+                  displayOrder:
+                    type: integer
+                  parentCategoryId:
+                    type: integer
+                    nullable: true
+                  isComputed:
+                    type: boolean
+                  computationFormula:
+                    type: string
+                    nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  isActive:
+                    type: boolean
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - projectType
+                  - facilityType
+                  - code
+                  - name
+                  - description
+                  - displayOrder
+                  - parentCategoryId
+                  - isComputed
+                  - computationFormula
+                  - metadata
+                  - isActive
+                  - createdAt
+                  - updatedAt
+        "404":
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    delete:
+      tags:
+        - categories
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "204":
+          description: The category was deleted
+        "404":
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/categories/hierarchy:
+    get:
+      tags:
+        - categories
+      parameters:
+        - schema:
+            type: string
+            enum:
+              - HIV
+              - Malaria
+              - TB
+          required: false
+          name: projectType
+          in: query
+        - schema:
+            type: string
+            enum:
+              - hospital
+              - health_center
+          required: false
+          name: facilityType
+          in: query
+        - schema:
+            type: string
+            enum:
+              - "true"
+              - "false"
+            default: "false"
+          required: false
+          name: rootOnly
+          in: query
+      responses:
+        "200":
+          description: Hierarchical category structure
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    code:
+                      type: string
+                    name:
+                      type: string
+                    displayOrder:
+                      type: integer
+                    children:
+                      type: array
+                      items:
+                        nullable: true
+                  required:
+                    - id
+                    - code
+                    - name
+                    - displayOrder
+  

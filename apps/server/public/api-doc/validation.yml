@@ -1,0 +1,559 @@
+  /api/validation/field:
+    post:
+      tags:
+        - validation
+      requestBody:
+        description: Field validation data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fieldKey:
+                  type: string
+                value:
+                  nullable: true
+                fieldType:
+                  type: string
+                  enum:
+                    - text
+                    - number
+                    - currency
+                    - percentage
+                    - date
+                    - select
+                    - multiselect
+                    - checkbox
+                    - textarea
+                    - calculated
+                    - readonly
+                validationRules:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - required
+                          - min
+                          - max
+                          - minLength
+                          - maxLength
+                          - pattern
+                          - custom
+                      value:
+                        nullable: true
+                      message:
+                        type: string
+                      severity:
+                        type: string
+                        enum:
+                          - error
+                          - warning
+                          - info
+                        default: error
+                    required:
+                      - type
+                      - message
+                required:
+                  type: boolean
+                  default: false
+              required:
+                - fieldKey
+                - fieldType
+      responses:
+        "200":
+          description: Field validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isValid:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fieldKey:
+                          type: string
+                        message:
+                          type: string
+                        severity:
+                          type: string
+                          enum:
+                            - error
+                            - warning
+                            - info
+                        value:
+                          nullable: true
+                      required:
+                        - fieldKey
+                        - message
+                        - severity
+                  warnings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fieldKey:
+                          type: string
+                        message:
+                          type: string
+                        value:
+                          nullable: true
+                      required:
+                        - fieldKey
+                        - message
+                  computedValues:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - isValid
+                  - errors
+                  - warnings
+        "400":
+          description: Invalid validation request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+  /api/validation/form:
+    post:
+      tags:
+        - validation
+      requestBody:
+        description: Form validation data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schemaId:
+                  type: integer
+                formData:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                validateComputed:
+                  type: boolean
+                  default: true
+                strictMode:
+                  type: boolean
+                  default: false
+              required:
+                - schemaId
+                - formData
+      responses:
+        "200":
+          description: Form validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isValid:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fieldKey:
+                          type: string
+                        message:
+                          type: string
+                        severity:
+                          type: string
+                          enum:
+                            - error
+                            - warning
+                            - info
+                        value:
+                          nullable: true
+                      required:
+                        - fieldKey
+                        - message
+                        - severity
+                  warnings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fieldKey:
+                          type: string
+                        message:
+                          type: string
+                        value:
+                          nullable: true
+                      required:
+                        - fieldKey
+                        - message
+                  computedValues:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - isValid
+                  - errors
+                  - warnings
+        "400":
+          description: Invalid validation request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+        "404":
+          description: Schema not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/validation/schema:
+    post:
+      tags:
+        - validation
+      requestBody:
+        description: Schema definition to validate
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schema:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                schemaId:
+                  type: integer
+              required:
+                - schema
+      responses:
+        "200":
+          description: Schema validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isValid:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        path:
+                          type: string
+                        message:
+                          type: string
+                        code:
+                          type: string
+                      required:
+                        - path
+                        - message
+                        - code
+                  warnings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        path:
+                          type: string
+                        message:
+                          type: string
+                        suggestion:
+                          type: string
+                      required:
+                        - path
+                        - message
+                required:
+                  - isValid
+                  - errors
+                  - warnings
+        "400":
+          description: Invalid schema definition
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+  /api/validation/bulk:
+    post:
+      tags:
+        - validation
+      requestBody:
+        description: Bulk validation data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                validations:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      schemaId:
+                        type: integer
+                      formData:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - id
+                      - schemaId
+                      - formData
+                stopOnFirstError:
+                  type: boolean
+                  default: false
+              required:
+                - validations
+      responses:
+        "200":
+          description: Bulk validation results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        validation:
+                          type: object
+                          properties:
+                            isValid:
+                              type: boolean
+                            errors:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  fieldKey:
+                                    type: string
+                                  message:
+                                    type: string
+                                  severity:
+                                    type: string
+                                    enum:
+                                      - error
+                                      - warning
+                                      - info
+                                  value:
+                                    nullable: true
+                                required:
+                                  - fieldKey
+                                  - message
+                                  - severity
+                            warnings:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  fieldKey:
+                                    type: string
+                                  message:
+                                    type: string
+                                  value:
+                                    nullable: true
+                                required:
+                                  - fieldKey
+                                  - message
+                            computedValues:
+                              type: object
+                              additionalProperties:
+                                nullable: true
+                          required:
+                            - isValid
+                            - errors
+                            - warnings
+                      required:
+                        - id
+                        - validation
+                  summary:
+                    type: object
+                    properties:
+                      total:
+                        type: number
+                      valid:
+                        type: number
+                      invalid:
+                        type: number
+                      warnings:
+                        type: number
+                    required:
+                      - total
+                      - valid
+                      - invalid
+                      - warnings
+                required:
+                  - results
+                  - summary
+        "400":
+          description: Invalid bulk validation request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+  /api/validation/rules/{schemaId}:
+    get:
+      tags:
+        - validation
+      parameters:
+        - schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+          name: schemaId
+          in: path
+      responses:
+        "200":
+          description: Validation rules for schema
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  schemaId:
+                    type: number
+                  rules:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  computedFields:
+                    type: array
+                    items:
+                      type: string
+                  requiredFields:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - schemaId
+                  - rules
+                  - computedFields
+                  - requiredFields
+        "404":
+          description: Schema not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/validation/computation:
+    post:
+      tags:
+        - validation
+      requestBody:
+        description: Computation validation data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                formula:
+                  type: string
+                context:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                fieldType:
+                  type: string
+              required:
+                - formula
+                - context
+      responses:
+        "200":
+          description: Computation validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isValid:
+                    type: boolean
+                  result:
+                    nullable: true
+                  error:
+                    type: string
+                  dependencies:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - isValid
+                  - dependencies
+        "400":
+          description: Invalid computation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+  

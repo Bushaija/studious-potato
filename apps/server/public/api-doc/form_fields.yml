@@ -1,0 +1,1303 @@
+  /api/form-fields:
+    get:
+      tags:
+        - form-fields
+      parameters:
+        - schema:
+            type: string
+          required: false
+          name: schemaId
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: categoryId
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: parentFieldId
+          in: query
+        - schema:
+            type: string
+            enum:
+              - text
+              - number
+              - currency
+              - percentage
+              - date
+              - select
+              - multiselect
+              - checkbox
+              - textarea
+              - calculated
+              - readonly
+          required: false
+          name: fieldType
+          in: query
+        - schema:
+            type: string
+            enum:
+              - "true"
+              - "false"
+          required: false
+          name: isVisible
+          in: query
+        - schema:
+            type: string
+            enum:
+              - "true"
+              - "false"
+          required: false
+          name: isEditable
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: List of form fields with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        schemaId:
+                          type: integer
+                        fieldKey:
+                          type: string
+                        label:
+                          type: string
+                        fieldType:
+                          type: string
+                          enum:
+                            - text
+                            - number
+                            - currency
+                            - percentage
+                            - date
+                            - select
+                            - multiselect
+                            - checkbox
+                            - textarea
+                            - calculated
+                            - readonly
+                        isRequired:
+                          type: boolean
+                        displayOrder:
+                          type: integer
+                        parentFieldId:
+                          type: integer
+                          nullable: true
+                        categoryId:
+                          type: integer
+                          nullable: true
+                        fieldConfig:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        validationRules:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        computationFormula:
+                          type: string
+                          nullable: true
+                        defaultValue:
+                          nullable: true
+                        helpText:
+                          type: string
+                          nullable: true
+                        isVisible:
+                          type: boolean
+                        isEditable:
+                          type: boolean
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - schemaId
+                        - fieldKey
+                        - label
+                        - fieldType
+                        - isRequired
+                        - displayOrder
+                        - parentFieldId
+                        - categoryId
+                        - fieldConfig
+                        - validationRules
+                        - computationFormula
+                        - helpText
+                        - isVisible
+                        - isEditable
+                        - createdAt
+                        - updatedAt
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      total:
+                        type: number
+                      pages:
+                        type: number
+                    required:
+                      - page
+                      - limit
+                      - total
+                      - pages
+                required:
+                  - data
+                  - pagination
+    post:
+      tags:
+        - form-fields
+      requestBody:
+        description: The form field to create
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schemaId:
+                  type: integer
+                fieldKey:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                label:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                fieldType:
+                  type: string
+                  enum:
+                    - text
+                    - number
+                    - currency
+                    - percentage
+                    - date
+                    - select
+                    - multiselect
+                    - checkbox
+                    - textarea
+                    - calculated
+                    - readonly
+                isRequired:
+                  type: boolean
+                  default: false
+                displayOrder:
+                  type: integer
+                parentFieldId:
+                  type: integer
+                categoryId:
+                  type: integer
+                fieldConfig:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                validationRules:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                computationFormula:
+                  type: string
+                defaultValue:
+                  nullable: true
+                helpText:
+                  type: string
+                isVisible:
+                  type: boolean
+                  default: true
+                isEditable:
+                  type: boolean
+                  default: true
+              required:
+                - schemaId
+                - fieldKey
+                - label
+                - fieldType
+                - displayOrder
+      responses:
+        "201":
+          description: The created form field
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  schemaId:
+                    type: integer
+                  fieldKey:
+                    type: string
+                  label:
+                    type: string
+                  fieldType:
+                    type: string
+                    enum:
+                      - text
+                      - number
+                      - currency
+                      - percentage
+                      - date
+                      - select
+                      - multiselect
+                      - checkbox
+                      - textarea
+                      - calculated
+                      - readonly
+                  isRequired:
+                    type: boolean
+                  displayOrder:
+                    type: integer
+                  parentFieldId:
+                    type: integer
+                    nullable: true
+                  categoryId:
+                    type: integer
+                    nullable: true
+                  fieldConfig:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationRules:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  computationFormula:
+                    type: string
+                    nullable: true
+                  defaultValue:
+                    nullable: true
+                  helpText:
+                    type: string
+                    nullable: true
+                  isVisible:
+                    type: boolean
+                  isEditable:
+                    type: boolean
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - schemaId
+                  - fieldKey
+                  - label
+                  - fieldType
+                  - isRequired
+                  - displayOrder
+                  - parentFieldId
+                  - categoryId
+                  - fieldConfig
+                  - validationRules
+                  - computationFormula
+                  - helpText
+                  - isVisible
+                  - isEditable
+                  - createdAt
+                  - updatedAt
+        "400":
+          description: Invalid field data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+  /api/form-fields/bulk:
+    post:
+      tags:
+        - form-fields
+      requestBody:
+        description: Form fields to create in bulk
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fields:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      schemaId:
+                        type: integer
+                      fieldKey:
+                        type: string
+                        minLength: 1
+                        maxLength: 100
+                      label:
+                        type: string
+                        minLength: 1
+                        maxLength: 200
+                      fieldType:
+                        type: string
+                        enum:
+                          - text
+                          - number
+                          - currency
+                          - percentage
+                          - date
+                          - select
+                          - multiselect
+                          - checkbox
+                          - textarea
+                          - calculated
+                          - readonly
+                      isRequired:
+                        type: boolean
+                        default: false
+                      displayOrder:
+                        type: integer
+                      parentFieldId:
+                        type: integer
+                      categoryId:
+                        type: integer
+                      fieldConfig:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      validationRules:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      computationFormula:
+                        type: string
+                      defaultValue:
+                        nullable: true
+                      helpText:
+                        type: string
+                      isVisible:
+                        type: boolean
+                        default: true
+                      isEditable:
+                        type: boolean
+                        default: true
+                    required:
+                      - schemaId
+                      - fieldKey
+                      - label
+                      - fieldType
+                      - displayOrder
+              required:
+                - fields
+      responses:
+        "201":
+          description: Bulk create results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        schemaId:
+                          type: integer
+                        fieldKey:
+                          type: string
+                        label:
+                          type: string
+                        fieldType:
+                          type: string
+                          enum:
+                            - text
+                            - number
+                            - currency
+                            - percentage
+                            - date
+                            - select
+                            - multiselect
+                            - checkbox
+                            - textarea
+                            - calculated
+                            - readonly
+                        isRequired:
+                          type: boolean
+                        displayOrder:
+                          type: integer
+                        parentFieldId:
+                          type: integer
+                          nullable: true
+                        categoryId:
+                          type: integer
+                          nullable: true
+                        fieldConfig:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        validationRules:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        computationFormula:
+                          type: string
+                          nullable: true
+                        defaultValue:
+                          nullable: true
+                        helpText:
+                          type: string
+                          nullable: true
+                        isVisible:
+                          type: boolean
+                        isEditable:
+                          type: boolean
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - schemaId
+                        - fieldKey
+                        - label
+                        - fieldType
+                        - isRequired
+                        - displayOrder
+                        - parentFieldId
+                        - categoryId
+                        - fieldConfig
+                        - validationRules
+                        - computationFormula
+                        - helpText
+                        - isVisible
+                        - isEditable
+                        - createdAt
+                        - updatedAt
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: number
+                        error:
+                          type: string
+                      required:
+                        - index
+                        - error
+                required:
+                  - created
+                  - errors
+        "400":
+          description: Invalid bulk data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+    patch:
+      tags:
+        - form-fields
+      requestBody:
+        description: Form fields to update in bulk
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fields:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      data:
+                        type: object
+                        properties:
+                          schemaId:
+                            type: integer
+                          fieldKey:
+                            type: string
+                            minLength: 1
+                            maxLength: 100
+                          label:
+                            type: string
+                            minLength: 1
+                            maxLength: 200
+                          fieldType:
+                            type: string
+                            enum:
+                              - text
+                              - number
+                              - currency
+                              - percentage
+                              - date
+                              - select
+                              - multiselect
+                              - checkbox
+                              - textarea
+                              - calculated
+                              - readonly
+                          isRequired:
+                            type: boolean
+                            default: false
+                          displayOrder:
+                            type: integer
+                          parentFieldId:
+                            type: integer
+                          categoryId:
+                            type: integer
+                          fieldConfig:
+                            type: object
+                            additionalProperties:
+                              nullable: true
+                          validationRules:
+                            type: object
+                            additionalProperties:
+                              nullable: true
+                          computationFormula:
+                            type: string
+                          defaultValue:
+                            nullable: true
+                          helpText:
+                            type: string
+                          isVisible:
+                            type: boolean
+                            default: true
+                          isEditable:
+                            type: boolean
+                            default: true
+                    required:
+                      - id
+                      - data
+              required:
+                - fields
+      responses:
+        "200":
+          description: Bulk update results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        schemaId:
+                          type: integer
+                        fieldKey:
+                          type: string
+                        label:
+                          type: string
+                        fieldType:
+                          type: string
+                          enum:
+                            - text
+                            - number
+                            - currency
+                            - percentage
+                            - date
+                            - select
+                            - multiselect
+                            - checkbox
+                            - textarea
+                            - calculated
+                            - readonly
+                        isRequired:
+                          type: boolean
+                        displayOrder:
+                          type: integer
+                        parentFieldId:
+                          type: integer
+                          nullable: true
+                        categoryId:
+                          type: integer
+                          nullable: true
+                        fieldConfig:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        validationRules:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        computationFormula:
+                          type: string
+                          nullable: true
+                        defaultValue:
+                          nullable: true
+                        helpText:
+                          type: string
+                          nullable: true
+                        isVisible:
+                          type: boolean
+                        isEditable:
+                          type: boolean
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - schemaId
+                        - fieldKey
+                        - label
+                        - fieldType
+                        - isRequired
+                        - displayOrder
+                        - parentFieldId
+                        - categoryId
+                        - fieldConfig
+                        - validationRules
+                        - computationFormula
+                        - helpText
+                        - isVisible
+                        - isEditable
+                        - createdAt
+                        - updatedAt
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        error:
+                          type: string
+                      required:
+                        - id
+                        - error
+                required:
+                  - updated
+                  - errors
+        "400":
+          description: Invalid bulk data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+  /api/form-fields/{id}:
+    get:
+      tags:
+        - form-fields
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: The form field
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  schemaId:
+                    type: integer
+                  fieldKey:
+                    type: string
+                  label:
+                    type: string
+                  fieldType:
+                    type: string
+                    enum:
+                      - text
+                      - number
+                      - currency
+                      - percentage
+                      - date
+                      - select
+                      - multiselect
+                      - checkbox
+                      - textarea
+                      - calculated
+                      - readonly
+                  isRequired:
+                    type: boolean
+                  displayOrder:
+                    type: integer
+                  parentFieldId:
+                    type: integer
+                    nullable: true
+                  categoryId:
+                    type: integer
+                    nullable: true
+                  fieldConfig:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationRules:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  computationFormula:
+                    type: string
+                    nullable: true
+                  defaultValue:
+                    nullable: true
+                  helpText:
+                    type: string
+                    nullable: true
+                  isVisible:
+                    type: boolean
+                  isEditable:
+                    type: boolean
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - schemaId
+                  - fieldKey
+                  - label
+                  - fieldType
+                  - isRequired
+                  - displayOrder
+                  - parentFieldId
+                  - categoryId
+                  - fieldConfig
+                  - validationRules
+                  - computationFormula
+                  - helpText
+                  - isVisible
+                  - isEditable
+                  - createdAt
+                  - updatedAt
+        "404":
+          description: Form field not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    patch:
+      tags:
+        - form-fields
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: The field data to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schemaId:
+                  type: integer
+                fieldKey:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                label:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                fieldType:
+                  type: string
+                  enum:
+                    - text
+                    - number
+                    - currency
+                    - percentage
+                    - date
+                    - select
+                    - multiselect
+                    - checkbox
+                    - textarea
+                    - calculated
+                    - readonly
+                isRequired:
+                  type: boolean
+                  default: false
+                displayOrder:
+                  type: integer
+                parentFieldId:
+                  type: integer
+                categoryId:
+                  type: integer
+                fieldConfig:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                validationRules:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                computationFormula:
+                  type: string
+                defaultValue:
+                  nullable: true
+                helpText:
+                  type: string
+                isVisible:
+                  type: boolean
+                  default: true
+                isEditable:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: The updated form field
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  schemaId:
+                    type: integer
+                  fieldKey:
+                    type: string
+                  label:
+                    type: string
+                  fieldType:
+                    type: string
+                    enum:
+                      - text
+                      - number
+                      - currency
+                      - percentage
+                      - date
+                      - select
+                      - multiselect
+                      - checkbox
+                      - textarea
+                      - calculated
+                      - readonly
+                  isRequired:
+                    type: boolean
+                  displayOrder:
+                    type: integer
+                  parentFieldId:
+                    type: integer
+                    nullable: true
+                  categoryId:
+                    type: integer
+                    nullable: true
+                  fieldConfig:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationRules:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  computationFormula:
+                    type: string
+                    nullable: true
+                  defaultValue:
+                    nullable: true
+                  helpText:
+                    type: string
+                    nullable: true
+                  isVisible:
+                    type: boolean
+                  isEditable:
+                    type: boolean
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - schemaId
+                  - fieldKey
+                  - label
+                  - fieldType
+                  - isRequired
+                  - displayOrder
+                  - parentFieldId
+                  - categoryId
+                  - fieldConfig
+                  - validationRules
+                  - computationFormula
+                  - helpText
+                  - isVisible
+                  - isEditable
+                  - createdAt
+                  - updatedAt
+        "400":
+          description: Invalid field data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+        "404":
+          description: Form field not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    delete:
+      tags:
+        - form-fields
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "204":
+          description: The form field was deleted
+        "404":
+          description: Form field not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/form-fields/reorder:
+    patch:
+      tags:
+        - form-fields
+      requestBody:
+        description: Field order updates
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fieldOrders:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      displayOrder:
+                        type: integer
+                    required:
+                      - id
+                      - displayOrder
+              required:
+                - fieldOrders
+      responses:
+        "200":
+          description: Reordered form fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        schemaId:
+                          type: integer
+                        fieldKey:
+                          type: string
+                        label:
+                          type: string
+                        fieldType:
+                          type: string
+                          enum:
+                            - text
+                            - number
+                            - currency
+                            - percentage
+                            - date
+                            - select
+                            - multiselect
+                            - checkbox
+                            - textarea
+                            - calculated
+                            - readonly
+                        isRequired:
+                          type: boolean
+                        displayOrder:
+                          type: integer
+                        parentFieldId:
+                          type: integer
+                          nullable: true
+                        categoryId:
+                          type: integer
+                          nullable: true
+                        fieldConfig:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        validationRules:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        computationFormula:
+                          type: string
+                          nullable: true
+                        defaultValue:
+                          nullable: true
+                        helpText:
+                          type: string
+                          nullable: true
+                        isVisible:
+                          type: boolean
+                        isEditable:
+                          type: boolean
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - schemaId
+                        - fieldKey
+                        - label
+                        - fieldType
+                        - isRequired
+                        - displayOrder
+                        - parentFieldId
+                        - categoryId
+                        - fieldConfig
+                        - validationRules
+                        - computationFormula
+                        - helpText
+                        - isVisible
+                        - isEditable
+                        - createdAt
+                        - updatedAt
+                  message:
+                    type: string
+                required:
+                  - updated
+                  - message
+        "400":
+          description: Invalid reorder data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+  /api/form-fields/schema/{schemaId}:
+    get:
+      tags:
+        - form-fields
+      parameters:
+        - schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+          name: schemaId
+          in: path
+        - schema:
+            type: string
+            enum:
+              - "true"
+              - "false"
+            default: "false"
+          required: false
+          name: includeHidden
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: categoryId
+          in: query
+      responses:
+        "200":
+          description: Form fields for the schema
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    schemaId:
+                      type: integer
+                    fieldKey:
+                      type: string
+                    label:
+                      type: string
+                    fieldType:
+                      type: string
+                      enum:
+                        - text
+                        - number
+                        - currency
+                        - percentage
+                        - date
+                        - select
+                        - multiselect
+                        - checkbox
+                        - textarea
+                        - calculated
+                        - readonly
+                    isRequired:
+                      type: boolean
+                    displayOrder:
+                      type: integer
+                    parentFieldId:
+                      type: integer
+                      nullable: true
+                    categoryId:
+                      type: integer
+                      nullable: true
+                    fieldConfig:
+                      type: object
+                      nullable: true
+                      additionalProperties:
+                        nullable: true
+                    validationRules:
+                      type: object
+                      nullable: true
+                      additionalProperties:
+                        nullable: true
+                    computationFormula:
+                      type: string
+                      nullable: true
+                    defaultValue:
+                      nullable: true
+                    helpText:
+                      type: string
+                      nullable: true
+                    isVisible:
+                      type: boolean
+                    isEditable:
+                      type: boolean
+                    createdAt:
+                      type: string
+                    updatedAt:
+                      type: string
+                  required:
+                    - id
+                    - schemaId
+                    - fieldKey
+                    - label
+                    - fieldType
+                    - isRequired
+                    - displayOrder
+                    - parentFieldId
+                    - categoryId
+                    - fieldConfig
+                    - validationRules
+                    - computationFormula
+                    - helpText
+                    - isVisible
+                    - isEditable
+                    - createdAt
+                    - updatedAt
+  

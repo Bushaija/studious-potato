@@ -1,0 +1,1488 @@
+/api/statement-templates:
+    post:
+      tags:
+        - statement-templates
+      requestBody:
+        description: Statement template data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                statementCode:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                statementName:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                lineItem:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                lineCode:
+                  type: string
+                  maxLength: 50
+                parentLineId:
+                  type: integer
+                displayOrder:
+                  type: integer
+                  minimum: 1
+                level:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  default: 1
+                isTotalLine:
+                  type: boolean
+                  default: false
+                isSubtotalLine:
+                  type: boolean
+                  default: false
+                eventMappings:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                calculationFormula:
+                  type: string
+                aggregationMethod:
+                  type: string
+                  maxLength: 50
+                  default: SUM
+                displayConditions:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                formatRules:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                isActive:
+                  type: boolean
+                  default: true
+              required:
+                - statementCode
+                - statementName
+                - lineItem
+                - displayOrder
+      responses:
+        "201":
+          description: The created statement template
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  statementCode:
+                    type: string
+                  statementName:
+                    type: string
+                  lineItem:
+                    type: string
+                  lineCode:
+                    type: string
+                    nullable: true
+                  parentLineId:
+                    type: integer
+                    nullable: true
+                  displayOrder:
+                    type: integer
+                  level:
+                    type: integer
+                  isTotalLine:
+                    type: boolean
+                  isSubtotalLine:
+                    type: boolean
+                  eventMappings:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  calculationFormula:
+                    type: string
+                    nullable: true
+                  aggregationMethod:
+                    type: string
+                  displayConditions:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  formatRules:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  isActive:
+                    type: boolean
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - statementCode
+                  - statementName
+                  - lineItem
+                  - lineCode
+                  - parentLineId
+                  - displayOrder
+                  - level
+                  - isTotalLine
+                  - isSubtotalLine
+                  - eventMappings
+                  - calculationFormula
+                  - aggregationMethod
+                  - displayConditions
+                  - formatRules
+                  - metadata
+                  - isActive
+                  - createdAt
+                  - updatedAt
+        "400":
+          description: Validation errors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  validationErrors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
+                required:
+                  - message
+                  - validationErrors
+  /api/statement-templates/{id}:
+    put:
+      tags:
+        - statement-templates
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Complete statement template data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                statementCode:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                statementName:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                lineItem:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                lineCode:
+                  type: string
+                  maxLength: 50
+                parentLineId:
+                  type: integer
+                displayOrder:
+                  type: integer
+                  minimum: 1
+                level:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  default: 1
+                isTotalLine:
+                  type: boolean
+                  default: false
+                isSubtotalLine:
+                  type: boolean
+                  default: false
+                eventMappings:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                calculationFormula:
+                  type: string
+                aggregationMethod:
+                  type: string
+                  maxLength: 50
+                  default: SUM
+                displayConditions:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                formatRules:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                isActive:
+                  type: boolean
+                  default: true
+              required:
+                - statementCode
+                - statementName
+                - lineItem
+                - displayOrder
+      responses:
+        "200":
+          description: The updated statement template
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  statementCode:
+                    type: string
+                  statementName:
+                    type: string
+                  lineItem:
+                    type: string
+                  lineCode:
+                    type: string
+                    nullable: true
+                  parentLineId:
+                    type: integer
+                    nullable: true
+                  displayOrder:
+                    type: integer
+                  level:
+                    type: integer
+                  isTotalLine:
+                    type: boolean
+                  isSubtotalLine:
+                    type: boolean
+                  eventMappings:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  calculationFormula:
+                    type: string
+                    nullable: true
+                  aggregationMethod:
+                    type: string
+                  displayConditions:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  formatRules:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  isActive:
+                    type: boolean
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - statementCode
+                  - statementName
+                  - lineItem
+                  - lineCode
+                  - parentLineId
+                  - displayOrder
+                  - level
+                  - isTotalLine
+                  - isSubtotalLine
+                  - eventMappings
+                  - calculationFormula
+                  - aggregationMethod
+                  - displayConditions
+                  - formatRules
+                  - metadata
+                  - isActive
+                  - createdAt
+                  - updatedAt
+        "400":
+          description: Validation errors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  validationErrors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
+                required:
+                  - message
+                  - validationErrors
+        "404":
+          description: Statement template not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    patch:
+      tags:
+        - statement-templates
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Fields to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                statementCode:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                statementName:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                lineItem:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                lineCode:
+                  type: string
+                  maxLength: 50
+                parentLineId:
+                  type: integer
+                displayOrder:
+                  type: integer
+                  minimum: 1
+                level:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  default: 1
+                isTotalLine:
+                  type: boolean
+                  default: false
+                isSubtotalLine:
+                  type: boolean
+                  default: false
+                eventMappings:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                calculationFormula:
+                  type: string
+                aggregationMethod:
+                  type: string
+                  maxLength: 50
+                  default: SUM
+                displayConditions:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                formatRules:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                isActive:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: The updated statement template
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  statementCode:
+                    type: string
+                  statementName:
+                    type: string
+                  lineItem:
+                    type: string
+                  lineCode:
+                    type: string
+                    nullable: true
+                  parentLineId:
+                    type: integer
+                    nullable: true
+                  displayOrder:
+                    type: integer
+                  level:
+                    type: integer
+                  isTotalLine:
+                    type: boolean
+                  isSubtotalLine:
+                    type: boolean
+                  eventMappings:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  calculationFormula:
+                    type: string
+                    nullable: true
+                  aggregationMethod:
+                    type: string
+                  displayConditions:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  formatRules:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  isActive:
+                    type: boolean
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - statementCode
+                  - statementName
+                  - lineItem
+                  - lineCode
+                  - parentLineId
+                  - displayOrder
+                  - level
+                  - isTotalLine
+                  - isSubtotalLine
+                  - eventMappings
+                  - calculationFormula
+                  - aggregationMethod
+                  - displayConditions
+                  - formatRules
+                  - metadata
+                  - isActive
+                  - createdAt
+                  - updatedAt
+        "404":
+          description: Statement template not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    delete:
+      tags:
+        - statement-templates
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "204":
+          description: Statement template deleted successfully
+        "404":
+          description: Statement template not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+        "409":
+          description: Cannot delete template due to dependencies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  dependencies:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+                  - dependencies
+  /api/statement-templates/validate:
+    post:
+      tags:
+        - statement-templates
+      requestBody:
+        description: Template to validate
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                statementCode:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                statementName:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                lineItem:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                lineCode:
+                  type: string
+                  maxLength: 50
+                parentLineId:
+                  type: integer
+                displayOrder:
+                  type: integer
+                  minimum: 1
+                level:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  default: 1
+                isTotalLine:
+                  type: boolean
+                  default: false
+                isSubtotalLine:
+                  type: boolean
+                  default: false
+                eventMappings:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                calculationFormula:
+                  type: string
+                aggregationMethod:
+                  type: string
+                  maxLength: 50
+                  default: SUM
+                displayConditions:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                formatRules:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  default: {}
+                isActive:
+                  type: boolean
+                  default: true
+              required:
+                - statementCode
+                - statementName
+                - lineItem
+                - displayOrder
+      responses:
+        "200":
+          description: Validation results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isValid:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                        lineId:
+                          type: number
+                      required:
+                        - field
+                        - message
+                  warnings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                        lineId:
+                          type: number
+                      required:
+                        - field
+                        - message
+                required:
+                  - isValid
+                  - errors
+                  - warnings
+  /api/statement-templates/bulk:
+    post:
+      tags:
+        - statement-templates
+      requestBody:
+        description: Bulk template creation data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                templates:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      statementCode:
+                        type: string
+                        minLength: 1
+                        maxLength: 50
+                      statementName:
+                        type: string
+                        minLength: 1
+                        maxLength: 200
+                      lineItem:
+                        type: string
+                        minLength: 1
+                        maxLength: 300
+                      lineCode:
+                        type: string
+                        maxLength: 50
+                      parentLineId:
+                        type: integer
+                      displayOrder:
+                        type: integer
+                        minimum: 1
+                      level:
+                        type: integer
+                        minimum: 1
+                        maximum: 10
+                        default: 1
+                      isTotalLine:
+                        type: boolean
+                        default: false
+                      isSubtotalLine:
+                        type: boolean
+                        default: false
+                      eventMappings:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                        default: {}
+                      calculationFormula:
+                        type: string
+                      aggregationMethod:
+                        type: string
+                        maxLength: 50
+                        default: SUM
+                      displayConditions:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                        default: {}
+                      formatRules:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                        default: {}
+                      metadata:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                        default: {}
+                      isActive:
+                        type: boolean
+                        default: true
+                    required:
+                      - statementCode
+                      - statementName
+                      - lineItem
+                      - displayOrder
+                validateOnly:
+                  type: boolean
+                  default: false
+              required:
+                - templates
+      responses:
+        "200":
+          description: Validation results (when validateOnly=true)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isValid:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                        lineId:
+                          type: number
+                      required:
+                        - field
+                        - message
+                  warnings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                        lineId:
+                          type: number
+                      required:
+                        - field
+                        - message
+                required:
+                  - isValid
+                  - errors
+                  - warnings
+        "201":
+          description: Bulk creation results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        statementCode:
+                          type: string
+                        statementName:
+                          type: string
+                        lineItem:
+                          type: string
+                        lineCode:
+                          type: string
+                          nullable: true
+                        parentLineId:
+                          type: integer
+                          nullable: true
+                        displayOrder:
+                          type: integer
+                        level:
+                          type: integer
+                        isTotalLine:
+                          type: boolean
+                        isSubtotalLine:
+                          type: boolean
+                        eventMappings:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        calculationFormula:
+                          type: string
+                          nullable: true
+                        aggregationMethod:
+                          type: string
+                        displayConditions:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        formatRules:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        metadata:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        isActive:
+                          type: boolean
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - statementCode
+                        - statementName
+                        - lineItem
+                        - lineCode
+                        - parentLineId
+                        - displayOrder
+                        - level
+                        - isTotalLine
+                        - isSubtotalLine
+                        - eventMappings
+                        - calculationFormula
+                        - aggregationMethod
+                        - displayConditions
+                        - formatRules
+                        - metadata
+                        - isActive
+                        - createdAt
+                        - updatedAt
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: number
+                        error:
+                          type: string
+                      required:
+                        - index
+                        - error
+                required:
+                  - created
+                  - errors
+    patch:
+      tags:
+        - statement-templates
+      requestBody:
+        description: Bulk update data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                updates:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      data:
+                        type: object
+                        properties:
+                          statementCode:
+                            type: string
+                            minLength: 1
+                            maxLength: 50
+                          statementName:
+                            type: string
+                            minLength: 1
+                            maxLength: 200
+                          lineItem:
+                            type: string
+                            minLength: 1
+                            maxLength: 300
+                          lineCode:
+                            type: string
+                            maxLength: 50
+                          parentLineId:
+                            type: integer
+                          displayOrder:
+                            type: integer
+                            minimum: 1
+                          level:
+                            type: integer
+                            minimum: 1
+                            maximum: 10
+                            default: 1
+                          isTotalLine:
+                            type: boolean
+                            default: false
+                          isSubtotalLine:
+                            type: boolean
+                            default: false
+                          eventMappings:
+                            type: object
+                            additionalProperties:
+                              nullable: true
+                            default: {}
+                          calculationFormula:
+                            type: string
+                          aggregationMethod:
+                            type: string
+                            maxLength: 50
+                            default: SUM
+                          displayConditions:
+                            type: object
+                            additionalProperties:
+                              nullable: true
+                            default: {}
+                          formatRules:
+                            type: object
+                            additionalProperties:
+                              nullable: true
+                            default: {}
+                          metadata:
+                            type: object
+                            additionalProperties:
+                              nullable: true
+                            default: {}
+                          isActive:
+                            type: boolean
+                            default: true
+                    required:
+                      - id
+                      - data
+              required:
+                - updates
+      responses:
+        "200":
+          description: Bulk update results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        statementCode:
+                          type: string
+                        statementName:
+                          type: string
+                        lineItem:
+                          type: string
+                        lineCode:
+                          type: string
+                          nullable: true
+                        parentLineId:
+                          type: integer
+                          nullable: true
+                        displayOrder:
+                          type: integer
+                        level:
+                          type: integer
+                        isTotalLine:
+                          type: boolean
+                        isSubtotalLine:
+                          type: boolean
+                        eventMappings:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        calculationFormula:
+                          type: string
+                          nullable: true
+                        aggregationMethod:
+                          type: string
+                        displayConditions:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        formatRules:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        metadata:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        isActive:
+                          type: boolean
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - statementCode
+                        - statementName
+                        - lineItem
+                        - lineCode
+                        - parentLineId
+                        - displayOrder
+                        - level
+                        - isTotalLine
+                        - isSubtotalLine
+                        - eventMappings
+                        - calculationFormula
+                        - aggregationMethod
+                        - displayConditions
+                        - formatRules
+                        - metadata
+                        - isActive
+                        - createdAt
+                        - updatedAt
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        error:
+                          type: string
+                      required:
+                        - id
+                        - error
+                required:
+                  - updated
+                  - errors
+  /api/statement-templates/reorder:
+    patch:
+      tags:
+        - statement-templates
+      requestBody:
+        description: Reorder data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                statementCode:
+                  type: string
+                reorderedItems:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      displayOrder:
+                        type: integer
+                      level:
+                        type: integer
+                      parentLineId:
+                        type: integer
+                    required:
+                      - id
+                      - displayOrder
+              required:
+                - statementCode
+                - reorderedItems
+      responses:
+        "200":
+          description: Reorder results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        statementCode:
+                          type: string
+                        statementName:
+                          type: string
+                        lineItem:
+                          type: string
+                        lineCode:
+                          type: string
+                          nullable: true
+                        parentLineId:
+                          type: integer
+                          nullable: true
+                        displayOrder:
+                          type: integer
+                        level:
+                          type: integer
+                        isTotalLine:
+                          type: boolean
+                        isSubtotalLine:
+                          type: boolean
+                        eventMappings:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        calculationFormula:
+                          type: string
+                          nullable: true
+                        aggregationMethod:
+                          type: string
+                        displayConditions:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        formatRules:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        metadata:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        isActive:
+                          type: boolean
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - statementCode
+                        - statementName
+                        - lineItem
+                        - lineCode
+                        - parentLineId
+                        - displayOrder
+                        - level
+                        - isTotalLine
+                        - isSubtotalLine
+                        - eventMappings
+                        - calculationFormula
+                        - aggregationMethod
+                        - displayConditions
+                        - formatRules
+                        - metadata
+                        - isActive
+                        - createdAt
+                        - updatedAt
+                  message:
+                    type: string
+                required:
+                  - updated
+                  - message
+        "400":
+          description: Reorder validation errors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+                  - errors
+  /api/statement-templates/codes:
+    get:
+      tags:
+        - statement-templates
+      responses:
+        "200":
+          description: Available statement codes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  codes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                        name:
+                          type: string
+                        description:
+                          type: string
+                      required:
+                        - code
+                        - name
+                required:
+                  - codes
+  /api/statement-templates/{id}/duplicate:
+    post:
+      tags:
+        - statement-templates
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Duplication parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newStatementCode:
+                  type: string
+                newStatementName:
+                  type: string
+                includeChildren:
+                  type: boolean
+                  default: true
+              required:
+                - newStatementCode
+                - newStatementName
+      responses:
+        "201":
+          description: Duplication results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  original:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      statementCode:
+                        type: string
+                      statementName:
+                        type: string
+                      lineItem:
+                        type: string
+                      lineCode:
+                        type: string
+                        nullable: true
+                      parentLineId:
+                        type: integer
+                        nullable: true
+                      displayOrder:
+                        type: integer
+                      level:
+                        type: integer
+                      isTotalLine:
+                        type: boolean
+                      isSubtotalLine:
+                        type: boolean
+                      eventMappings:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      calculationFormula:
+                        type: string
+                        nullable: true
+                      aggregationMethod:
+                        type: string
+                      displayConditions:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      formatRules:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      metadata:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      isActive:
+                        type: boolean
+                      createdAt:
+                        type: string
+                      updatedAt:
+                        type: string
+                    required:
+                      - id
+                      - statementCode
+                      - statementName
+                      - lineItem
+                      - lineCode
+                      - parentLineId
+                      - displayOrder
+                      - level
+                      - isTotalLine
+                      - isSubtotalLine
+                      - eventMappings
+                      - calculationFormula
+                      - aggregationMethod
+                      - displayConditions
+                      - formatRules
+                      - metadata
+                      - isActive
+                      - createdAt
+                      - updatedAt
+                  duplicated:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        statementCode:
+                          type: string
+                        statementName:
+                          type: string
+                        lineItem:
+                          type: string
+                        lineCode:
+                          type: string
+                          nullable: true
+                        parentLineId:
+                          type: integer
+                          nullable: true
+                        displayOrder:
+                          type: integer
+                        level:
+                          type: integer
+                        isTotalLine:
+                          type: boolean
+                        isSubtotalLine:
+                          type: boolean
+                        eventMappings:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        calculationFormula:
+                          type: string
+                          nullable: true
+                        aggregationMethod:
+                          type: string
+                        displayConditions:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        formatRules:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        metadata:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        isActive:
+                          type: boolean
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - statementCode
+                        - statementName
+                        - lineItem
+                        - lineCode
+                        - parentLineId
+                        - displayOrder
+                        - level
+                        - isTotalLine
+                        - isSubtotalLine
+                        - eventMappings
+                        - calculationFormula
+                        - aggregationMethod
+                        - displayConditions
+                        - formatRules
+                        - metadata
+                        - isActive
+                        - createdAt
+                        - updatedAt
+                required:
+                  - original
+                  - duplicated
+        "404":
+          description: Template to duplicate not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found

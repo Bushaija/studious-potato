@@ -1,0 +1,110 @@
+/api/provinces:
+    get:
+      tags:
+        - provinces
+      responses:
+        "200":
+          description: The list of provinces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                  required:
+                    - id
+                    - name
+  /api/provinces/{id}:
+    get:
+      tags:
+        - provinces
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: The province
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                required:
+                  - id
+                  - name
+        "404":
+          description: Province not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+        "422":
+          description: Invalid province ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      issues:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            code:
+                              type: string
+                            path:
+                              type: array
+                              items:
+                                anyOf:
+                                  - type: string
+                                  - type: number
+                            message:
+                              type: string
+                          required:
+                            - code
+                            - path
+                      name:
+                        type: string
+                    required:
+                      - issues
+                      - name
+                    example:
+                      name: ZodError
+                      issues:
+                        - code: invalid_type
+                          path:
+                            - id
+                          message: "Invalid input: expected number, received NaN"
+                required:
+                  - success
+                  - error
+  

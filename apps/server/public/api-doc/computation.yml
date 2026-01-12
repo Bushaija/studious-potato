@@ -1,0 +1,581 @@
+  /api/computation/calculate-values:
+    post:
+      tags:
+        - computation
+      requestBody:
+        description: Data and formulas for calculation
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schemaId:
+                  type: integer
+                data:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                calculations:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      fieldId:
+                        type: string
+                      formula:
+                        type: string
+                      dependencies:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - fieldId
+                      - formula
+                      - dependencies
+              required:
+                - schemaId
+                - data
+      responses:
+        "200":
+          description: Calculated values with trace
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  computedValues:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  calculationTrace:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fieldId:
+                          type: string
+                        formula:
+                          type: string
+                        inputs:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        result:
+                          nullable: true
+                        executionTime:
+                          type: number
+                        error:
+                          type: string
+                      required:
+                        - fieldId
+                        - formula
+                        - inputs
+                        - executionTime
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fieldId:
+                          type: string
+                        message:
+                          type: string
+                        code:
+                          type: string
+                      required:
+                        - fieldId
+                        - message
+                        - code
+                  warnings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fieldId:
+                          type: string
+                        message:
+                          type: string
+                        code:
+                          type: string
+                      required:
+                        - fieldId
+                        - message
+                        - code
+                required:
+                  - computedValues
+                  - calculationTrace
+                  - errors
+                  - warnings
+        "400":
+          description: Calculation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+                  - errors
+  /api/computation/aggregate-totals:
+    post:
+      tags:
+        - computation
+      requestBody:
+        description: Data for aggregation
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                aggregationRules:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      fieldId:
+                        type: string
+                      aggregationType:
+                        type: string
+                        enum:
+                          - SUM
+                          - AVERAGE
+                          - COUNT
+                          - MIN
+                          - MAX
+                          - MEDIAN
+                      sourceFields:
+                        type: array
+                        items:
+                          type: string
+                      filters:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - fieldId
+                      - aggregationType
+                      - sourceFields
+              required:
+                - data
+                - aggregationRules
+      responses:
+        "200":
+          description: Aggregated totals
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  aggregatedValues:
+                    type: object
+                    additionalProperties:
+                      type: number
+                  itemCount:
+                    type: number
+                  processedFields:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - aggregatedValues
+                  - itemCount
+                  - processedFields
+  /api/computation/variance-analysis:
+    post:
+      tags:
+        - computation
+      requestBody:
+        description: Planned vs actual data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plannedData:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                actualData:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                analysisType:
+                  type: string
+                  enum:
+                    - budget_vs_actual
+                    - quarter_vs_quarter
+                    - year_over_year
+                toleranceThreshold:
+                  type: number
+                  default: 0.05
+              required:
+                - plannedData
+                - actualData
+                - analysisType
+      responses:
+        "200":
+          description: Variance analysis results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: object
+                    properties:
+                      totalVariance:
+                        type: number
+                      averageVariance:
+                        type: number
+                      significantVariances:
+                        type: number
+                      overBudgetItems:
+                        type: number
+                      underBudgetItems:
+                        type: number
+                    required:
+                      - totalVariance
+                      - averageVariance
+                      - significantVariances
+                      - overBudgetItems
+                      - underBudgetItems
+                  fieldAnalysis:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fieldId:
+                          type: string
+                        planned:
+                          type: number
+                        actual:
+                          type: number
+                        variance:
+                          type: number
+                        percentageVariance:
+                          type: number
+                        isSignificant:
+                          type: boolean
+                        status:
+                          type: string
+                          enum:
+                            - over_budget
+                            - under_budget
+                            - on_track
+                      required:
+                        - fieldId
+                        - planned
+                        - actual
+                        - variance
+                        - percentageVariance
+                        - isSignificant
+                        - status
+                  recommendations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fieldId:
+                          type: string
+                        priority:
+                          type: string
+                          enum:
+                            - high
+                            - medium
+                            - low
+                        message:
+                          type: string
+                        suggestedAction:
+                          type: string
+                      required:
+                        - fieldId
+                        - priority
+                        - message
+                        - suggestedAction
+                required:
+                  - summary
+                  - fieldAnalysis
+                  - recommendations
+  /api/computation/validate-formula:
+    post:
+      tags:
+        - computation
+      requestBody:
+        description: Formula to validate
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                formula:
+                  type: string
+                context:
+                  type: object
+                  properties:
+                    availableFields:
+                      type: array
+                      items:
+                        type: string
+                    functions:
+                      type: array
+                      items:
+                        type: string
+                    testData:
+                      type: object
+                      additionalProperties:
+                        nullable: true
+                  required:
+                    - availableFields
+              required:
+                - formula
+                - context
+      responses:
+        "200":
+          description: Formula validation results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isValid:
+                    type: boolean
+                  syntax:
+                    type: object
+                    properties:
+                      isValidSyntax:
+                        type: boolean
+                      syntaxErrors:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - isValidSyntax
+                      - syntaxErrors
+                  dependencies:
+                    type: object
+                    properties:
+                      requiredFields:
+                        type: array
+                        items:
+                          type: string
+                      missingFields:
+                        type: array
+                        items:
+                          type: string
+                      circularDependencies:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - requiredFields
+                      - missingFields
+                      - circularDependencies
+                  testResult:
+                    type: object
+                    properties:
+                      result:
+                        nullable: true
+                      executionTime:
+                        type: number
+                      error:
+                        type: string
+                    required:
+                      - executionTime
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - isValid
+                  - syntax
+                  - dependencies
+                  - warnings
+  /api/computation/financial-ratios:
+    post:
+      tags:
+        - computation
+      requestBody:
+        description: Data for financial ratio calculation
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                ratios:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - current_ratio
+                      - quick_ratio
+                      - debt_to_equity
+                      - return_on_assets
+                      - budget_execution_rate
+                      - expenditure_ratio
+                      - surplus_ratio
+              required:
+                - data
+                - ratios
+      responses:
+        "200":
+          description: Financial ratios analysis
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ratios:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ratioName:
+                          type: string
+                        value:
+                          type: number
+                        formula:
+                          type: string
+                        interpretation:
+                          type: string
+                        benchmark:
+                          type: number
+                        status:
+                          type: string
+                          enum:
+                            - excellent
+                            - good
+                            - fair
+                            - poor
+                      required:
+                        - ratioName
+                        - value
+                        - formula
+                        - interpretation
+                        - status
+                  summary:
+                    type: object
+                    properties:
+                      overallScore:
+                        type: number
+                      riskLevel:
+                        type: string
+                        enum:
+                          - low
+                          - medium
+                          - high
+                      keyInsights:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - overallScore
+                      - riskLevel
+                      - keyInsights
+                required:
+                  - ratios
+                  - summary
+  /api/computation/optimize-formulas:
+    post:
+      tags:
+        - computation
+      requestBody:
+        description: Formulas to optimize
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                formulas:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      fieldId:
+                        type: string
+                      formula:
+                        type: string
+                      priority:
+                        type: string
+                        enum:
+                          - high
+                          - medium
+                          - low
+                        default: medium
+                    required:
+                      - fieldId
+                      - formula
+                optimizationGoals:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - performance
+                      - accuracy
+                      - maintainability
+              required:
+                - formulas
+                - optimizationGoals
+      responses:
+        "200":
+          description: Formula optimization results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  optimizedFormulas:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fieldId:
+                          type: string
+                        originalFormula:
+                          type: string
+                        optimizedFormula:
+                          type: string
+                        improvementType:
+                          type: string
+                        performanceGain:
+                          type: number
+                        risks:
+                          type: array
+                          items:
+                            type: string
+                      required:
+                        - fieldId
+                        - originalFormula
+                        - optimizedFormula
+                        - improvementType
+                        - performanceGain
+                        - risks
+                  recommendations:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - optimizedFormulas
+                  - recommendations
+  

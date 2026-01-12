@@ -1,0 +1,508 @@
+/api/reporting-periods/current:
+    get:
+      tags:
+        - reporting-periods
+      responses:
+        "200":
+          description: Current active reporting period
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  year:
+                    type: integer
+                  periodType:
+                    type: string
+                  startDate:
+                    type: string
+                  endDate:
+                    type: string
+                  status:
+                    type: string
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - year
+                  - periodType
+                  - startDate
+                  - endDate
+                  - status
+                  - createdAt
+                  - updatedAt
+        "404":
+          description: No current active reporting period found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/reporting-periods/stats:
+    get:
+      tags:
+        - reporting-periods
+      responses:
+        "200":
+          description: Reporting periods statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalPeriods:
+                    type: number
+                  activePeriods:
+                    type: number
+                  yearRange:
+                    type: object
+                    properties:
+                      earliest:
+                        type: number
+                      latest:
+                        type: number
+                    required:
+                      - earliest
+                      - latest
+                  periodTypeDistribution:
+                    type: object
+                    additionalProperties:
+                      type: number
+                required:
+                  - totalPeriods
+                  - activePeriods
+                  - yearRange
+                  - periodTypeDistribution
+  /api/reporting-periods:
+    get:
+      tags:
+        - reporting-periods
+      parameters:
+        - schema:
+            type: string
+          required: false
+          name: year
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: periodType
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: status
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: startYear
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: endYear
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: limit
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: offset
+          in: query
+      responses:
+        "200":
+          description: List of reporting periods with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        year:
+                          type: integer
+                        periodType:
+                          type: string
+                        startDate:
+                          type: string
+                        endDate:
+                          type: string
+                        status:
+                          type: string
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - year
+                        - periodType
+                        - startDate
+                        - endDate
+                        - status
+                        - createdAt
+                        - updatedAt
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: number
+                      limit:
+                        type: number
+                      offset:
+                        type: number
+                      hasMore:
+                        type: boolean
+                    required:
+                      - total
+                      - limit
+                      - offset
+                      - hasMore
+                required:
+                  - data
+                  - pagination
+    post:
+      tags:
+        - reporting-periods
+      requestBody:
+        description: Reporting period data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                year:
+                  type: integer
+                  minimum: 2020
+                  maximum: 2050
+                periodType:
+                  type: string
+                  default: ANNUAL
+                startDate:
+                  type: string
+                  pattern: ^\d{4}-\d{2}-\d{2}$
+                endDate:
+                  type: string
+                  pattern: ^\d{4}-\d{2}-\d{2}$
+                status:
+                  type: string
+                  default: ACTIVE
+              required:
+                - year
+                - startDate
+                - endDate
+      responses:
+        "201":
+          description: The created reporting period
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  year:
+                    type: integer
+                  periodType:
+                    type: string
+                  startDate:
+                    type: string
+                  endDate:
+                    type: string
+                  status:
+                    type: string
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - year
+                  - periodType
+                  - startDate
+                  - endDate
+                  - status
+                  - createdAt
+                  - updatedAt
+        "409":
+          description: Reporting period already exists for the given year and period type
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  conflictField:
+                    type: string
+                required:
+                  - message
+                  - conflictField
+  /api/reporting-periods/{id}:
+    get:
+      tags:
+        - reporting-periods
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: The reporting period
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  year:
+                    type: integer
+                  periodType:
+                    type: string
+                  startDate:
+                    type: string
+                  endDate:
+                    type: string
+                  status:
+                    type: string
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - year
+                  - periodType
+                  - startDate
+                  - endDate
+                  - status
+                  - createdAt
+                  - updatedAt
+        "404":
+          description: Reporting period not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    patch:
+      tags:
+        - reporting-periods
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Fields to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                year:
+                  type: integer
+                  minimum: 2020
+                  maximum: 2050
+                periodType:
+                  type: string
+                  default: ANNUAL
+                startDate:
+                  type: string
+                  pattern: ^\d{4}-\d{2}-\d{2}$
+                endDate:
+                  type: string
+                  pattern: ^\d{4}-\d{2}-\d{2}$
+                status:
+                  type: string
+                  default: ACTIVE
+      responses:
+        "200":
+          description: The updated reporting period
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  year:
+                    type: integer
+                  periodType:
+                    type: string
+                  startDate:
+                    type: string
+                  endDate:
+                    type: string
+                  status:
+                    type: string
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - year
+                  - periodType
+                  - startDate
+                  - endDate
+                  - status
+                  - createdAt
+                  - updatedAt
+        "404":
+          description: Reporting period not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+        "409":
+          description: Update would create a conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  conflictField:
+                    type: string
+                required:
+                  - message
+                  - conflictField
+    delete:
+      tags:
+        - reporting-periods
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "204":
+          description: Reporting period deleted successfully
+        "404":
+          description: Reporting period not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+        "409":
+          description: Cannot delete reporting period due to existing dependencies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  relatedEntities:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+                  - relatedEntities
+  /api/reporting-periods/year/{year}:
+    get:
+      tags:
+        - reporting-periods
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: year
+          in: path
+      responses:
+        "200":
+          description: Reporting periods for the specified year
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    year:
+                      type: integer
+                    periodType:
+                      type: string
+                    startDate:
+                      type: string
+                    endDate:
+                      type: string
+                    status:
+                      type: string
+                    createdAt:
+                      type: string
+                    updatedAt:
+                      type: string
+                  required:
+                    - id
+                    - year
+                    - periodType
+                    - startDate
+                    - endDate
+                    - status
+                    - createdAt
+                    - updatedAt
+  

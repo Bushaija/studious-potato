@@ -1,0 +1,821 @@
+/api/execution/quarterly-summary:
+    get:
+      tags:
+        - execution
+      parameters:
+        - schema:
+            type: integer
+            nullable: true
+          required: false
+          name: projectId
+          in: query
+        - schema:
+            type: integer
+            nullable: true
+          required: false
+          name: facilityId
+          in: query
+        - schema:
+            type: integer
+            nullable: true
+          required: false
+          name: year
+          in: query
+      responses:
+        "200":
+          description: Quarterly execution summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quarters:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        totalReceipts:
+                          type: number
+                        totalExpenditures:
+                          type: number
+                        surplus:
+                          type: number
+                        netFinancialAssets:
+                          type: number
+                        closingBalance:
+                          type: number
+                        isBalanced:
+                          type: boolean
+                      required:
+                        - totalReceipts
+                        - totalExpenditures
+                        - surplus
+                        - netFinancialAssets
+                        - closingBalance
+                        - isBalanced
+                  yearToDate:
+                    type: object
+                    properties:
+                      totalReceipts:
+                        type: number
+                      totalExpenditures:
+                        type: number
+                      cumulativeSurplus:
+                        type: number
+                      finalClosingBalance:
+                        type: number
+                    required:
+                      - totalReceipts
+                      - totalExpenditures
+                      - cumulativeSurplus
+                      - finalClosingBalance
+                required:
+                  - quarters
+                  - yearToDate
+  /api/execution:
+    get:
+      tags:
+        - execution
+      parameters:
+        - schema:
+            type: integer
+          required: false
+          name: projectId
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: facilityId
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: reportingPeriodId
+          in: query
+        - schema:
+            type: string
+            enum:
+              - Q1
+              - Q2
+              - Q3
+              - Q4
+          required: false
+          name: quarter
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: year
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: List of execution data entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        schemaId:
+                          type: integer
+                        entityId:
+                          type: integer
+                          nullable: true
+                        entityType:
+                          type: string
+                        projectId:
+                          type: integer
+                        facilityId:
+                          type: integer
+                        reportingPeriodId:
+                          type: integer
+                          nullable: true
+                        formData:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        computedValues:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        validationState:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        metadata:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        createdBy:
+                          type: integer
+                          nullable: true
+                        createdAt:
+                          type: string
+                        updatedBy:
+                          type: integer
+                          nullable: true
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - schemaId
+                        - entityId
+                        - entityType
+                        - projectId
+                        - facilityId
+                        - reportingPeriodId
+                        - formData
+                        - computedValues
+                        - validationState
+                        - metadata
+                        - createdBy
+                        - createdAt
+                        - updatedBy
+                        - updatedAt
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      total:
+                        type: number
+                      totalPages:
+                        type: number
+                    required:
+                      - page
+                      - limit
+                      - total
+                      - totalPages
+                required:
+                  - data
+                  - pagination
+    post:
+      tags:
+        - execution
+      requestBody:
+        description: Execution data to create
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schemaId:
+                  type: integer
+                projectId:
+                  type: integer
+                facilityId:
+                  type: integer
+                reportingPeriodId:
+                  type: integer
+                formData:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+              required:
+                - schemaId
+                - projectId
+                - facilityId
+                - formData
+      responses:
+        "201":
+          description: Created execution data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  schemaId:
+                    type: integer
+                  entityId:
+                    type: integer
+                    nullable: true
+                  entityType:
+                    type: string
+                  projectId:
+                    type: integer
+                  facilityId:
+                    type: integer
+                  reportingPeriodId:
+                    type: integer
+                    nullable: true
+                  formData:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  computedValues:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationState:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  createdBy:
+                    type: integer
+                    nullable: true
+                  createdAt:
+                    type: string
+                  updatedBy:
+                    type: integer
+                    nullable: true
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - schemaId
+                  - entityId
+                  - entityType
+                  - projectId
+                  - facilityId
+                  - reportingPeriodId
+                  - formData
+                  - computedValues
+                  - validationState
+                  - metadata
+                  - createdBy
+                  - createdAt
+                  - updatedBy
+                  - updatedAt
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+  /api/execution/{id}:
+    get:
+      tags:
+        - execution
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Execution data entry
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  schemaId:
+                    type: integer
+                  entityId:
+                    type: integer
+                    nullable: true
+                  entityType:
+                    type: string
+                  projectId:
+                    type: integer
+                  facilityId:
+                    type: integer
+                  reportingPeriodId:
+                    type: integer
+                    nullable: true
+                  formData:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  computedValues:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationState:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  createdBy:
+                    type: integer
+                    nullable: true
+                  createdAt:
+                    type: string
+                  updatedBy:
+                    type: integer
+                    nullable: true
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - schemaId
+                  - entityId
+                  - entityType
+                  - projectId
+                  - facilityId
+                  - reportingPeriodId
+                  - formData
+                  - computedValues
+                  - validationState
+                  - metadata
+                  - createdBy
+                  - createdAt
+                  - updatedBy
+                  - updatedAt
+        "404":
+          description: Execution data not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    put:
+      tags:
+        - execution
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Execution data updates
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schemaId:
+                  type: integer
+                projectId:
+                  type: integer
+                facilityId:
+                  type: integer
+                reportingPeriodId:
+                  type: integer
+                formData:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+      responses:
+        "200":
+          description: Updated execution data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  schemaId:
+                    type: integer
+                  entityId:
+                    type: integer
+                    nullable: true
+                  entityType:
+                    type: string
+                  projectId:
+                    type: integer
+                  facilityId:
+                    type: integer
+                  reportingPeriodId:
+                    type: integer
+                    nullable: true
+                  formData:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  computedValues:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationState:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  createdBy:
+                    type: integer
+                    nullable: true
+                  createdAt:
+                    type: string
+                  updatedBy:
+                    type: integer
+                    nullable: true
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - schemaId
+                  - entityId
+                  - entityType
+                  - projectId
+                  - facilityId
+                  - reportingPeriodId
+                  - formData
+                  - computedValues
+                  - validationState
+                  - metadata
+                  - createdBy
+                  - createdAt
+                  - updatedBy
+                  - updatedAt
+        "404":
+          description: Execution data not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    delete:
+      tags:
+        - execution
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "204":
+          description: Execution data deleted successfully
+        "404":
+          description: Execution data not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/execution/calculate-balances:
+    post:
+      tags:
+        - execution
+      requestBody:
+        description: Data for balance calculation
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                executionId:
+                  type: integer
+                data:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+              required:
+                - executionId
+                - data
+      responses:
+        "200":
+          description: Calculated balances
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  receipts:
+                    type: object
+                    properties:
+                      q1:
+                        type: number
+                      q2:
+                        type: number
+                      q3:
+                        type: number
+                      q4:
+                        type: number
+                      cumulativeBalance:
+                        type: number
+                    required:
+                      - q1
+                      - q2
+                      - q3
+                      - q4
+                      - cumulativeBalance
+                  expenditures:
+                    type: object
+                    properties:
+                      q1:
+                        type: number
+                      q2:
+                        type: number
+                      q3:
+                        type: number
+                      q4:
+                        type: number
+                      cumulativeBalance:
+                        type: number
+                    required:
+                      - q1
+                      - q2
+                      - q3
+                      - q4
+                      - cumulativeBalance
+                  surplus:
+                    type: object
+                    properties:
+                      q1:
+                        type: number
+                      q2:
+                        type: number
+                      q3:
+                        type: number
+                      q4:
+                        type: number
+                      cumulativeBalance:
+                        type: number
+                    required:
+                      - q1
+                      - q2
+                      - q3
+                      - q4
+                      - cumulativeBalance
+                  financialAssets:
+                    type: object
+                    properties:
+                      q1:
+                        type: number
+                      q2:
+                        type: number
+                      q3:
+                        type: number
+                      q4:
+                        type: number
+                      cumulativeBalance:
+                        type: number
+                    required:
+                      - q1
+                      - q2
+                      - q3
+                      - q4
+                      - cumulativeBalance
+                  financialLiabilities:
+                    type: object
+                    properties:
+                      q1:
+                        type: number
+                      q2:
+                        type: number
+                      q3:
+                        type: number
+                      q4:
+                        type: number
+                      cumulativeBalance:
+                        type: number
+                    required:
+                      - q1
+                      - q2
+                      - q3
+                      - q4
+                      - cumulativeBalance
+                  netFinancialAssets:
+                    type: object
+                    properties:
+                      q1:
+                        type: number
+                      q2:
+                        type: number
+                      q3:
+                        type: number
+                      q4:
+                        type: number
+                      cumulativeBalance:
+                        type: number
+                    required:
+                      - q1
+                      - q2
+                      - q3
+                      - q4
+                      - cumulativeBalance
+                  closingBalance:
+                    type: object
+                    properties:
+                      q1:
+                        type: number
+                      q2:
+                        type: number
+                      q3:
+                        type: number
+                      q4:
+                        type: number
+                      cumulativeBalance:
+                        type: number
+                    required:
+                      - q1
+                      - q2
+                      - q3
+                      - q4
+                      - cumulativeBalance
+                  isBalanced:
+                    type: boolean
+                  validationErrors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                        code:
+                          type: string
+                      required:
+                        - field
+                        - message
+                        - code
+                required:
+                  - receipts
+                  - expenditures
+                  - surplus
+                  - financialAssets
+                  - financialLiabilities
+                  - netFinancialAssets
+                  - closingBalance
+                  - isBalanced
+                  - validationErrors
+  /api/execution/validate-accounting-equation:
+    post:
+      tags:
+        - execution
+      requestBody:
+        description: Data to validate
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                tolerance:
+                  type: number
+                  default: 0.01
+              required:
+                - data
+      responses:
+        "200":
+          description: Accounting equation validation results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isValid:
+                    type: boolean
+                  netFinancialAssets:
+                    type: number
+                  closingBalance:
+                    type: number
+                  difference:
+                    type: number
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                        code:
+                          type: string
+                      required:
+                        - field
+                        - message
+                        - code
+                required:
+                  - isValid
+                  - netFinancialAssets
+                  - closingBalance
+                  - difference
+                  - errors
+  

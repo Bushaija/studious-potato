@@ -1,0 +1,1025 @@
+/api/event-mappings:
+    get:
+      tags:
+        - event-mappings
+      parameters:
+        - schema:
+            type: integer
+          required: false
+          name: eventId
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: activityId
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: categoryId
+          in: query
+        - schema:
+            type: string
+            enum:
+              - HIV
+              - Malaria
+              - TB
+          required: false
+          name: projectType
+          in: query
+        - schema:
+            type: string
+            enum:
+              - hospital
+              - health_center
+          required: false
+          name: facilityType
+          in: query
+        - schema:
+            type: string
+            enum:
+              - DIRECT
+              - COMPUTED
+              - AGGREGATED
+          required: false
+          name: mappingType
+          in: query
+        - schema:
+            type: boolean
+          required: false
+          name: isActive
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: List of event mappings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        eventId:
+                          type: integer
+                        activityId:
+                          type: integer
+                          nullable: true
+                        categoryId:
+                          type: integer
+                          nullable: true
+                        projectType:
+                          type: string
+                          enum:
+                            - HIV
+                            - Malaria
+                            - TB
+                        facilityType:
+                          type: string
+                          enum:
+                            - hospital
+                            - health_center
+                        mappingType:
+                          type: string
+                          enum:
+                            - DIRECT
+                            - COMPUTED
+                            - AGGREGATED
+                        mappingFormula:
+                          type: string
+                          nullable: true
+                        mappingRatio:
+                          type: number
+                        isActive:
+                          type: boolean
+                        effectiveFrom:
+                          type: string
+                          nullable: true
+                        effectiveTo:
+                          type: string
+                          nullable: true
+                        metadata:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                        event:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            noteNumber:
+                              type: integer
+                            code:
+                              type: string
+                            description:
+                              type: string
+                            statementCodes:
+                              type: array
+                              items:
+                                type: string
+                            eventType:
+                              type: string
+                              enum:
+                                - REVENUE
+                                - EXPENSE
+                                - ASSET
+                                - LIABILITY
+                                - EQUITY
+                            isCurrent:
+                              type: boolean
+                            displayOrder:
+                              type: integer
+                            createdAt:
+                              type: string
+                            updatedAt:
+                              type: string
+                          required:
+                            - id
+                            - noteNumber
+                            - code
+                            - description
+                            - statementCodes
+                            - eventType
+                            - isCurrent
+                            - displayOrder
+                            - createdAt
+                            - updatedAt
+                        activity:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            name:
+                              type: string
+                            code:
+                              type: string
+                          required:
+                            - id
+                            - name
+                        category:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            name:
+                              type: string
+                            code:
+                              type: string
+                          required:
+                            - id
+                            - name
+                            - code
+                      required:
+                        - id
+                        - eventId
+                        - activityId
+                        - categoryId
+                        - projectType
+                        - facilityType
+                        - mappingType
+                        - mappingFormula
+                        - mappingRatio
+                        - isActive
+                        - effectiveFrom
+                        - effectiveTo
+                        - metadata
+                        - createdAt
+                        - updatedAt
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      total:
+                        type: number
+                      totalPages:
+                        type: number
+                    required:
+                      - page
+                      - limit
+                      - total
+                      - totalPages
+                required:
+                  - data
+                  - pagination
+    post:
+      tags:
+        - event-mappings
+      requestBody:
+        description: Event mapping to create
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventId:
+                  type: integer
+                activityId:
+                  type: integer
+                categoryId:
+                  type: integer
+                projectType:
+                  type: string
+                  enum:
+                    - HIV
+                    - Malaria
+                    - TB
+                facilityType:
+                  type: string
+                  enum:
+                    - hospital
+                    - health_center
+                mappingType:
+                  type: string
+                  enum:
+                    - DIRECT
+                    - COMPUTED
+                    - AGGREGATED
+                  default: DIRECT
+                mappingFormula:
+                  type: string
+                mappingRatio:
+                  type: number
+                  default: 1
+                effectiveFrom:
+                  type: string
+                effectiveTo:
+                  type: string
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+              required:
+                - eventId
+                - projectType
+                - facilityType
+      responses:
+        "201":
+          description: Created event mapping
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  eventId:
+                    type: integer
+                  activityId:
+                    type: integer
+                    nullable: true
+                  categoryId:
+                    type: integer
+                    nullable: true
+                  projectType:
+                    type: string
+                    enum:
+                      - HIV
+                      - Malaria
+                      - TB
+                  facilityType:
+                    type: string
+                    enum:
+                      - hospital
+                      - health_center
+                  mappingType:
+                    type: string
+                    enum:
+                      - DIRECT
+                      - COMPUTED
+                      - AGGREGATED
+                  mappingFormula:
+                    type: string
+                    nullable: true
+                  mappingRatio:
+                    type: number
+                  isActive:
+                    type: boolean
+                  effectiveFrom:
+                    type: string
+                    nullable: true
+                  effectiveTo:
+                    type: string
+                    nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - eventId
+                  - activityId
+                  - categoryId
+                  - projectType
+                  - facilityType
+                  - mappingType
+                  - mappingFormula
+                  - mappingRatio
+                  - isActive
+                  - effectiveFrom
+                  - effectiveTo
+                  - metadata
+                  - createdAt
+                  - updatedAt
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+  /api/event-mappings/{id}:
+    get:
+      tags:
+        - event-mappings
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Event mapping details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  eventId:
+                    type: integer
+                  activityId:
+                    type: integer
+                    nullable: true
+                  categoryId:
+                    type: integer
+                    nullable: true
+                  projectType:
+                    type: string
+                    enum:
+                      - HIV
+                      - Malaria
+                      - TB
+                  facilityType:
+                    type: string
+                    enum:
+                      - hospital
+                      - health_center
+                  mappingType:
+                    type: string
+                    enum:
+                      - DIRECT
+                      - COMPUTED
+                      - AGGREGATED
+                  mappingFormula:
+                    type: string
+                    nullable: true
+                  mappingRatio:
+                    type: number
+                  isActive:
+                    type: boolean
+                  effectiveFrom:
+                    type: string
+                    nullable: true
+                  effectiveTo:
+                    type: string
+                    nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                  event:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      noteNumber:
+                        type: integer
+                      code:
+                        type: string
+                      description:
+                        type: string
+                      statementCodes:
+                        type: array
+                        items:
+                          type: string
+                      eventType:
+                        type: string
+                        enum:
+                          - REVENUE
+                          - EXPENSE
+                          - ASSET
+                          - LIABILITY
+                          - EQUITY
+                      isCurrent:
+                        type: boolean
+                      displayOrder:
+                        type: integer
+                      createdAt:
+                        type: string
+                      updatedAt:
+                        type: string
+                    required:
+                      - id
+                      - noteNumber
+                      - code
+                      - description
+                      - statementCodes
+                      - eventType
+                      - isCurrent
+                      - displayOrder
+                      - createdAt
+                      - updatedAt
+                  activity:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      name:
+                        type: string
+                      code:
+                        type: string
+                      activityType:
+                        type: string
+                    required:
+                      - id
+                      - name
+                      - activityType
+                  category:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      name:
+                        type: string
+                      code:
+                        type: string
+                      description:
+                        type: string
+                    required:
+                      - id
+                      - name
+                      - code
+                required:
+                  - id
+                  - eventId
+                  - activityId
+                  - categoryId
+                  - projectType
+                  - facilityType
+                  - mappingType
+                  - mappingFormula
+                  - mappingRatio
+                  - isActive
+                  - effectiveFrom
+                  - effectiveTo
+                  - metadata
+                  - createdAt
+                  - updatedAt
+                  - event
+        "404":
+          description: Event mapping not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    put:
+      tags:
+        - event-mappings
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Event mapping updates
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventId:
+                  type: integer
+                activityId:
+                  type: integer
+                categoryId:
+                  type: integer
+                projectType:
+                  type: string
+                  enum:
+                    - HIV
+                    - Malaria
+                    - TB
+                facilityType:
+                  type: string
+                  enum:
+                    - hospital
+                    - health_center
+                mappingType:
+                  type: string
+                  enum:
+                    - DIRECT
+                    - COMPUTED
+                    - AGGREGATED
+                  default: DIRECT
+                mappingFormula:
+                  type: string
+                mappingRatio:
+                  type: number
+                  default: 1
+                effectiveFrom:
+                  type: string
+                effectiveTo:
+                  type: string
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+      responses:
+        "200":
+          description: Updated event mapping
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  eventId:
+                    type: integer
+                  activityId:
+                    type: integer
+                    nullable: true
+                  categoryId:
+                    type: integer
+                    nullable: true
+                  projectType:
+                    type: string
+                    enum:
+                      - HIV
+                      - Malaria
+                      - TB
+                  facilityType:
+                    type: string
+                    enum:
+                      - hospital
+                      - health_center
+                  mappingType:
+                    type: string
+                    enum:
+                      - DIRECT
+                      - COMPUTED
+                      - AGGREGATED
+                  mappingFormula:
+                    type: string
+                    nullable: true
+                  mappingRatio:
+                    type: number
+                  isActive:
+                    type: boolean
+                  effectiveFrom:
+                    type: string
+                    nullable: true
+                  effectiveTo:
+                    type: string
+                    nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - eventId
+                  - activityId
+                  - categoryId
+                  - projectType
+                  - facilityType
+                  - mappingType
+                  - mappingFormula
+                  - mappingRatio
+                  - isActive
+                  - effectiveFrom
+                  - effectiveTo
+                  - metadata
+                  - createdAt
+                  - updatedAt
+        "404":
+          description: Event mapping not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    delete:
+      tags:
+        - event-mappings
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "204":
+          description: Event mapping deleted successfully
+        "404":
+          description: Event mapping not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/event-mappings/bulk-update:
+    post:
+      tags:
+        - event-mappings
+      requestBody:
+        description: Bulk mapping updates
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mappings:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      eventId:
+                        type: integer
+                      activityId:
+                        type: integer
+                      categoryId:
+                        type: integer
+                      mappingType:
+                        type: string
+                        enum:
+                          - DIRECT
+                          - COMPUTED
+                          - AGGREGATED
+                      mappingFormula:
+                        type: string
+                      mappingRatio:
+                        type: number
+                        default: 1
+                    required:
+                      - eventId
+                      - mappingType
+                projectType:
+                  type: string
+                  enum:
+                    - HIV
+                    - Malaria
+                    - TB
+                facilityType:
+                  type: string
+                  enum:
+                    - hospital
+                    - health_center
+              required:
+                - mappings
+                - projectType
+                - facilityType
+      responses:
+        "200":
+          description: Bulk update results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: number
+                  updated:
+                    type: number
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: number
+                        message:
+                          type: string
+                      required:
+                        - index
+                        - message
+                required:
+                  - created
+                  - updated
+                  - errors
+  /api/event-mappings/validate:
+    post:
+      tags:
+        - event-mappings
+      requestBody:
+        description: Mapping to validate
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventId:
+                  type: integer
+                mappingFormula:
+                  type: string
+                testData:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+              required:
+                - eventId
+                - mappingFormula
+      responses:
+        "200":
+          description: Mapping validation results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isValid:
+                    type: boolean
+                  result:
+                    nullable: true
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        message:
+                          type: string
+                        code:
+                          type: string
+                      required:
+                        - message
+                        - code
+                  warnings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        message:
+                          type: string
+                        code:
+                          type: string
+                      required:
+                        - message
+                        - code
+                required:
+                  - isValid
+                  - errors
+                  - warnings
+  /api/event-mappings/templates/{projectType}/{facilityType}:
+    get:
+      tags:
+        - event-mappings
+      parameters:
+        - schema:
+            type: string
+            enum:
+              - HIV
+              - Malaria
+              - TB
+          required: true
+          name: projectType
+          in: path
+        - schema:
+            type: string
+            enum:
+              - hospital
+              - health_center
+          required: true
+          name: facilityType
+          in: path
+      responses:
+        "200":
+          description: Event mapping template
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mappings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        eventId:
+                          type: integer
+                        activityId:
+                          type: integer
+                          nullable: true
+                        categoryId:
+                          type: integer
+                          nullable: true
+                        projectType:
+                          type: string
+                          enum:
+                            - HIV
+                            - Malaria
+                            - TB
+                        facilityType:
+                          type: string
+                          enum:
+                            - hospital
+                            - health_center
+                        mappingType:
+                          type: string
+                          enum:
+                            - DIRECT
+                            - COMPUTED
+                            - AGGREGATED
+                        mappingFormula:
+                          type: string
+                          nullable: true
+                        mappingRatio:
+                          type: number
+                        isActive:
+                          type: boolean
+                        effectiveFrom:
+                          type: string
+                          nullable: true
+                        effectiveTo:
+                          type: string
+                          nullable: true
+                        metadata:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - eventId
+                        - activityId
+                        - categoryId
+                        - projectType
+                        - facilityType
+                        - mappingType
+                        - mappingFormula
+                        - mappingRatio
+                        - isActive
+                        - effectiveFrom
+                        - effectiveTo
+                        - metadata
+                        - createdAt
+                        - updatedAt
+                  unmappedEvents:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        noteNumber:
+                          type: integer
+                        code:
+                          type: string
+                        description:
+                          type: string
+                        statementCodes:
+                          type: array
+                          items:
+                            type: string
+                        eventType:
+                          type: string
+                          enum:
+                            - REVENUE
+                            - EXPENSE
+                            - ASSET
+                            - LIABILITY
+                            - EQUITY
+                        isCurrent:
+                          type: boolean
+                        displayOrder:
+                          type: integer
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - noteNumber
+                        - code
+                        - description
+                        - statementCodes
+                        - eventType
+                        - isCurrent
+                        - displayOrder
+                        - createdAt
+                        - updatedAt
+                  recommendedMappings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        eventId:
+                          type: number
+                        suggestedActivityId:
+                          type: number
+                        suggestedCategoryId:
+                          type: number
+                        confidence:
+                          type: number
+                        reason:
+                          type: string
+                      required:
+                        - eventId
+                        - confidence
+                        - reason
+                required:
+                  - mappings
+                  - unmappedEvents
+                  - recommendedMappings
+  

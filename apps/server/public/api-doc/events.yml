@@ -1,0 +1,505 @@
+  /api/events:
+    get:
+      tags:
+        - events
+      responses:
+        "200":
+          description: The list of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    noteNumber:
+                      type: integer
+                    code:
+                      type: string
+                    description:
+                      type: string
+                    statementCodes:
+                      type: array
+                      items:
+                        type: string
+                    eventType:
+                      type: string
+                      enum:
+                        - REVENUE
+                        - EXPENSE
+                        - ASSET
+                        - LIABILITY
+                        - EQUITY
+                    isCurrent:
+                      type: boolean
+                    displayOrder:
+                      type: integer
+                    createdAt:
+                      type: string
+                    updatedAt:
+                      type: string
+                  required:
+                    - id
+                    - noteNumber
+                    - code
+                    - description
+                    - statementCodes
+                    - eventType
+                    - isCurrent
+                    - displayOrder
+    post:
+      tags:
+        - events
+      requestBody:
+        description: The event to create
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                noteNumber:
+                  type: integer
+                code:
+                  type: string
+                  maxLength: 50
+                description:
+                  type: string
+                statementCodes:
+                  type: array
+                  items:
+                    type: string
+                eventType:
+                  type: string
+                  enum:
+                    - REVENUE
+                    - EXPENSE
+                    - ASSET
+                    - LIABILITY
+                    - EQUITY
+                isCurrent:
+                  type: boolean
+                  default: true
+                displayOrder:
+                  type: integer
+              required:
+                - noteNumber
+                - code
+                - description
+                - statementCodes
+                - eventType
+                - displayOrder
+      responses:
+        "201":
+          description: The created event
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  noteNumber:
+                    type: integer
+                  code:
+                    type: string
+                  description:
+                    type: string
+                  statementCodes:
+                    type: array
+                    items:
+                      type: string
+                  eventType:
+                    type: string
+                    enum:
+                      - REVENUE
+                      - EXPENSE
+                      - ASSET
+                      - LIABILITY
+                      - EQUITY
+                  isCurrent:
+                    type: boolean
+                  displayOrder:
+                    type: integer
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - noteNumber
+                  - code
+                  - description
+                  - statementCodes
+                  - eventType
+                  - isCurrent
+                  - displayOrder
+        "400":
+          description: Invalid event data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+        "409":
+          description: Event with this code or note number already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/events/{id}:
+    get:
+      tags:
+        - events
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: The event
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  noteNumber:
+                    type: integer
+                  code:
+                    type: string
+                  description:
+                    type: string
+                  statementCodes:
+                    type: array
+                    items:
+                      type: string
+                  eventType:
+                    type: string
+                    enum:
+                      - REVENUE
+                      - EXPENSE
+                      - ASSET
+                      - LIABILITY
+                      - EQUITY
+                  isCurrent:
+                    type: boolean
+                  displayOrder:
+                    type: integer
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - noteNumber
+                  - code
+                  - description
+                  - statementCodes
+                  - eventType
+                  - isCurrent
+                  - displayOrder
+        "404":
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    put:
+      tags:
+        - events
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: The event updates
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                noteNumber:
+                  type: integer
+                code:
+                  type: string
+                  maxLength: 50
+                description:
+                  type: string
+                statementCodes:
+                  type: array
+                  items:
+                    type: string
+                eventType:
+                  type: string
+                  enum:
+                    - REVENUE
+                    - EXPENSE
+                    - ASSET
+                    - LIABILITY
+                    - EQUITY
+                isCurrent:
+                  type: boolean
+                  default: true
+                displayOrder:
+                  type: integer
+              required:
+                - noteNumber
+                - code
+                - description
+                - statementCodes
+                - eventType
+                - displayOrder
+      responses:
+        "200":
+          description: The updated event
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  noteNumber:
+                    type: integer
+                  code:
+                    type: string
+                  description:
+                    type: string
+                  statementCodes:
+                    type: array
+                    items:
+                      type: string
+                  eventType:
+                    type: string
+                    enum:
+                      - REVENUE
+                      - EXPENSE
+                      - ASSET
+                      - LIABILITY
+                      - EQUITY
+                  isCurrent:
+                    type: boolean
+                  displayOrder:
+                    type: integer
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - noteNumber
+                  - code
+                  - description
+                  - statementCodes
+                  - eventType
+                  - isCurrent
+                  - displayOrder
+        "400":
+          description: Invalid event data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+        "404":
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    patch:
+      tags:
+        - events
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: The event partial updates
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                noteNumber:
+                  type: integer
+                code:
+                  type: string
+                  maxLength: 50
+                description:
+                  type: string
+                statementCodes:
+                  type: array
+                  items:
+                    type: string
+                eventType:
+                  type: string
+                  enum:
+                    - REVENUE
+                    - EXPENSE
+                    - ASSET
+                    - LIABILITY
+                    - EQUITY
+                isCurrent:
+                  type: boolean
+                  default: true
+                displayOrder:
+                  type: integer
+      responses:
+        "200":
+          description: The updated event
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  noteNumber:
+                    type: integer
+                  code:
+                    type: string
+                  description:
+                    type: string
+                  statementCodes:
+                    type: array
+                    items:
+                      type: string
+                  eventType:
+                    type: string
+                    enum:
+                      - REVENUE
+                      - EXPENSE
+                      - ASSET
+                      - LIABILITY
+                      - EQUITY
+                  isCurrent:
+                    type: boolean
+                  displayOrder:
+                    type: integer
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - noteNumber
+                  - code
+                  - description
+                  - statementCodes
+                  - eventType
+                  - isCurrent
+                  - displayOrder
+        "400":
+          description: Invalid event data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+        "404":
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    delete:
+      tags:
+        - events
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "204":
+          description: Event deleted successfully
+        "404":
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  

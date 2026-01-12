@@ -1,0 +1,1615 @@
+  /api/financial-reports:
+    get:
+      tags:
+        - financial-reports
+      parameters:
+        - schema:
+            type: integer
+          required: false
+          name: projectId
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: facilityId
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: reportingPeriodId
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: fiscalYear
+          in: query
+        - schema:
+            type: string
+            enum:
+              - draft
+              - submitted
+              - approved
+              - rejected
+          required: false
+          name: status
+          in: query
+        - schema:
+            type: string
+            enum:
+              - revenue_expenditure
+              - balance_sheet
+              - cash_flow
+              - budget_vs_actual
+              - net_assets_changes
+          required: false
+          name: reportType
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: createdBy
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: fromDate
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: toDate
+          in: query
+        - schema:
+            type: integer
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Financial reports retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reports:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        reportCode:
+                          type: string
+                        title:
+                          type: string
+                        projectId:
+                          type: integer
+                        facilityId:
+                          type: integer
+                        reportingPeriodId:
+                          type: integer
+                        version:
+                          type: string
+                        fiscalYear:
+                          type: string
+                        status:
+                          type: string
+                          enum:
+                            - draft
+                            - submitted
+                            - approved
+                            - rejected
+                        reportData:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        metadata:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        computedTotals:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        validationResults:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        createdBy:
+                          type: integer
+                          nullable: true
+                        createdAt:
+                          type: string
+                        updatedBy:
+                          type: integer
+                          nullable: true
+                        updatedAt:
+                          type: string
+                        submittedBy:
+                          type: integer
+                          nullable: true
+                        submittedAt:
+                          type: string
+                          nullable: true
+                        approvedBy:
+                          type: integer
+                          nullable: true
+                        approvedAt:
+                          type: string
+                          nullable: true
+                        project:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            name:
+                              type: string
+                            code:
+                              type: string
+                            projectType:
+                              type: string
+                              nullable: true
+                          required:
+                            - id
+                            - name
+                            - code
+                            - projectType
+                        facility:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            name:
+                              type: string
+                            facilityType:
+                              type: string
+                            district:
+                              type: object
+                              properties:
+                                id:
+                                  type: number
+                                name:
+                                  type: string
+                              required:
+                                - id
+                                - name
+                          required:
+                            - id
+                            - name
+                            - facilityType
+                        reportingPeriod:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            year:
+                              type: number
+                            periodType:
+                              type: string
+                            startDate:
+                              type: string
+                            endDate:
+                              type: string
+                          required:
+                            - id
+                            - year
+                            - periodType
+                            - startDate
+                            - endDate
+                        creator:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            name:
+                              type: string
+                            email:
+                              type: string
+                          required:
+                            - id
+                            - name
+                            - email
+                        submitter:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            name:
+                              type: string
+                            email:
+                              type: string
+                          required:
+                            - id
+                            - name
+                            - email
+                        approver:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            name:
+                              type: string
+                            email:
+                              type: string
+                          required:
+                            - id
+                            - name
+                            - email
+                      required:
+                        - id
+                        - reportCode
+                        - title
+                        - projectId
+                        - facilityId
+                        - reportingPeriodId
+                        - version
+                        - fiscalYear
+                        - status
+                        - reportData
+                        - metadata
+                        - computedTotals
+                        - validationResults
+                        - createdBy
+                        - createdAt
+                        - updatedBy
+                        - updatedAt
+                        - submittedBy
+                        - submittedAt
+                        - approvedBy
+                        - approvedAt
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      total:
+                        type: number
+                      totalPages:
+                        type: number
+                    required:
+                      - page
+                      - limit
+                      - total
+                      - totalPages
+                  summary:
+                    type: object
+                    properties:
+                      totalReports:
+                        type: number
+                      byStatus:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      byType:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      pendingApproval:
+                        type: number
+                    required:
+                      - totalReports
+                      - byStatus
+                      - byType
+                      - pendingApproval
+                required:
+                  - reports
+                  - pagination
+    post:
+      tags:
+        - financial-reports
+      requestBody:
+        description: Financial report data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reportCode:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                projectId:
+                  type: integer
+                facilityId:
+                  type: integer
+                reportingPeriodId:
+                  type: integer
+                version:
+                  type: string
+                  default: "1.0"
+                fiscalYear:
+                  type: string
+                  minLength: 1
+                  maxLength: 10
+                status:
+                  type: string
+                  enum:
+                    - draft
+                    - submitted
+                    - approved
+                    - rejected
+                  default: draft
+                reportData:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                computedTotals:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                validationResults:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+              required:
+                - reportCode
+                - title
+                - projectId
+                - facilityId
+                - reportingPeriodId
+                - fiscalYear
+                - reportData
+      responses:
+        "201":
+          description: Financial report created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  reportCode:
+                    type: string
+                  title:
+                    type: string
+                  projectId:
+                    type: integer
+                  facilityId:
+                    type: integer
+                  reportingPeriodId:
+                    type: integer
+                  version:
+                    type: string
+                  fiscalYear:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      - draft
+                      - submitted
+                      - approved
+                      - rejected
+                  reportData:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  computedTotals:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationResults:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  createdBy:
+                    type: integer
+                    nullable: true
+                  createdAt:
+                    type: string
+                  updatedBy:
+                    type: integer
+                    nullable: true
+                  updatedAt:
+                    type: string
+                  submittedBy:
+                    type: integer
+                    nullable: true
+                  submittedAt:
+                    type: string
+                    nullable: true
+                  approvedBy:
+                    type: integer
+                    nullable: true
+                  approvedAt:
+                    type: string
+                    nullable: true
+                required:
+                  - id
+                  - reportCode
+                  - title
+                  - projectId
+                  - facilityId
+                  - reportingPeriodId
+                  - version
+                  - fiscalYear
+                  - status
+                  - reportData
+                  - metadata
+                  - computedTotals
+                  - validationResults
+                  - createdBy
+                  - createdAt
+                  - updatedBy
+                  - updatedAt
+                  - submittedBy
+                  - submittedAt
+                  - approvedBy
+                  - approvedAt
+        "400":
+          description: Invalid financial report data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+  /api/financial-reports/{id}:
+    get:
+      tags:
+        - financial-reports
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Financial report retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  reportCode:
+                    type: string
+                  title:
+                    type: string
+                  projectId:
+                    type: integer
+                  facilityId:
+                    type: integer
+                  reportingPeriodId:
+                    type: integer
+                  version:
+                    type: string
+                  fiscalYear:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      - draft
+                      - submitted
+                      - approved
+                      - rejected
+                  reportData:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  computedTotals:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationResults:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  createdBy:
+                    type: integer
+                    nullable: true
+                  createdAt:
+                    type: string
+                  updatedBy:
+                    type: integer
+                    nullable: true
+                  updatedAt:
+                    type: string
+                  submittedBy:
+                    type: integer
+                    nullable: true
+                  submittedAt:
+                    type: string
+                    nullable: true
+                  approvedBy:
+                    type: integer
+                    nullable: true
+                  approvedAt:
+                    type: string
+                    nullable: true
+                  project:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      name:
+                        type: string
+                      code:
+                        type: string
+                      projectType:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - name
+                      - code
+                      - projectType
+                  facility:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      name:
+                        type: string
+                      facilityType:
+                        type: string
+                      district:
+                        type: object
+                        properties:
+                          id:
+                            type: number
+                          name:
+                            type: string
+                        required:
+                          - id
+                          - name
+                    required:
+                      - id
+                      - name
+                      - facilityType
+                  reportingPeriod:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      year:
+                        type: number
+                      periodType:
+                        type: string
+                      startDate:
+                        type: string
+                      endDate:
+                        type: string
+                    required:
+                      - id
+                      - year
+                      - periodType
+                      - startDate
+                      - endDate
+                  creator:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      name:
+                        type: string
+                      email:
+                        type: string
+                    required:
+                      - id
+                      - name
+                      - email
+                  submitter:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      name:
+                        type: string
+                      email:
+                        type: string
+                    required:
+                      - id
+                      - name
+                      - email
+                  approver:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      name:
+                        type: string
+                      email:
+                        type: string
+                    required:
+                      - id
+                      - name
+                      - email
+                required:
+                  - id
+                  - reportCode
+                  - title
+                  - projectId
+                  - facilityId
+                  - reportingPeriodId
+                  - version
+                  - fiscalYear
+                  - status
+                  - reportData
+                  - metadata
+                  - computedTotals
+                  - validationResults
+                  - createdBy
+                  - createdAt
+                  - updatedBy
+                  - updatedAt
+                  - submittedBy
+                  - submittedAt
+                  - approvedBy
+                  - approvedAt
+        "404":
+          description: Financial report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    put:
+      tags:
+        - financial-reports
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Financial report updates
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reportCode:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                projectId:
+                  type: integer
+                facilityId:
+                  type: integer
+                reportingPeriodId:
+                  type: integer
+                version:
+                  type: string
+                  default: "1.0"
+                fiscalYear:
+                  type: string
+                  minLength: 1
+                  maxLength: 10
+                status:
+                  type: string
+                  enum:
+                    - draft
+                    - submitted
+                    - approved
+                    - rejected
+                  default: draft
+                reportData:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                computedTotals:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                validationResults:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+      responses:
+        "200":
+          description: Financial report updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  reportCode:
+                    type: string
+                  title:
+                    type: string
+                  projectId:
+                    type: integer
+                  facilityId:
+                    type: integer
+                  reportingPeriodId:
+                    type: integer
+                  version:
+                    type: string
+                  fiscalYear:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      - draft
+                      - submitted
+                      - approved
+                      - rejected
+                  reportData:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  computedTotals:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationResults:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  createdBy:
+                    type: integer
+                    nullable: true
+                  createdAt:
+                    type: string
+                  updatedBy:
+                    type: integer
+                    nullable: true
+                  updatedAt:
+                    type: string
+                  submittedBy:
+                    type: integer
+                    nullable: true
+                  submittedAt:
+                    type: string
+                    nullable: true
+                  approvedBy:
+                    type: integer
+                    nullable: true
+                  approvedAt:
+                    type: string
+                    nullable: true
+                required:
+                  - id
+                  - reportCode
+                  - title
+                  - projectId
+                  - facilityId
+                  - reportingPeriodId
+                  - version
+                  - fiscalYear
+                  - status
+                  - reportData
+                  - metadata
+                  - computedTotals
+                  - validationResults
+                  - createdBy
+                  - createdAt
+                  - updatedBy
+                  - updatedAt
+                  - submittedBy
+                  - submittedAt
+                  - approvedBy
+                  - approvedAt
+        "404":
+          description: Financial report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    delete:
+      tags:
+        - financial-reports
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "204":
+          description: Financial report deleted successfully
+        "404":
+          description: Financial report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/financial-reports/generate:
+    post:
+      tags:
+        - financial-reports
+      requestBody:
+        description: Report generation parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                templateType:
+                  type: string
+                  enum:
+                    - revenue_expenditure
+                    - balance_sheet
+                    - cash_flow
+                    - budget_vs_actual
+                    - net_assets_changes
+                projectId:
+                  type: integer
+                facilityId:
+                  type: integer
+                reportingPeriodId:
+                  type: integer
+                fiscalYear:
+                  type: string
+                title:
+                  type: string
+                includeComparatives:
+                  type: boolean
+                  default: false
+                customMappings:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                generateFromPlanning:
+                  type: boolean
+                  default: false
+                generateFromExecution:
+                  type: boolean
+                  default: true
+              required:
+                - templateType
+                - projectId
+                - facilityId
+                - reportingPeriodId
+                - fiscalYear
+      responses:
+        "201":
+          description: Financial report generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  report:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      reportCode:
+                        type: string
+                      title:
+                        type: string
+                      projectId:
+                        type: integer
+                      facilityId:
+                        type: integer
+                      reportingPeriodId:
+                        type: integer
+                      version:
+                        type: string
+                      fiscalYear:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - draft
+                          - submitted
+                          - approved
+                          - rejected
+                      reportData:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      metadata:
+                        type: object
+                        nullable: true
+                        additionalProperties:
+                          nullable: true
+                      computedTotals:
+                        type: object
+                        nullable: true
+                        additionalProperties:
+                          nullable: true
+                      validationResults:
+                        type: object
+                        nullable: true
+                        additionalProperties:
+                          nullable: true
+                      createdBy:
+                        type: integer
+                        nullable: true
+                      createdAt:
+                        type: string
+                      updatedBy:
+                        type: integer
+                        nullable: true
+                      updatedAt:
+                        type: string
+                      submittedBy:
+                        type: integer
+                        nullable: true
+                      submittedAt:
+                        type: string
+                        nullable: true
+                      approvedBy:
+                        type: integer
+                        nullable: true
+                      approvedAt:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - reportCode
+                      - title
+                      - projectId
+                      - facilityId
+                      - reportingPeriodId
+                      - version
+                      - fiscalYear
+                      - status
+                      - reportData
+                      - metadata
+                      - computedTotals
+                      - validationResults
+                      - createdBy
+                      - createdAt
+                      - updatedBy
+                      - updatedAt
+                      - submittedBy
+                      - submittedAt
+                      - approvedBy
+                      - approvedAt
+                  generationSummary:
+                    type: object
+                    properties:
+                      linesProcessed:
+                        type: number
+                      valuesComputed:
+                        type: number
+                      validationErrors:
+                        type: array
+                        items:
+                          type: string
+                      warnings:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - linesProcessed
+                      - valuesComputed
+                      - validationErrors
+                      - warnings
+                required:
+                  - report
+                  - generationSummary
+        "400":
+          description: Invalid report generation parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+  /api/financial-reports/{id}/calculate-totals:
+    post:
+      tags:
+        - financial-reports
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Calculation parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recalculateAll:
+                  type: boolean
+                  default: false
+      responses:
+        "200":
+          description: Report totals calculated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reportId:
+                    type: integer
+                  computedTotals:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  validationResults:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  calculationSummary:
+                    type: object
+                    properties:
+                      linesCalculated:
+                        type: number
+                      totalValue:
+                        type: number
+                      balanceValidation:
+                        type: boolean
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - linesCalculated
+                      - totalValue
+                      - balanceValidation
+                      - errors
+                required:
+                  - reportId
+                  - computedTotals
+                  - validationResults
+                  - calculationSummary
+        "404":
+          description: Financial report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/financial-reports/{id}/validate:
+    post:
+      tags:
+        - financial-reports
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Validation parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reportId:
+                  type: integer
+                validationType:
+                  type: string
+                  enum:
+                    - accounting_equation
+                    - completeness
+                    - business_rules
+                    - all
+                  default: all
+              required:
+                - reportId
+      responses:
+        "200":
+          description: Report validation completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reportId:
+                    type: integer
+                  isValid:
+                    type: boolean
+                  validationResults:
+                    type: object
+                    properties:
+                      accountingEquation:
+                        type: object
+                        properties:
+                          isValid:
+                            type: boolean
+                          leftSide:
+                            type: number
+                          rightSide:
+                            type: number
+                          difference:
+                            type: number
+                        required:
+                          - isValid
+                          - leftSide
+                          - rightSide
+                          - difference
+                      completeness:
+                        type: object
+                        properties:
+                          isValid:
+                            type: boolean
+                          missingFields:
+                            type: array
+                            items:
+                              type: string
+                          completionPercentage:
+                            type: number
+                        required:
+                          - isValid
+                          - missingFields
+                          - completionPercentage
+                      businessRules:
+                        type: object
+                        properties:
+                          isValid:
+                            type: boolean
+                          violations:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                rule:
+                                  type: string
+                                field:
+                                  type: string
+                                message:
+                                  type: string
+                              required:
+                                - rule
+                                - field
+                                - message
+                        required:
+                          - isValid
+                          - violations
+                    required:
+                      - accountingEquation
+                      - completeness
+                      - businessRules
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - reportId
+                  - isValid
+                  - validationResults
+                  - errors
+                  - warnings
+        "404":
+          description: Financial report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/financial-reports/{id}/export/{format}:
+    get:
+      tags:
+        - financial-reports
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: id
+          in: path
+        - schema:
+            type: string
+            enum:
+              - pdf
+              - excel
+              - csv
+          required: true
+          name: format
+          in: path
+        - schema:
+            type: boolean
+          required: false
+          name: includeComparatives
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: template
+          in: query
+      responses:
+        "200":
+          description: Report exported successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            text/csv:
+              schema:
+                type: string
+        "404":
+          description: Financial report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/financial-reports/{id}/duplicate:
+    post:
+      tags:
+        - financial-reports
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Duplication parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                fiscalYear:
+                  type: string
+                reportingPeriodId:
+                  type: integer
+                resetStatus:
+                  type: boolean
+                  default: true
+      responses:
+        "201":
+          description: Report duplicated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  reportCode:
+                    type: string
+                  title:
+                    type: string
+                  projectId:
+                    type: integer
+                  facilityId:
+                    type: integer
+                  reportingPeriodId:
+                    type: integer
+                  version:
+                    type: string
+                  fiscalYear:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      - draft
+                      - submitted
+                      - approved
+                      - rejected
+                  reportData:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  computedTotals:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationResults:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  createdBy:
+                    type: integer
+                    nullable: true
+                  createdAt:
+                    type: string
+                  updatedBy:
+                    type: integer
+                    nullable: true
+                  updatedAt:
+                    type: string
+                  submittedBy:
+                    type: integer
+                    nullable: true
+                  submittedAt:
+                    type: string
+                    nullable: true
+                  approvedBy:
+                    type: integer
+                    nullable: true
+                  approvedAt:
+                    type: string
+                    nullable: true
+                required:
+                  - id
+                  - reportCode
+                  - title
+                  - projectId
+                  - facilityId
+                  - reportingPeriodId
+                  - version
+                  - fiscalYear
+                  - status
+                  - reportData
+                  - metadata
+                  - computedTotals
+                  - validationResults
+                  - createdBy
+                  - createdAt
+                  - updatedBy
+                  - updatedAt
+                  - submittedBy
+                  - submittedAt
+                  - approvedBy
+                  - approvedAt
+        "404":
+          description: Financial report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/financial-reports/{id}/versions:
+    get:
+      tags:
+        - financial-reports
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Report versions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    reportCode:
+                      type: string
+                    title:
+                      type: string
+                    projectId:
+                      type: integer
+                    facilityId:
+                      type: integer
+                    reportingPeriodId:
+                      type: integer
+                    version:
+                      type: string
+                    fiscalYear:
+                      type: string
+                    status:
+                      type: string
+                      enum:
+                        - draft
+                        - submitted
+                        - approved
+                        - rejected
+                    reportData:
+                      type: object
+                      additionalProperties:
+                        nullable: true
+                    metadata:
+                      type: object
+                      nullable: true
+                      additionalProperties:
+                        nullable: true
+                    computedTotals:
+                      type: object
+                      nullable: true
+                      additionalProperties:
+                        nullable: true
+                    validationResults:
+                      type: object
+                      nullable: true
+                      additionalProperties:
+                        nullable: true
+                    createdBy:
+                      type: integer
+                      nullable: true
+                    createdAt:
+                      type: string
+                    updatedBy:
+                      type: integer
+                      nullable: true
+                    updatedAt:
+                      type: string
+                    submittedBy:
+                      type: integer
+                      nullable: true
+                    submittedAt:
+                      type: string
+                      nullable: true
+                    approvedBy:
+                      type: integer
+                      nullable: true
+                    approvedAt:
+                      type: string
+                      nullable: true
+                  required:
+                    - id
+                    - reportCode
+                    - title
+                    - projectId
+                    - facilityId
+                    - reportingPeriodId
+                    - version
+                    - fiscalYear
+                    - status
+                    - reportData
+                    - metadata
+                    - computedTotals
+                    - validationResults
+                    - createdBy
+                    - createdAt
+                    - updatedBy
+                    - updatedAt
+                    - submittedBy
+                    - submittedAt
+                    - approvedBy
+                    - approvedAt
+        "404":
+          description: Financial report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  

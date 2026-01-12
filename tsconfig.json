@@ -1,0 +1,43 @@
+// {
+//   "compilerOptions": {
+//     "target": "ESNext",
+//     "lib": [
+//       "ESNext"
+//     ],
+//     "baseUrl": ".",
+//     "paths": {
+//       "@rina/server/routes": ["apps/server/src/api/routes/index.ts"]
+//     },
+//     "moduleDetection": "force",
+//     "useDefineForClassFields": true,
+//     "module": "ESNext",
+//     "moduleResolution": "Bundler",
+//     "strict": true,
+//     "noFallthroughCasesInSwitch": true,
+//     "noUnusedLocals": true,
+//     "noUnusedParameters": true,
+//     "isolatedModules": true,
+//     "skipLibCheck": true,
+//     "noUncheckedSideEffectImports": true
+//   }
+// }
+
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": [
+      "ESNext"
+    ],
+    "moduleDetection": "force",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noUncheckedSideEffectImports": true
+  }
+}

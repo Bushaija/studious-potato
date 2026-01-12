@@ -1,0 +1,102 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rina-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-finna_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      # Expose if you want to connect from host tools (psql, IDE)
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+      args:
+        DB_HOST: db
+        DB_PORT: 5432
+        DB_USER: ${DB_USER:-postgres}
+        DB_PASSWORD: ${DB_PASSWORD:-postgres}
+        DB_NAME: ${DB_NAME:-finna_db}
+        DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-finna_db}
+        BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+    image: rina-scale:migrate
+    container_name: rina-migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-finna_db}
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-finna_db}
+    command: ["/bin/sh", "-c", "pnpm install --frozen-lockfile --prod=false && pnpm db:migrate && pnpm db:seed"]
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Build-time args for Next build; safe defaults
+        DB_HOST: db
+        DB_PORT: 5432
+        DB_USER: ${DB_USER:-postgres}
+        DB_PASSWORD: ${DB_PASSWORD:-postgres}
+        DB_NAME: ${DB_NAME:-finna_db}
+        DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-finna_db}
+        BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+    image: rina-scale:compose
+    container_name: rina-web
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    # command: >
+    #   sh -c "
+    #     echo '⏳ Waiting for Postgres...' &&
+    #     until nc -z db 5432; do sleep 1; done &&
+    #     echo '✅ Postgres is ready!' &&
+    #     pnpm db:migrate &&
+    #     pnpm db:seed &&
+    #     pnpm start
+    #   "
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-finna_db}
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-finna_db}
+      # Add any NEXT_PUBLIC_* envs here as needed, e.g.:
+      # NEXT_PUBLIC_API_BASE: http://localhost:3000
+    ports:
+      - "3000:3000"
+    # Option A: run app and seed manually afterwards
+    # command: ["node", "server.js"]
+    # Start the Next.js server (migrations handled by migrate service)
+    command: ["node", "server.js"]
+
+volumes:
+  db-data:
+    driver: local
+
+

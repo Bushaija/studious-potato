@@ -1,0 +1,1830 @@
+  /api/migration/normalize-legacy-reports:
+    post:
+      tags:
+        - migration
+      summary: Normalize legacy financial reports to new schema format
+      description: Converts legacy financial report data to the new schema-driven
+        format, applying field mappings and validations
+      requestBody:
+        description: Legacy report data and normalization configuration
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                legacyData:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  description: Legacy financial report data in original format
+                targetSchemaId:
+                  type: integer
+                  description: ID of the target form schema to normalize to
+                projectId:
+                  type: integer
+                  description: Project ID for the migrated data
+                facilityId:
+                  type: integer
+                  description: Facility ID for the migrated data
+                reportingPeriodId:
+                  type: integer
+                  description: Reporting period ID if applicable
+                mappingRules:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  description: Custom field mapping rules
+                validationMode:
+                  type: string
+                  enum:
+                    - strict
+                    - lenient
+                    - skip
+                  default: strict
+                  description: Validation strictness level
+                preserveOriginal:
+                  type: boolean
+                  default: true
+                  description: Whether to preserve original data for rollback
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                  description: Additional migration metadata
+              required:
+                - legacyData
+                - targetSchemaId
+                - projectId
+                - facilityId
+      responses:
+        "200":
+          description: Successfully normalized legacy data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  migrationId:
+                    type: string
+                    description: Unique migration identifier
+                  status:
+                    type: string
+                    enum:
+                      - pending
+                      - in_progress
+                      - completed
+                      - failed
+                      - cancelled
+                  normalizedData:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                    description: Normalized data structure
+                  validationResults:
+                    type: object
+                    properties:
+                      isValid:
+                        type: boolean
+                      errors:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            field:
+                              type: string
+                            message:
+                              type: string
+                            severity:
+                              type: string
+                              enum:
+                                - error
+                                - warning
+                                - info
+                          required:
+                            - field
+                            - message
+                            - severity
+                      warnings:
+                        type: array
+                        items:
+                          type: string
+                      summary:
+                        type: object
+                        properties:
+                          totalFields:
+                            type: number
+                          validFields:
+                            type: number
+                          errorFields:
+                            type: number
+                          warningFields:
+                            type: number
+                        required:
+                          - totalFields
+                          - validFields
+                          - errorFields
+                          - warningFields
+                    required:
+                      - isValid
+                      - errors
+                      - warnings
+                      - summary
+                  mappingReport:
+                    type: object
+                    properties:
+                      appliedMappings:
+                        type: object
+                        additionalProperties:
+                          type: string
+                      unmappedFields:
+                        type: array
+                        items:
+                          type: string
+                      computedFields:
+                        type: array
+                        items:
+                          type: string
+                      transformations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            field:
+                              type: string
+                            originalValue:
+                              nullable: true
+                            transformedValue:
+                              nullable: true
+                            rule:
+                              type: string
+                          required:
+                            - field
+                            - rule
+                    required:
+                      - appliedMappings
+                      - unmappedFields
+                      - computedFields
+                      - transformations
+                  createdAt:
+                    type: string
+                    format: date-time
+                  estimatedCompletionTime:
+                    type: string
+                required:
+                  - migrationId
+                  - status
+                  - validationResults
+                  - createdAt
+        "400":
+          description: Invalid request data or validation errors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  validationErrors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
+                required:
+                  - message
+        "422":
+          description: Migration failed due to data inconsistencies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  migrationId:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+                  - errors
+  /api/migration/validate-migration:
+    post:
+      tags:
+        - migration
+      summary: Validate a migration before or after execution
+      description: Performs comprehensive validation of migration data including
+        structure, references, and business rules
+      requestBody:
+        description: Migration validation configuration
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                migrationId:
+                  type: string
+                  description: Migration ID to validate
+                validationType:
+                  type: string
+                  enum:
+                    - structure
+                    - data
+                    - references
+                    - business_rules
+                  default: structure
+                includeWarnings:
+                  type: boolean
+                  default: true
+                customValidators:
+                  type: array
+                  items:
+                    type: string
+                  description: Additional validation rule names to apply
+              required:
+                - migrationId
+      responses:
+        "200":
+          description: Migration validation results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  migrationId:
+                    type: string
+                  isValid:
+                    type: boolean
+                  validationType:
+                    type: string
+                  results:
+                    type: object
+                    properties:
+                      structureValidation:
+                        type: object
+                        properties:
+                          isValid:
+                            type: boolean
+                          missingFields:
+                            type: array
+                            items:
+                              type: string
+                          extraFields:
+                            type: array
+                            items:
+                              type: string
+                          typeErrors:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                field:
+                                  type: string
+                                expectedType:
+                                  type: string
+                                actualType:
+                                  type: string
+                              required:
+                                - field
+                                - expectedType
+                                - actualType
+                        required:
+                          - isValid
+                          - missingFields
+                          - extraFields
+                          - typeErrors
+                      dataValidation:
+                        type: object
+                        properties:
+                          isValid:
+                            type: boolean
+                          errors:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                field:
+                                  type: string
+                                value:
+                                  nullable: true
+                                constraint:
+                                  type: string
+                                message:
+                                  type: string
+                              required:
+                                - field
+                                - constraint
+                                - message
+                          warnings:
+                            type: array
+                            items:
+                              type: string
+                        required:
+                          - isValid
+                          - errors
+                          - warnings
+                      referenceValidation:
+                        type: object
+                        properties:
+                          isValid:
+                            type: boolean
+                          brokenReferences:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                field:
+                                  type: string
+                                value:
+                                  nullable: true
+                                targetTable:
+                                  type: string
+                                message:
+                                  type: string
+                              required:
+                                - field
+                                - targetTable
+                                - message
+                        required:
+                          - isValid
+                          - brokenReferences
+                      businessRuleValidation:
+                        type: object
+                        properties:
+                          isValid:
+                            type: boolean
+                          violations:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                rule:
+                                  type: string
+                                description:
+                                  type: string
+                                affectedFields:
+                                  type: array
+                                  items:
+                                    type: string
+                                severity:
+                                  type: string
+                                  enum:
+                                    - error
+                                    - warning
+                              required:
+                                - rule
+                                - description
+                                - affectedFields
+                                - severity
+                        required:
+                          - isValid
+                          - violations
+                  summary:
+                    type: object
+                    properties:
+                      totalChecks:
+                        type: number
+                      passedChecks:
+                        type: number
+                      failedChecks:
+                        type: number
+                      warningCount:
+                        type: number
+                    required:
+                      - totalChecks
+                      - passedChecks
+                      - failedChecks
+                      - warningCount
+                  recommendations:
+                    type: array
+                    items:
+                      type: string
+                  validatedAt:
+                    type: string
+                    format: date-time
+                required:
+                  - migrationId
+                  - isValid
+                  - validationType
+                  - results
+                  - summary
+                  - validatedAt
+        "400":
+          description: Invalid validation request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+        "404":
+          description: Migration not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/migration/status/{id}:
+    get:
+      tags:
+        - migration
+      summary: Get detailed migration status and progress
+      description: Retrieves current status, progress, and statistics for a specific
+        migration
+      parameters:
+        - schema:
+            type: string
+            description: Migration ID
+          required: true
+          description: Migration ID
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Migration status and progress information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  type:
+                    type: string
+                    enum:
+                      - normalize_legacy_reports
+                      - schema_migration
+                      - data_transformation
+                      - bulk_import
+                  status:
+                    type: string
+                    enum:
+                      - pending
+                      - in_progress
+                      - completed
+                      - failed
+                      - cancelled
+                  progress:
+                    type: number
+                    minimum: 0
+                    maximum: 100
+                    description: Progress percentage
+                  currentStep:
+                    type: string
+                  totalSteps:
+                    type: number
+                  startedAt:
+                    type: string
+                    format: date-time
+                  completedAt:
+                    type: string
+                    format: date-time
+                  estimatedTimeRemaining:
+                    type: number
+                    description: Seconds remaining
+                  statistics:
+                    type: object
+                    properties:
+                      recordsProcessed:
+                        type: number
+                      recordsTotal:
+                        type: number
+                      recordsSuccessful:
+                        type: number
+                      recordsFailed:
+                        type: number
+                      recordsSkipped:
+                        type: number
+                    required:
+                      - recordsProcessed
+                      - recordsTotal
+                      - recordsSuccessful
+                      - recordsFailed
+                      - recordsSkipped
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        timestamp:
+                          type: string
+                          format: date-time
+                        error:
+                          type: string
+                        context:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                      required:
+                        - timestamp
+                        - error
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                  metadata:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  createdBy:
+                    type: number
+                  updatedAt:
+                    type: string
+                    format: date-time
+                required:
+                  - id
+                  - type
+                  - status
+                  - progress
+                  - updatedAt
+        "404":
+          description: Migration not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/migration/schema-migration:
+    post:
+      tags:
+        - migration
+      summary: Migrate data between different schema versions
+      description: Migrates form data from one schema version to another with field
+        mappings and transformations
+      requestBody:
+        description: Schema migration configuration
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sourceSchemaId:
+                  type: integer
+                  description: Source form schema ID
+                targetSchemaId:
+                  type: integer
+                  description: Target form schema ID
+                entityIds:
+                  type: array
+                  items:
+                    type: number
+                  description: Specific entity IDs to migrate (empty = all)
+                fieldMappings:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Manual field mappings
+                transformationRules:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      sourceField:
+                        type: string
+                      targetField:
+                        type: string
+                      transformFunction:
+                        type: string
+                      parameters:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - sourceField
+                      - targetField
+                      - transformFunction
+                options:
+                  type: object
+                  properties:
+                    preserveOriginal:
+                      type: boolean
+                      default: true
+                    validateAfterMigration:
+                      type: boolean
+                      default: true
+                    allowPartialMigration:
+                      type: boolean
+                      default: false
+                    batchSize:
+                      type: number
+                      default: 100
+              required:
+                - sourceSchemaId
+                - targetSchemaId
+      responses:
+        "202":
+          description: Schema migration initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  migrationId:
+                    type: string
+                  message:
+                    type: string
+                  estimatedTime:
+                    type: number
+                required:
+                  - migrationId
+                  - message
+        "400":
+          description: Invalid schema migration request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+        "409":
+          description: Conflicting migration in progress
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  conflictingMigrations:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+  /api/migration/bulk-import:
+    post:
+      tags:
+        - migration
+      summary: Import bulk data from various formats
+      description: Imports data in bulk from CSV, Excel, JSON, or XML formats into the
+        schema-driven system
+      requestBody:
+        description: Bulk import data and configuration
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                importType:
+                  type: string
+                  enum:
+                    - csv
+                    - excel
+                    - json
+                    - xml
+                schemaId:
+                  type: integer
+                  description: Target form schema ID
+                data:
+                  type: string
+                  description: Base64 encoded file data or direct JSON string
+                options:
+                  type: object
+                  properties:
+                    hasHeaders:
+                      type: boolean
+                      default: true
+                    delimiter:
+                      type: string
+                      default: ","
+                    encoding:
+                      type: string
+                      default: utf-8
+                    skipValidation:
+                      type: boolean
+                      default: false
+                    allowPartialImport:
+                      type: boolean
+                      default: false
+                    updateExisting:
+                      type: boolean
+                      default: false
+                fieldMappings:
+                  type: object
+                  additionalProperties:
+                    type: string
+                defaultValues:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+              required:
+                - importType
+                - schemaId
+                - data
+      responses:
+        "202":
+          description: Bulk import initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  migrationId:
+                    type: string
+                  message:
+                    type: string
+                  previewData:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties:
+                        nullable: true
+                  statistics:
+                    type: object
+                    properties:
+                      totalRecords:
+                        type: number
+                      validRecords:
+                        type: number
+                      invalidRecords:
+                        type: number
+                    required:
+                      - totalRecords
+                      - validRecords
+                      - invalidRecords
+                required:
+                  - migrationId
+                  - message
+        "400":
+          description: Invalid import data or format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  formatErrors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+        "413":
+          description: Import data exceeds size limits
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  maxSize:
+                    type: number
+                  actualSize:
+                    type: number
+                required:
+                  - message
+                  - maxSize
+                  - actualSize
+  /api/migration/history:
+    get:
+      tags:
+        - migration
+      summary: Get migration history with pagination
+      description: Retrieves paginated list of all migrations with their status and
+        statistics
+      parameters:
+        - schema:
+            type: integer
+            nullable: true
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            nullable: true
+            default: 20
+          required: false
+          name: limit
+          in: query
+        - schema:
+            type: string
+            enum:
+              - pending
+              - in_progress
+              - completed
+              - failed
+              - cancelled
+          required: false
+          name: status
+          in: query
+        - schema:
+            type: string
+            enum:
+              - normalize_legacy_reports
+              - schema_migration
+              - data_transformation
+              - bulk_import
+          required: false
+          name: type
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: createdBy
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: dateFrom
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: dateTo
+          in: query
+      responses:
+        "200":
+          description: Migration history with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  migrations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        type:
+                          type: string
+                          enum:
+                            - normalize_legacy_reports
+                            - schema_migration
+                            - data_transformation
+                            - bulk_import
+                        status:
+                          type: string
+                          enum:
+                            - pending
+                            - in_progress
+                            - completed
+                            - failed
+                            - cancelled
+                        description:
+                          type: string
+                        startedAt:
+                          type: string
+                          format: date-time
+                        completedAt:
+                          type: string
+                          format: date-time
+                        createdBy:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            name:
+                              type: string
+                            email:
+                              type: string
+                          required:
+                            - id
+                            - name
+                            - email
+                        statistics:
+                          type: object
+                          properties:
+                            recordsProcessed:
+                              type: number
+                            recordsSuccessful:
+                              type: number
+                            recordsFailed:
+                              type: number
+                          required:
+                            - recordsProcessed
+                            - recordsSuccessful
+                            - recordsFailed
+                        canRollback:
+                          type: boolean
+                      required:
+                        - id
+                        - type
+                        - status
+                        - description
+                        - startedAt
+                        - canRollback
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      total:
+                        type: number
+                      totalPages:
+                        type: number
+                    required:
+                      - page
+                      - limit
+                      - total
+                      - totalPages
+                required:
+                  - migrations
+                  - pagination
+  /api/migration/{id}/cancel:
+    post:
+      tags:
+        - migration
+      summary: Cancel an in-progress migration
+      description: Cancels a currently running migration and performs cleanup
+      parameters:
+        - schema:
+            type: string
+            description: Migration ID
+          required: true
+          description: Migration ID
+          name: id
+          in: path
+      requestBody:
+        description: Cancellation reason
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Migration cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  migrationId:
+                    type: string
+                  cancelledAt:
+                    type: string
+                    format: date-time
+                required:
+                  - message
+                  - migrationId
+                  - cancelledAt
+        "404":
+          description: Migration not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+        "409":
+          description: Migration cannot be cancelled in current state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  currentStatus:
+                    type: string
+                required:
+                  - message
+                  - currentStatus
+  /api/migration/{id}/rollback:
+    post:
+      tags:
+        - migration
+      summary: Rollback a completed migration
+      description: Reverts changes made by a completed migration, restoring original data
+      parameters:
+        - schema:
+            type: string
+            description: Migration ID
+          required: true
+          description: Migration ID
+          name: id
+          in: path
+      requestBody:
+        description: Rollback configuration
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                migrationId:
+                  type: string
+                rollbackReason:
+                  type: string
+                preserveChanges:
+                  type: boolean
+                  default: false
+                  description: Whether to preserve any manual changes made after migration
+              required:
+                - migrationId
+      responses:
+        "202":
+          description: Rollback initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rollbackId:
+                    type: string
+                  message:
+                    type: string
+                  originalMigrationId:
+                    type: string
+                required:
+                  - rollbackId
+                  - message
+                  - originalMigrationId
+        "400":
+          description: Migration cannot be rolled back
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                required:
+                  - message
+                  - reason
+        "404":
+          description: Migration not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/migration/transform-data:
+    post:
+      tags:
+        - migration
+      summary: Apply data transformations
+      description: Applies custom transformation rules to data without full migration
+      requestBody:
+        description: Data transformation configuration
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sourceData:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                transformationRules:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - field_rename
+                          - value_transform
+                          - field_merge
+                          - field_split
+                          - conditional_transform
+                      config:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - type
+                      - config
+                targetSchema:
+                  type: object
+                  properties:
+                    fields:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          required:
+                            type: boolean
+                          validation:
+                            type: object
+                            additionalProperties:
+                              nullable: true
+                        required:
+                          - name
+                          - type
+                  required:
+                    - fields
+                options:
+                  type: object
+                  properties:
+                    validateOutput:
+                      type: boolean
+                      default: true
+                    preserveMetadata:
+                      type: boolean
+                      default: true
+                    generateReport:
+                      type: boolean
+                      default: true
+              required:
+                - sourceData
+                - transformationRules
+      responses:
+        "200":
+          description: Data transformed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transformedData:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties:
+                        nullable: true
+                  transformationReport:
+                    type: object
+                    properties:
+                      totalRecords:
+                        type: number
+                      successfulTransformations:
+                        type: number
+                      failedTransformations:
+                        type: number
+                      warnings:
+                        type: array
+                        items:
+                          type: string
+                      appliedRules:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - totalRecords
+                      - successfulTransformations
+                      - failedTransformations
+                      - warnings
+                      - appliedRules
+                  validationResults:
+                    type: object
+                    properties:
+                      migrationId:
+                        type: string
+                      isValid:
+                        type: boolean
+                      validationType:
+                        type: string
+                      results:
+                        type: object
+                        properties:
+                          structureValidation:
+                            type: object
+                            properties:
+                              isValid:
+                                type: boolean
+                              missingFields:
+                                type: array
+                                items:
+                                  type: string
+                              extraFields:
+                                type: array
+                                items:
+                                  type: string
+                              typeErrors:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    field:
+                                      type: string
+                                    expectedType:
+                                      type: string
+                                    actualType:
+                                      type: string
+                                  required:
+                                    - field
+                                    - expectedType
+                                    - actualType
+                            required:
+                              - isValid
+                              - missingFields
+                              - extraFields
+                              - typeErrors
+                          dataValidation:
+                            type: object
+                            properties:
+                              isValid:
+                                type: boolean
+                              errors:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    field:
+                                      type: string
+                                    value:
+                                      nullable: true
+                                    constraint:
+                                      type: string
+                                    message:
+                                      type: string
+                                  required:
+                                    - field
+                                    - constraint
+                                    - message
+                              warnings:
+                                type: array
+                                items:
+                                  type: string
+                            required:
+                              - isValid
+                              - errors
+                              - warnings
+                          referenceValidation:
+                            type: object
+                            properties:
+                              isValid:
+                                type: boolean
+                              brokenReferences:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    field:
+                                      type: string
+                                    value:
+                                      nullable: true
+                                    targetTable:
+                                      type: string
+                                    message:
+                                      type: string
+                                  required:
+                                    - field
+                                    - targetTable
+                                    - message
+                            required:
+                              - isValid
+                              - brokenReferences
+                          businessRuleValidation:
+                            type: object
+                            properties:
+                              isValid:
+                                type: boolean
+                              violations:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    rule:
+                                      type: string
+                                    description:
+                                      type: string
+                                    affectedFields:
+                                      type: array
+                                      items:
+                                        type: string
+                                    severity:
+                                      type: string
+                                      enum:
+                                        - error
+                                        - warning
+                                  required:
+                                    - rule
+                                    - description
+                                    - affectedFields
+                                    - severity
+                            required:
+                              - isValid
+                              - violations
+                      summary:
+                        type: object
+                        properties:
+                          totalChecks:
+                            type: number
+                          passedChecks:
+                            type: number
+                          failedChecks:
+                            type: number
+                          warningCount:
+                            type: number
+                        required:
+                          - totalChecks
+                          - passedChecks
+                          - failedChecks
+                          - warningCount
+                      recommendations:
+                        type: array
+                        items:
+                          type: string
+                      validatedAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - migrationId
+                      - isValid
+                      - validationType
+                      - results
+                      - summary
+                      - validatedAt
+                required:
+                  - transformedData
+                  - transformationReport
+        "400":
+          description: Transformation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  transformationErrors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        rule:
+                          type: string
+                        error:
+                          type: string
+                        affectedRecords:
+                          type: number
+                      required:
+                        - rule
+                        - error
+                        - affectedRecords
+                required:
+                  - message
+  /api/migration/dry-run:
+    post:
+      tags:
+        - migration
+      summary: Perform a dry run of migration without making changes
+      description: Simulates migration process to identify potential issues without
+        modifying data
+      requestBody:
+        description: Migration configuration for dry run
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - type: object
+                  properties:
+                    legacyData:
+                      type: object
+                      additionalProperties:
+                        nullable: true
+                      description: Legacy financial report data in original format
+                    targetSchemaId:
+                      type: integer
+                      description: ID of the target form schema to normalize to
+                    projectId:
+                      type: integer
+                      description: Project ID for the migrated data
+                    facilityId:
+                      type: integer
+                      description: Facility ID for the migrated data
+                    reportingPeriodId:
+                      type: integer
+                      description: Reporting period ID if applicable
+                    mappingRules:
+                      type: object
+                      additionalProperties:
+                        nullable: true
+                      description: Custom field mapping rules
+                    validationMode:
+                      type: string
+                      enum:
+                        - strict
+                        - lenient
+                        - skip
+                      default: strict
+                      description: Validation strictness level
+                    preserveOriginal:
+                      type: boolean
+                      default: true
+                      description: Whether to preserve original data for rollback
+                    metadata:
+                      type: object
+                      additionalProperties:
+                        nullable: true
+                      description: Additional migration metadata
+                  required:
+                    - legacyData
+                    - targetSchemaId
+                    - projectId
+                    - facilityId
+                - type: object
+                  properties:
+                    sourceSchemaId:
+                      type: integer
+                      description: Source form schema ID
+                    targetSchemaId:
+                      type: integer
+                      description: Target form schema ID
+                    entityIds:
+                      type: array
+                      items:
+                        type: number
+                      description: Specific entity IDs to migrate (empty = all)
+                    fieldMappings:
+                      type: object
+                      additionalProperties:
+                        type: string
+                      description: Manual field mappings
+                    transformationRules:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          sourceField:
+                            type: string
+                          targetField:
+                            type: string
+                          transformFunction:
+                            type: string
+                          parameters:
+                            type: object
+                            additionalProperties:
+                              nullable: true
+                        required:
+                          - sourceField
+                          - targetField
+                          - transformFunction
+                    options:
+                      type: object
+                      properties:
+                        preserveOriginal:
+                          type: boolean
+                          default: true
+                        validateAfterMigration:
+                          type: boolean
+                          default: true
+                        allowPartialMigration:
+                          type: boolean
+                          default: false
+                        batchSize:
+                          type: number
+                          default: 100
+                  required:
+                    - sourceSchemaId
+                    - targetSchemaId
+                - type: object
+                  properties:
+                    importType:
+                      type: string
+                      enum:
+                        - csv
+                        - excel
+                        - json
+                        - xml
+                    schemaId:
+                      type: integer
+                      description: Target form schema ID
+                    data:
+                      type: string
+                      description: Base64 encoded file data or direct JSON string
+                    options:
+                      type: object
+                      properties:
+                        hasHeaders:
+                          type: boolean
+                          default: true
+                        delimiter:
+                          type: string
+                          default: ","
+                        encoding:
+                          type: string
+                          default: utf-8
+                        skipValidation:
+                          type: boolean
+                          default: false
+                        allowPartialImport:
+                          type: boolean
+                          default: false
+                        updateExisting:
+                          type: boolean
+                          default: false
+                    fieldMappings:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    defaultValues:
+                      type: object
+                      additionalProperties:
+                        nullable: true
+                    metadata:
+                      type: object
+                      additionalProperties:
+                        nullable: true
+                  required:
+                    - importType
+                    - schemaId
+                    - data
+      responses:
+        "200":
+          description: Dry run completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dryRunId:
+                    type: string
+                  simulationResults:
+                    type: object
+                    properties:
+                      wouldSucceed:
+                        type: boolean
+                      affectedRecords:
+                        type: number
+                      estimatedTime:
+                        type: number
+                      potentialIssues:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            severity:
+                              type: string
+                              enum:
+                                - error
+                                - warning
+                                - info
+                            message:
+                              type: string
+                            affectedFields:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                            - severity
+                            - message
+                      resourceRequirements:
+                        type: object
+                        properties:
+                          estimatedMemory:
+                            type: string
+                          estimatedDiskSpace:
+                            type: string
+                          estimatedDuration:
+                            type: string
+                        required:
+                          - estimatedMemory
+                          - estimatedDiskSpace
+                          - estimatedDuration
+                    required:
+                      - wouldSucceed
+                      - affectedRecords
+                      - estimatedTime
+                      - potentialIssues
+                  validationResults:
+                    type: object
+                    properties:
+                      migrationId:
+                        type: string
+                      isValid:
+                        type: boolean
+                      validationType:
+                        type: string
+                      results:
+                        type: object
+                        properties:
+                          structureValidation:
+                            type: object
+                            properties:
+                              isValid:
+                                type: boolean
+                              missingFields:
+                                type: array
+                                items:
+                                  type: string
+                              extraFields:
+                                type: array
+                                items:
+                                  type: string
+                              typeErrors:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    field:
+                                      type: string
+                                    expectedType:
+                                      type: string
+                                    actualType:
+                                      type: string
+                                  required:
+                                    - field
+                                    - expectedType
+                                    - actualType
+                            required:
+                              - isValid
+                              - missingFields
+                              - extraFields
+                              - typeErrors
+                          dataValidation:
+                            type: object
+                            properties:
+                              isValid:
+                                type: boolean
+                              errors:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    field:
+                                      type: string
+                                    value:
+                                      nullable: true
+                                    constraint:
+                                      type: string
+                                    message:
+                                      type: string
+                                  required:
+                                    - field
+                                    - constraint
+                                    - message
+                              warnings:
+                                type: array
+                                items:
+                                  type: string
+                            required:
+                              - isValid
+                              - errors
+                              - warnings
+                          referenceValidation:
+                            type: object
+                            properties:
+                              isValid:
+                                type: boolean
+                              brokenReferences:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    field:
+                                      type: string
+                                    value:
+                                      nullable: true
+                                    targetTable:
+                                      type: string
+                                    message:
+                                      type: string
+                                  required:
+                                    - field
+                                    - targetTable
+                                    - message
+                            required:
+                              - isValid
+                              - brokenReferences
+                          businessRuleValidation:
+                            type: object
+                            properties:
+                              isValid:
+                                type: boolean
+                              violations:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    rule:
+                                      type: string
+                                    description:
+                                      type: string
+                                    affectedFields:
+                                      type: array
+                                      items:
+                                        type: string
+                                    severity:
+                                      type: string
+                                      enum:
+                                        - error
+                                        - warning
+                                  required:
+                                    - rule
+                                    - description
+                                    - affectedFields
+                                    - severity
+                            required:
+                              - isValid
+                              - violations
+                      summary:
+                        type: object
+                        properties:
+                          totalChecks:
+                            type: number
+                          passedChecks:
+                            type: number
+                          failedChecks:
+                            type: number
+                          warningCount:
+                            type: number
+                        required:
+                          - totalChecks
+                          - passedChecks
+                          - failedChecks
+                          - warningCount
+                      recommendations:
+                        type: array
+                        items:
+                          type: string
+                      validatedAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - migrationId
+                      - isValid
+                      - validationType
+                      - results
+                      - summary
+                      - validatedAt
+                  recommendations:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - dryRunId
+                  - simulationResults
+        "400":
+          description: Invalid dry run configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  configurationErrors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+  

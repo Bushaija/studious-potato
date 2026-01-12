@@ -1,0 +1,164 @@
+  
+  /api/analytics/budget-execution-rates:
+    get:
+      tags:
+        - analytics
+      parameters:
+        - schema:
+            type: integer
+          required: false
+          name: projectId
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: facilityId
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: reportingPeriodId
+          in: query
+        - schema:
+            type: string
+            enum:
+              - project
+              - facility
+              - category
+              - quarter
+            default: project
+          required: false
+          name: groupBy
+          in: query
+        - schema:
+            type: string
+            format: date-time
+          required: false
+          name: fromDate
+          in: query
+        - schema:
+            type: string
+            format: date-time
+          required: false
+          name: toDate
+          in: query
+      responses:
+        "200":
+          description: Budget execution rates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  overall:
+                    type: object
+                    properties:
+                      planned:
+                        type: number
+                      executed:
+                        type: number
+                      rate:
+                        type: number
+                      variance:
+                        type: number
+                    required:
+                      - planned
+                      - executed
+                      - rate
+                      - variance
+                  breakdown:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        planned:
+                          type: number
+                        executed:
+                          type: number
+                        rate:
+                          type: number
+                        variance:
+                          type: number
+                        trend:
+                          type: string
+                          enum:
+                            - up
+                            - down
+                            - stable
+                      required:
+                        - id
+                        - name
+                        - planned
+                        - executed
+                        - rate
+                        - variance
+                        - trend
+                  byQuarter:
+                    type: object
+                    properties:
+                      q1:
+                        type: object
+                        properties:
+                          planned:
+                            type: number
+                          executed:
+                            type: number
+                          rate:
+                            type: number
+                        required:
+                          - planned
+                          - executed
+                          - rate
+                      q2:
+                        type: object
+                        properties:
+                          planned:
+                            type: number
+                          executed:
+                            type: number
+                          rate:
+                            type: number
+                        required:
+                          - planned
+                          - executed
+                          - rate
+                      q3:
+                        type: object
+                        properties:
+                          planned:
+                            type: number
+                          executed:
+                            type: number
+                          rate:
+                            type: number
+                        required:
+                          - planned
+                          - executed
+                          - rate
+                      q4:
+                        type: object
+                        properties:
+                          planned:
+                            type: number
+                          executed:
+                            type: number
+                          rate:
+                            type: number
+                        required:
+                          - planned
+                          - executed
+                          - rate
+                    required:
+                      - q1
+                      - q2
+                      - q3
+                      - q4
+                required:
+                  - overall
+                  - breakdown
+                  - byQuarter
+  

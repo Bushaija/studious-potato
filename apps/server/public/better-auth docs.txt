@@ -1,0 +1,479 @@
+better-auth docs
+================
+
+
+1. auth.ts
+
+import { betterAuth } from "better-auth"
+import { admin } from "better-auth/plugins"
+
+export const auth = betterAuth({
+    // ... other config options
+    plugins: [
+        admin() 
+    ]
+})
+
+
+2. migrate the database
+npx @better-auth/cli migrate
+
+
+user
+
+export const users = pgTable("users", {
+    id: serial().primaryKey().notNull(),
+    name: text("name").notNull(),
+    email: text("email").notNull().unique(),
+    emailVerified: boolean("email_verified").default(false).notNull(),
+    image: text("image"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+    role: text("role").default("accountant").notNull(),
+    banned: boolean("banned").default(false),
+    banReason: text("ban_reason"),
+    banExpires: timestamp("ban_expires"),
+    facilityId: integer("facility_id"),
+    permissions: text("permissions"),
+    projectAccess: text("project_access"),
+    configAccess: text("config_access"),
+    lastLoginAt: timestamp("last_login_at"),
+    isActive: boolean("is_active").default(true),
+    createdBy: integer("created_by"),
+    mustChangePassword: boolean("must_change_password").default(true),
+  });
+
+session
+
+export const session = pgTable("session", {
+  id: serial().primaryKey().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  token: text("token").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  impersonatedBy: text("impersonated_by"),
+  activeOrganizationId: text("active_organization_id"),
+});
+
+account
+
+export const account = pgTable("account", {
+  id: serial().primaryKey(),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+verification
+
+export const verification = pgTable("verification", {
+    id: serial().primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  });
+
+organization
+
+export const organization = pgTable("organization", {
+    id: serial().primaryKey(),
+    name: text("name").notNull(),
+    slug: text("slug").unique(),
+    logo: text("logo"),
+    createdAt: timestamp("created_at").notNull(),
+    metadata: text("metadata"),
+  });
+
+member
+
+export const member = pgTable("member", {
+  id: serial().primaryKey(),
+  organizationId: integer("organization_id")
+    .notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  role: text("role").default("member").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+});
+
+invitation
+
+export const invitation = pgTable("invitation", {
+    id: serial().primaryKey(),
+    organizationId: integer("organization_id").notNull(),
+    email: text().notNull(),
+    role: text().notNull(),
+    status: text().notNull(),
+    expiresAt: timestamp("expires_at", { mode: 'date' }).notNull(),
+    inviterId: integer("inviter_id").notNull(),
+  }, (table) => [
+    foreignKey({
+      columns: [table.organizationId],
+      foreignColumns: [organization.id],
+      name: "invitation_organization_id_fk"
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.inviterId],
+      foreignColumns: [users.id],
+      name: "invitation_inviter_id_fk"
+    }).onDelete("cascade"),
+  ])
+
+
+3. add client plugin
+
+
+import { createAuthClient } from "better-auth/client"
+import { adminClient } from "better-auth/client/plugins"
+
+export const authClient = createAuthClient({
+    plugins: [
+        adminClient()
+    ]
+})
+
+
+USAGE
+
+1. create user: POST /admin/users
+
+const newUser = await auth.api.createUser({
+    body: {
+        email: "user@example.com", // required
+        password: "some-secure-password", // required
+        name: "James Smith", // required
+        role: "user",
+        data: { customField: "customValue" },
+    },
+});
+
+2. GET /admin/list
+
+const users = await auth.api.listUsers({
+    query: {
+        query: {
+            searchValue: "some name",
+            searchField: "name",
+            searchOperator: "contains",
+            limit: 100,
+            offset: 100,
+            sortBy: "name",
+            sortDirection: "desc",
+            filterField: "email",
+            filterValue: "hello@example.com",
+            filterOperator: "eq",
+        },
+    },
+    // This endpoint requires session cookies.
+    headers: await headers(),
+});
+
+prop:
+
+query?	
+query.searchValue?	
+query.searchField? "email" | "name"	
+query.searchOperator?	The operator to use for the search. Can be contains, starts_with or ends_with.
+"contains" | "starts_with" | "ends_with"
+query.limit?	The number of users to return. Defaults to 100. string | number
+query.offset?	The offset to start from. string | number
+query.sortBy?	The field to sort by.string
+query.sortDirection?	The direction to sort by."asc" | "desc"
+query.filterField?	The field to filter by. string
+query.filterValue?	The value to filter by. string | number | boolean
+query.filterOperator?   The operator to use for the filter."eq" | "ne" | "lt" | "lte" | "gt" | "gte"
+
+
+How to Implement Pagination
+
+To paginate results, use the total, limit, and offset values to calculate:
+- Total pages: Math.ceil(total / limit)
+- Current page: (offset / limit) + 1
+- Next page offset: Math.min(offset + limit, (total - 1)) – The value to use as offset for the next page, ensuring it does not exceed the total number of pages.
+- Previous page offset: Math.max(0, offset - limit) – The value to use as offset for the previous page (ensuring it doesn’t go below zero).
+
+
+
+3. set user role
+
+POST /admin/set-role
+const data = await auth.api.setRole({
+    body: {
+        userId: "user-id",
+        role: "admin", // required
+    },
+    // This endpoint requires session cookies.
+    headers: await headers(),
+});
+
+4. set user password
+
+POST /admin/set-user-password
+const data = await auth.api.setUserPassword({
+    body: {
+        newPassword: 'new-password', // required
+        userId: 'user-id', // required
+    },
+    // This endpoint requires session cookies.
+    headers: await headers(),
+});
+
+5. Ban User
+
+POST /admin/ban-user
+await auth.api.banUser({
+    body: {
+        userId: "user-id", // required
+        banReason: "Spamming",
+        banExpiresIn: 60 * 60 * 24 * 7,
+    },
+    // This endpoint requires session cookies.
+    headers: await headers(),
+});
+
+6. Unban User
+POST /admin/unban-user
+await auth.api.unbanUser({
+    body: {
+        userId: "user-id", // required
+    },
+    // This endpoint requires session cookies.
+    headers: await headers(),
+});
+
+
+7. List User Sessions
+POST /admin/list-user-sessions
+const data = await auth.api.listUserSessions({
+    body: {
+        userId: "user-id", // required
+    },
+    // This endpoint requires session cookies.
+    headers: await headers(),
+});
+
+8. revoke user session
+POST /admin/revoke-user-session
+const data = await auth.api.revokeUserSession({
+    body: {
+        sessionToken: "session_token_here", // required
+    },
+    // This endpoint requires session cookies.
+    headers: await headers(),
+});
+
+
+9. Remove user
+POST /admin/remove-user
+const deletedUser = await auth.api.removeUser({
+    body: {
+        userId: "user-id", // required
+    },
+    // This endpoint requires session cookies.
+    headers: await headers(),
+});
+
+
+Access Control
+- The admin plugin offers a highly flexible access control system, allowing you to manage user permissions based on their role. You can define custom permission sets to fit your needs.
+
+Roles
+By default, there are two roles:
+- admin: Users with the admin role have full control over other users.
+- user: Users with the user role have no control over other users.
+
+Permissions
+By default, there are two resources with up to six permissions.
+- user: create list set-role ban impersonate delete set-password
+- session: list revoke delete
+
+Custom Permissions
+
+1. create access control
+
+permissions.ts
+import { createAccessControl } from "better-auth/plugins/access";
+
+/**
+ * make sure to use `as const` so typescript can infer the type correctly
+ */
+const statement = { 
+    project: ["create", "share", "update", "delete"], 
+} as const; 
+
+const ac = createAccessControl(statement); 
+
+2. create roles
+
+permissions.ts
+import { createAccessControl } from "better-auth/plugins/access";
+
+export const statement = {
+    project: ["create", "share", "update", "delete"], // <-- Permissions available for created roles
+} as const;
+
+const ac = createAccessControl(statement);
+
+export const user = ac.newRole({ 
+    project: ["create"], 
+}); 
+
+export const admin = ac.newRole({ 
+    project: ["create", "update"], 
+}); 
+
+export const myCustomRole = ac.newRole({ 
+    project: ["create", "update", "delete"], 
+    user: ["ban"], 
+}); 
+
+
+permissions.ts
+import { createAccessControl } from "better-auth/plugins/access";
+import { defaultStatements, adminAc } from "better-auth/plugins/admin/access";
+
+const statement = {
+    ...defaultStatements, 
+    project: ["create", "share", "update", "delete"],
+} as const;
+
+const ac = createAccessControl(statement);
+
+const admin = ac.newRole({
+    project: ["create", "update"],
+    ...adminAc.statements, 
+});
+
+3. pass roles to the plugin
+import { betterAuth } from "better-auth"
+import { admin as adminPlugin } from "better-auth/plugins"
+import { ac, admin, user } from "@/auth/permissions"
+
+export const auth = betterAuth({
+    plugins: [
+        adminPlugin({
+            ac,
+            roles: {
+                admin,
+                user,
+                myCustomRole
+            }
+        }),
+    ],
+});
+
+import { createAuthClient } from "better-auth/client"
+import { adminClient } from "better-auth/client/plugins"
+import { ac, admin, user, myCustomRole } from "@/auth/permissions"
+
+export const client = createAuthClient({
+    plugins: [
+        adminClient({
+            ac,
+            roles: {
+                admin,
+                user,
+                myCustomRole
+            }
+        })
+    ]
+})
+
+
+access control usage
+
+has permission:
+POST /admin/has-permission
+const data = await auth.api.userHasPermission({
+    body: {
+        userId: "user-id",
+        role: "admin", // server-only
+        permission: { "project": ["create", "update"] } /* Must use this, or permissions */,
+        permissions,
+    },
+});
+
+
+userId?	The user id which you want to check the permissions for. string
+role?(server-only)	Check role permissions. string
+permission?	Optionally check if a single permission is granted. Must use this, or permissions.Record<string, string[]>
+permissions?	Optionally check if multiple permissions are granted. Must use this, or permission. Record<string, string[]>
+
+example usage:
+const canCreateProject = await authClient.admin.hasPermission({
+  permissions: {
+    project: ["create"],
+  },
+});
+
+// You can also check multiple resource permissions at the same time
+const canCreateProjectAndCreateSale = await authClient.admin.hasPermission({
+  permissions: {
+    project: ["create"],
+    sale: ["create"]
+  },
+});
+
+If you want to check a user's permissions server-side, you can use the userHasPermission action provided by the api to check the user's
+
+import { auth } from "@/auth";
+
+await auth.api.userHasPermission({
+  body: {
+    userId: 'id', //the user id
+    permissions: {
+      project: ["create"], // This must match the structure in your access control
+    },
+  },
+});
+
+// You can also just pass the role directly
+await auth.api.userHasPermission({
+  body: {
+   role: "admin",
+    permissions: {
+      project: ["create"], // This must match the structure in your access control
+    },
+  },
+});
+
+// You can also check multiple resource permissions at the same time
+await auth.api.userHasPermission({
+  body: {
+   role: "admin",
+    permissions: {
+      project: ["create"], // This must match the structure in your access control
+      sale: ["create"]
+    },
+  },
+});

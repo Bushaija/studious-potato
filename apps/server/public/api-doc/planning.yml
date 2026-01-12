@@ -1,0 +1,629 @@
+  
+  /api/planning:
+    get:
+      tags:
+        - planning
+      parameters:
+        - schema:
+            type: integer
+          required: false
+          name: projectId
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: facilityId
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: reportingPeriodId
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: categoryId
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: year
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: List of planning data entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        schemaId:
+                          type: integer
+                        entityId:
+                          type: integer
+                          nullable: true
+                        entityType:
+                          type: string
+                        projectId:
+                          type: integer
+                        facilityId:
+                          type: integer
+                        reportingPeriodId:
+                          type: integer
+                          nullable: true
+                        formData:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        computedValues:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        validationState:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        metadata:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        createdBy:
+                          type: integer
+                          nullable: true
+                        createdAt:
+                          type: string
+                        updatedBy:
+                          type: integer
+                          nullable: true
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - schemaId
+                        - entityId
+                        - entityType
+                        - projectId
+                        - facilityId
+                        - reportingPeriodId
+                        - formData
+                        - computedValues
+                        - validationState
+                        - metadata
+                        - createdBy
+                        - createdAt
+                        - updatedBy
+                        - updatedAt
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      total:
+                        type: number
+                      totalPages:
+                        type: number
+                    required:
+                      - page
+                      - limit
+                      - total
+                      - totalPages
+                required:
+                  - data
+                  - pagination
+    post:
+      tags:
+        - planning
+      requestBody:
+        description: Planning data to create
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schemaId:
+                  type: integer
+                projectId:
+                  type: integer
+                facilityId:
+                  type: integer
+                reportingPeriodId:
+                  type: integer
+                formData:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+              required:
+                - schemaId
+                - projectId
+                - facilityId
+                - formData
+      responses:
+        "201":
+          description: Created planning data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  schemaId:
+                    type: integer
+                  entityId:
+                    type: integer
+                    nullable: true
+                  entityType:
+                    type: string
+                  projectId:
+                    type: integer
+                  facilityId:
+                    type: integer
+                  reportingPeriodId:
+                    type: integer
+                    nullable: true
+                  formData:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  computedValues:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationState:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  createdBy:
+                    type: integer
+                    nullable: true
+                  createdAt:
+                    type: string
+                  updatedBy:
+                    type: integer
+                    nullable: true
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - schemaId
+                  - entityId
+                  - entityType
+                  - projectId
+                  - facilityId
+                  - reportingPeriodId
+                  - formData
+                  - computedValues
+                  - validationState
+                  - metadata
+                  - createdBy
+                  - createdAt
+                  - updatedBy
+                  - updatedAt
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+  /api/planning/{id}:
+    get:
+      tags:
+        - planning
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Planning data entry
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  schemaId:
+                    type: integer
+                  entityId:
+                    type: integer
+                    nullable: true
+                  entityType:
+                    type: string
+                  projectId:
+                    type: integer
+                  facilityId:
+                    type: integer
+                  reportingPeriodId:
+                    type: integer
+                    nullable: true
+                  formData:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  computedValues:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationState:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  createdBy:
+                    type: integer
+                    nullable: true
+                  createdAt:
+                    type: string
+                  updatedBy:
+                    type: integer
+                    nullable: true
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - schemaId
+                  - entityId
+                  - entityType
+                  - projectId
+                  - facilityId
+                  - reportingPeriodId
+                  - formData
+                  - computedValues
+                  - validationState
+                  - metadata
+                  - createdBy
+                  - createdAt
+                  - updatedBy
+                  - updatedAt
+        "404":
+          description: Planning data not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    put:
+      tags:
+        - planning
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Planning data updates
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schemaId:
+                  type: integer
+                projectId:
+                  type: integer
+                facilityId:
+                  type: integer
+                reportingPeriodId:
+                  type: integer
+                formData:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+      responses:
+        "200":
+          description: Updated planning data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  schemaId:
+                    type: integer
+                  entityId:
+                    type: integer
+                    nullable: true
+                  entityType:
+                    type: string
+                  projectId:
+                    type: integer
+                  facilityId:
+                    type: integer
+                  reportingPeriodId:
+                    type: integer
+                    nullable: true
+                  formData:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  computedValues:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationState:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  createdBy:
+                    type: integer
+                    nullable: true
+                  createdAt:
+                    type: string
+                  updatedBy:
+                    type: integer
+                    nullable: true
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - schemaId
+                  - entityId
+                  - entityType
+                  - projectId
+                  - facilityId
+                  - reportingPeriodId
+                  - formData
+                  - computedValues
+                  - validationState
+                  - metadata
+                  - createdBy
+                  - createdAt
+                  - updatedBy
+                  - updatedAt
+        "404":
+          description: Planning data not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    delete:
+      tags:
+        - planning
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "204":
+          description: Planning data deleted successfully
+        "404":
+          description: Planning data not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/planning/calculate-totals:
+    post:
+      tags:
+        - planning
+      requestBody:
+        description: Data for calculation
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                planningId:
+                  type: integer
+                data:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+              required:
+                - planningId
+                - data
+      responses:
+        "200":
+          description: Calculated planning totals
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quarterlyTotals:
+                    type: object
+                    properties:
+                      q1:
+                        type: number
+                      q2:
+                        type: number
+                      q3:
+                        type: number
+                      q4:
+                        type: number
+                    required:
+                      - q1
+                      - q2
+                      - q3
+                      - q4
+                  annualTotal:
+                    type: number
+                  categoryTotals:
+                    type: object
+                    additionalProperties:
+                      type: number
+                  computedValues:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - quarterlyTotals
+                  - annualTotal
+                  - categoryTotals
+                  - computedValues
+  /api/planning/validate:
+    post:
+      tags:
+        - planning
+      requestBody:
+        description: Data to validate
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schemaId:
+                  type: integer
+                data:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                context:
+                  type: object
+                  properties:
+                    projectType:
+                      type: string
+                      enum:
+                        - HIV
+                        - Malaria
+                        - TB
+                    facilityType:
+                      type: string
+                      enum:
+                        - hospital
+                        - health_center
+                    reportingPeriod:
+                      type: string
+                  required:
+                    - projectType
+                    - facilityType
+              required:
+                - schemaId
+                - data
+      responses:
+        "200":
+          description: Validation results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isValid:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                        code:
+                          type: string
+                      required:
+                        - field
+                        - message
+                        - code
+                  computedValues:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - isValid
+                  - errors
+                  - computedValues
+  

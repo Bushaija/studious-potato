@@ -1,0 +1,1145 @@
+  /api/bulk/export/report/{id}:
+    post:
+      tags:
+        - bulk
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Export parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:
+                  type: string
+                  enum:
+                    - pdf
+                    - excel
+                    - csv
+                    - json
+                    - xml
+                templateType:
+                  type: string
+                  enum:
+                    - default
+                    - detailed
+                    - summary
+                    - comparative
+                    - custom
+                  default: default
+                includeMetadata:
+                  type: boolean
+                  default: true
+                includeValidation:
+                  type: boolean
+                  default: false
+                includeHistory:
+                  type: boolean
+                  default: false
+                includeComparatives:
+                  type: boolean
+                  default: false
+                customFields:
+                  type: array
+                  items:
+                    type: string
+                filters:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+              required:
+                - format
+      responses:
+        "200":
+          description: Export initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exportId:
+                    type: string
+                  format:
+                    type: string
+                    enum:
+                      - pdf
+                      - excel
+                      - csv
+                      - json
+                      - xml
+                  filename:
+                    type: string
+                  fileSize:
+                    type: number
+                  downloadUrl:
+                    type: string
+                  expiresAt:
+                    type: string
+                  metadata:
+                    type: object
+                    properties:
+                      recordsCount:
+                        type: number
+                      generatedAt:
+                        type: string
+                      generatedBy:
+                        type: number
+                      processingTime:
+                        type: number
+                      checksum:
+                        type: string
+                    required:
+                      - recordsCount
+                      - generatedAt
+                      - generatedBy
+                      - processingTime
+                      - checksum
+                required:
+                  - exportId
+                  - format
+                  - filename
+                  - fileSize
+                  - downloadUrl
+                  - expiresAt
+                  - metadata
+        "400":
+          description: Invalid export parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        "404":
+          description: Report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/bulk/export:
+    post:
+      tags:
+        - bulk
+      requestBody:
+        description: Bulk export parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                exportType:
+                  type: string
+                  enum:
+                    - financial_reports
+                    - statement_templates
+                    - form_schemas
+                    - activities
+                    - event_mappings
+                    - system_configurations
+                    - audit_logs
+                format:
+                  type: string
+                  enum:
+                    - pdf
+                    - excel
+                    - csv
+                    - json
+                    - xml
+                filters:
+                  type: object
+                  properties:
+                    dateRange:
+                      type: object
+                      properties:
+                        startDate:
+                          type: string
+                        endDate:
+                          type: string
+                      required:
+                        - startDate
+                        - endDate
+                    facilityIds:
+                      type: array
+                      items:
+                        type: integer
+                    projectIds:
+                      type: array
+                      items:
+                        type: integer
+                    status:
+                      type: array
+                      items:
+                        type: string
+                    reportingPeriodIds:
+                      type: array
+                      items:
+                        type: integer
+                includeRelations:
+                  type: boolean
+                  default: true
+                includeInactive:
+                  type: boolean
+                  default: false
+                compression:
+                  type: boolean
+                  default: true
+                splitFiles:
+                  type: boolean
+                  default: false
+                maxFileSize:
+                  type: number
+                  default: 52428800
+              required:
+                - exportType
+                - format
+      responses:
+        "202":
+          description: Bulk export queued successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exportId:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      - queued
+                      - processing
+                      - completed
+                      - failed
+                      - cancelled
+                  progress:
+                    type: object
+                    properties:
+                      current:
+                        type: number
+                      total:
+                        type: number
+                      percentage:
+                        type: number
+                      stage:
+                        type: string
+                    required:
+                      - current
+                      - total
+                      - percentage
+                      - stage
+                  files:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        filename:
+                          type: string
+                        format:
+                          type: string
+                          enum:
+                            - pdf
+                            - excel
+                            - csv
+                            - json
+                            - xml
+                        fileSize:
+                          type: number
+                        recordCount:
+                          type: number
+                        downloadUrl:
+                          type: string
+                      required:
+                        - filename
+                        - format
+                        - fileSize
+                        - recordCount
+                        - downloadUrl
+                  metadata:
+                    type: object
+                    properties:
+                      totalRecords:
+                        type: number
+                      totalFiles:
+                        type: number
+                      startedAt:
+                        type: string
+                      completedAt:
+                        type: string
+                      estimatedTimeRemaining:
+                        type: number
+                    required:
+                      - totalRecords
+                      - totalFiles
+                      - startedAt
+                required:
+                  - exportId
+                  - status
+                  - progress
+                  - metadata
+        "400":
+          description: Invalid export parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+  /api/bulk/export/{exportId}/status:
+    get:
+      tags:
+        - bulk
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: exportId
+          in: path
+      responses:
+        "200":
+          description: Export status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exportId:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      - queued
+                      - processing
+                      - completed
+                      - failed
+                      - cancelled
+                  progress:
+                    type: object
+                    properties:
+                      current:
+                        type: number
+                      total:
+                        type: number
+                      percentage:
+                        type: number
+                      stage:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - current
+                      - total
+                      - percentage
+                      - stage
+                  startedAt:
+                    type: string
+                  completedAt:
+                    type: string
+                  estimatedTimeRemaining:
+                    type: number
+                  error:
+                    type: string
+                required:
+                  - exportId
+                  - status
+                  - progress
+                  - startedAt
+        "404":
+          description: Export job not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/bulk/export/{exportId}/download:
+    get:
+      tags:
+        - bulk
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: exportId
+          in: path
+        - schema:
+            type: integer
+          required: false
+          name: fileIndex
+          in: query
+      responses:
+        "200":
+          description: File download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            text/csv:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: string
+        "404":
+          description: Export file not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/bulk/export/{exportId}/cancel:
+    post:
+      tags:
+        - bulk
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: exportId
+          in: path
+      responses:
+        "200":
+          description: Export cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        "400":
+          description: Cannot cancel export in current state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        "404":
+          description: Export job not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/bulk/migration-export:
+    post:
+      tags:
+        - bulk
+      requestBody:
+        description: Migration export parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sourceSystem:
+                  type: string
+                targetFormat:
+                  type: string
+                  enum:
+                    - pdf
+                    - excel
+                    - csv
+                    - json
+                    - xml
+                migrationScope:
+                  type: string
+                  enum:
+                    - full_system
+                    - selective_data
+                    - configuration_only
+                dataMapping:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                transformationRules:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      sourceField:
+                        type: string
+                      targetField:
+                        type: string
+                      transformation:
+                        type: string
+                    required:
+                      - sourceField
+                      - targetField
+                      - transformation
+                validateData:
+                  type: boolean
+                  default: true
+                createBackup:
+                  type: boolean
+                  default: true
+              required:
+                - sourceSystem
+                - targetFormat
+                - migrationScope
+      responses:
+        "202":
+          description: Migration export queued successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exportId:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      - queued
+                      - processing
+                      - completed
+                      - failed
+                      - cancelled
+                  progress:
+                    type: object
+                    properties:
+                      current:
+                        type: number
+                      total:
+                        type: number
+                      percentage:
+                        type: number
+                      stage:
+                        type: string
+                    required:
+                      - current
+                      - total
+                      - percentage
+                      - stage
+                  files:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        filename:
+                          type: string
+                        format:
+                          type: string
+                          enum:
+                            - pdf
+                            - excel
+                            - csv
+                            - json
+                            - xml
+                        fileSize:
+                          type: number
+                        recordCount:
+                          type: number
+                        downloadUrl:
+                          type: string
+                      required:
+                        - filename
+                        - format
+                        - fileSize
+                        - recordCount
+                        - downloadUrl
+                  metadata:
+                    type: object
+                    properties:
+                      totalRecords:
+                        type: number
+                      totalFiles:
+                        type: number
+                      startedAt:
+                        type: string
+                      completedAt:
+                        type: string
+                      estimatedTimeRemaining:
+                        type: number
+                    required:
+                      - totalRecords
+                      - totalFiles
+                      - startedAt
+                required:
+                  - exportId
+                  - status
+                  - progress
+                  - metadata
+        "400":
+          description: Invalid migration parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+  /api/bulk/export-templates:
+    get:
+      tags:
+        - bulk
+      parameters:
+        - schema:
+            type: string
+          required: false
+          name: templateType
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: format
+          in: query
+        - schema:
+            type: boolean
+          required: false
+          name: isPublic
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: createdBy
+          in: query
+        - schema:
+            type: integer
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Export templates retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                          minLength: 1
+                          maxLength: 100
+                        description:
+                          type: string
+                        templateType:
+                          type: string
+                          enum:
+                            - default
+                            - detailed
+                            - summary
+                            - comparative
+                            - custom
+                        format:
+                          type: string
+                          enum:
+                            - pdf
+                            - excel
+                            - csv
+                            - json
+                            - xml
+                        scope:
+                          type: string
+                          enum:
+                            - single_report
+                            - multiple_reports
+                            - bulk_data
+                            - system_backup
+                        configuration:
+                          type: object
+                          additionalProperties:
+                            nullable: true
+                        isActive:
+                          type: boolean
+                          default: true
+                        isPublic:
+                          type: boolean
+                          default: false
+                        createdBy:
+                          type: integer
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - name
+                        - templateType
+                        - format
+                        - scope
+                        - configuration
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      total:
+                        type: number
+                      totalPages:
+                        type: number
+                    required:
+                      - page
+                      - limit
+                      - total
+                      - totalPages
+                required:
+                  - templates
+                  - pagination
+    post:
+      tags:
+        - bulk
+      requestBody:
+        description: Export template
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                description:
+                  type: string
+                templateType:
+                  type: string
+                  enum:
+                    - default
+                    - detailed
+                    - summary
+                    - comparative
+                    - custom
+                format:
+                  type: string
+                  enum:
+                    - pdf
+                    - excel
+                    - csv
+                    - json
+                    - xml
+                scope:
+                  type: string
+                  enum:
+                    - single_report
+                    - multiple_reports
+                    - bulk_data
+                    - system_backup
+                configuration:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                isActive:
+                  type: boolean
+                  default: true
+                isPublic:
+                  type: boolean
+                  default: false
+                createdBy:
+                  type: integer
+              required:
+                - name
+                - templateType
+                - format
+                - scope
+                - configuration
+      responses:
+        "201":
+          description: Export template created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                    minLength: 1
+                    maxLength: 100
+                  description:
+                    type: string
+                  templateType:
+                    type: string
+                    enum:
+                      - default
+                      - detailed
+                      - summary
+                      - comparative
+                      - custom
+                  format:
+                    type: string
+                    enum:
+                      - pdf
+                      - excel
+                      - csv
+                      - json
+                      - xml
+                  scope:
+                    type: string
+                    enum:
+                      - single_report
+                      - multiple_reports
+                      - bulk_data
+                      - system_backup
+                  configuration:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  isActive:
+                    type: boolean
+                    default: true
+                  isPublic:
+                    type: boolean
+                    default: false
+                  createdBy:
+                    type: integer
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - name
+                  - templateType
+                  - format
+                  - scope
+                  - configuration
+        "400":
+          description: Invalid template data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+  /api/bulk/export-templates/{id}:
+    get:
+      tags:
+        - bulk
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Export template retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                    minLength: 1
+                    maxLength: 100
+                  description:
+                    type: string
+                  templateType:
+                    type: string
+                    enum:
+                      - default
+                      - detailed
+                      - summary
+                      - comparative
+                      - custom
+                  format:
+                    type: string
+                    enum:
+                      - pdf
+                      - excel
+                      - csv
+                      - json
+                      - xml
+                  scope:
+                    type: string
+                    enum:
+                      - single_report
+                      - multiple_reports
+                      - bulk_data
+                      - system_backup
+                  configuration:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  isActive:
+                    type: boolean
+                    default: true
+                  isPublic:
+                    type: boolean
+                    default: false
+                  createdBy:
+                    type: integer
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - name
+                  - templateType
+                  - format
+                  - scope
+                  - configuration
+        "404":
+          description: Export template not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    put:
+      tags:
+        - bulk
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Export template updates
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                description:
+                  type: string
+                templateType:
+                  type: string
+                  enum:
+                    - default
+                    - detailed
+                    - summary
+                    - comparative
+                    - custom
+                format:
+                  type: string
+                  enum:
+                    - pdf
+                    - excel
+                    - csv
+                    - json
+                    - xml
+                scope:
+                  type: string
+                  enum:
+                    - single_report
+                    - multiple_reports
+                    - bulk_data
+                    - system_backup
+                configuration:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                isActive:
+                  type: boolean
+                  default: true
+                isPublic:
+                  type: boolean
+                  default: false
+                createdBy:
+                  type: integer
+      responses:
+        "200":
+          description: Export template updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                    minLength: 1
+                    maxLength: 100
+                  description:
+                    type: string
+                  templateType:
+                    type: string
+                    enum:
+                      - default
+                      - detailed
+                      - summary
+                      - comparative
+                      - custom
+                  format:
+                    type: string
+                    enum:
+                      - pdf
+                      - excel
+                      - csv
+                      - json
+                      - xml
+                  scope:
+                    type: string
+                    enum:
+                      - single_report
+                      - multiple_reports
+                      - bulk_data
+                      - system_backup
+                  configuration:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  isActive:
+                    type: boolean
+                    default: true
+                  isPublic:
+                    type: boolean
+                    default: false
+                  createdBy:
+                    type: integer
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - name
+                  - templateType
+                  - format
+                  - scope
+                  - configuration
+        "400":
+          description: Invalid template data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        "404":
+          description: Export template not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    delete:
+      tags:
+        - bulk
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "204":
+          description: Export template deleted successfully
+        "404":
+          description: Export template not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  

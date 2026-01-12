@@ -1,0 +1,1160 @@
+  /api/statements/{id}/submit:
+    post:
+      tags:
+        - statements
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Submission details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comments:
+                  type: string
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                notifyUsers:
+                  type: array
+                  items:
+                    type: integer
+                scheduledDate:
+                  type: string
+      responses:
+        "200":
+          description: Report submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reportId:
+                    type: integer
+                  action:
+                    type: string
+                    enum:
+                      - submit
+                      - approve
+                      - reject
+                      - request_changes
+                      - recall
+                  previousStatus:
+                    type: string
+                  newStatus:
+                    type: string
+                  actionBy:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                    required:
+                      - id
+                      - name
+                      - email
+                      - role
+                  actionAt:
+                    type: string
+                  comments:
+                    type: string
+                    nullable: true
+                  validationResults:
+                    type: object
+                    properties:
+                      isValid:
+                        type: boolean
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                      warnings:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - isValid
+                      - errors
+                      - warnings
+                required:
+                  - reportId
+                  - action
+                  - previousStatus
+                  - newStatus
+                  - actionBy
+                  - actionAt
+                  - comments
+        "400":
+          description: Invalid submission request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  validationErrors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+        "404":
+          description: Report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/statements/{id}/approve:
+    post:
+      tags:
+        - statements
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Approval details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comments:
+                  type: string
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                notifyUsers:
+                  type: array
+                  items:
+                    type: integer
+                scheduledDate:
+                  type: string
+      responses:
+        "200":
+          description: Report approved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reportId:
+                    type: integer
+                  action:
+                    type: string
+                    enum:
+                      - submit
+                      - approve
+                      - reject
+                      - request_changes
+                      - recall
+                  previousStatus:
+                    type: string
+                  newStatus:
+                    type: string
+                  actionBy:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                    required:
+                      - id
+                      - name
+                      - email
+                      - role
+                  actionAt:
+                    type: string
+                  comments:
+                    type: string
+                    nullable: true
+                  validationResults:
+                    type: object
+                    properties:
+                      isValid:
+                        type: boolean
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                      warnings:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - isValid
+                      - errors
+                      - warnings
+                required:
+                  - reportId
+                  - action
+                  - previousStatus
+                  - newStatus
+                  - actionBy
+                  - actionAt
+                  - comments
+        "403":
+          description: Insufficient permissions to approve report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        "404":
+          description: Report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/statements/{id}/reject:
+    post:
+      tags:
+        - statements
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Rejection details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comments:
+                  type: string
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                notifyUsers:
+                  type: array
+                  items:
+                    type: integer
+                scheduledDate:
+                  type: string
+      responses:
+        "200":
+          description: Report rejected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reportId:
+                    type: integer
+                  action:
+                    type: string
+                    enum:
+                      - submit
+                      - approve
+                      - reject
+                      - request_changes
+                      - recall
+                  previousStatus:
+                    type: string
+                  newStatus:
+                    type: string
+                  actionBy:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                    required:
+                      - id
+                      - name
+                      - email
+                      - role
+                  actionAt:
+                    type: string
+                  comments:
+                    type: string
+                    nullable: true
+                  validationResults:
+                    type: object
+                    properties:
+                      isValid:
+                        type: boolean
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                      warnings:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - isValid
+                      - errors
+                      - warnings
+                required:
+                  - reportId
+                  - action
+                  - previousStatus
+                  - newStatus
+                  - actionBy
+                  - actionAt
+                  - comments
+        "404":
+          description: Report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/statements/{id}/request-changes:
+    post:
+      tags:
+        - statements
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Change request details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comments:
+                  type: string
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                notifyUsers:
+                  type: array
+                  items:
+                    type: integer
+                scheduledDate:
+                  type: string
+      responses:
+        "200":
+          description: Changes requested successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reportId:
+                    type: integer
+                  action:
+                    type: string
+                    enum:
+                      - submit
+                      - approve
+                      - reject
+                      - request_changes
+                      - recall
+                  previousStatus:
+                    type: string
+                  newStatus:
+                    type: string
+                  actionBy:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                    required:
+                      - id
+                      - name
+                      - email
+                      - role
+                  actionAt:
+                    type: string
+                  comments:
+                    type: string
+                    nullable: true
+                  validationResults:
+                    type: object
+                    properties:
+                      isValid:
+                        type: boolean
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                      warnings:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - isValid
+                      - errors
+                      - warnings
+                required:
+                  - reportId
+                  - action
+                  - previousStatus
+                  - newStatus
+                  - actionBy
+                  - actionAt
+                  - comments
+        "404":
+          description: Report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/statements/{id}/recall:
+    post:
+      tags:
+        - statements
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: Recall details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comments:
+                  type: string
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                notifyUsers:
+                  type: array
+                  items:
+                    type: integer
+                scheduledDate:
+                  type: string
+      responses:
+        "200":
+          description: Report recalled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reportId:
+                    type: integer
+                  action:
+                    type: string
+                    enum:
+                      - submit
+                      - approve
+                      - reject
+                      - request_changes
+                      - recall
+                  previousStatus:
+                    type: string
+                  newStatus:
+                    type: string
+                  actionBy:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                    required:
+                      - id
+                      - name
+                      - email
+                      - role
+                  actionAt:
+                    type: string
+                  comments:
+                    type: string
+                    nullable: true
+                  validationResults:
+                    type: object
+                    properties:
+                      isValid:
+                        type: boolean
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                      warnings:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - isValid
+                      - errors
+                      - warnings
+                required:
+                  - reportId
+                  - action
+                  - previousStatus
+                  - newStatus
+                  - actionBy
+                  - actionAt
+                  - comments
+        "403":
+          description: Cannot recall report in current state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        "404":
+          description: Report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/statements/{id}/workflow-history:
+    get:
+      tags:
+        - statements
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+        - schema:
+            type: integer
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Workflow history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  history:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        reportId:
+                          type: integer
+                        action:
+                          type: string
+                          enum:
+                            - submit
+                            - approve
+                            - reject
+                            - request_changes
+                            - recall
+                        fromStatus:
+                          type: string
+                        toStatus:
+                          type: string
+                        actionBy:
+                          type: integer
+                        actionByUser:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            name:
+                              type: string
+                            email:
+                              type: string
+                            role:
+                              type: string
+                          required:
+                            - id
+                            - name
+                            - email
+                            - role
+                        comments:
+                          type: string
+                          nullable: true
+                        attachments:
+                          type: array
+                          nullable: true
+                          items:
+                            type: string
+                        metadata:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        actionAt:
+                          type: string
+                      required:
+                        - id
+                        - reportId
+                        - action
+                        - fromStatus
+                        - toStatus
+                        - actionBy
+                        - actionByUser
+                        - comments
+                        - attachments
+                        - metadata
+                        - actionAt
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      total:
+                        type: number
+                      totalPages:
+                        type: number
+                    required:
+                      - page
+                      - limit
+                      - total
+                      - totalPages
+                required:
+                  - history
+                  - pagination
+        "404":
+          description: Report not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/statements/bulk-approval:
+    post:
+      tags:
+        - statements
+      requestBody:
+        description: Bulk approval request
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reportIds:
+                  type: array
+                  items:
+                    type: integer
+                action:
+                  type: string
+                  enum:
+                    - submit
+                    - approve
+                    - reject
+                    - request_changes
+                    - recall
+                comments:
+                  type: string
+                skipValidation:
+                  type: boolean
+                  default: false
+              required:
+                - reportIds
+                - action
+      responses:
+        "200":
+          description: Bulk approval completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  successful:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reportId:
+                          type: number
+                        action:
+                          type: string
+                          enum:
+                            - submit
+                            - approve
+                            - reject
+                            - request_changes
+                            - recall
+                        newStatus:
+                          type: string
+                      required:
+                        - reportId
+                        - action
+                        - newStatus
+                  failed:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reportId:
+                          type: number
+                        error:
+                          type: string
+                        validationErrors:
+                          type: array
+                          items:
+                            type: string
+                      required:
+                        - reportId
+                        - error
+                  summary:
+                    type: object
+                    properties:
+                      totalProcessed:
+                        type: number
+                      successCount:
+                        type: number
+                      failureCount:
+                        type: number
+                    required:
+                      - totalProcessed
+                      - successCount
+                      - failureCount
+                required:
+                  - successful
+                  - failed
+                  - summary
+        "400":
+          description: Invalid bulk approval request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+  /api/statements/approval-queue:
+    get:
+      tags:
+        - statements
+      parameters:
+        - schema:
+            type: integer
+          required: false
+          name: userId
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: facilityId
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: projectType
+          in: query
+        - schema:
+            type: string
+            enum:
+              - high
+              - medium
+              - low
+          required: false
+          name: priority
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: dueBefore
+          in: query
+        - schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - draft
+                - submitted
+                - under_review
+                - approved
+                - rejected
+                - changes_requested
+          required: false
+          name: status
+          in: query
+        - schema:
+            type: integer
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Approval queue retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  queue:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reportId:
+                          type: integer
+                        report:
+                          type: object
+                          properties:
+                            title:
+                              type: string
+                            reportCode:
+                              type: string
+                            fiscalYear:
+                              type: string
+                            status:
+                              type: string
+                            createdAt:
+                              type: string
+                            submittedAt:
+                              type: string
+                              nullable: true
+                          required:
+                            - title
+                            - reportCode
+                            - fiscalYear
+                            - status
+                            - createdAt
+                            - submittedAt
+                        facility:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            name:
+                              type: string
+                            facilityType:
+                              type: string
+                          required:
+                            - id
+                            - name
+                            - facilityType
+                        project:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            name:
+                              type: string
+                            projectType:
+                              type: string
+                              nullable: true
+                          required:
+                            - id
+                            - name
+                            - projectType
+                        submitter:
+                          type: object
+                          nullable: true
+                          properties:
+                            id:
+                              type: number
+                            name:
+                              type: string
+                            email:
+                              type: string
+                          required:
+                            - id
+                            - name
+                            - email
+                        daysInQueue:
+                          type: number
+                        priority:
+                          type: string
+                          enum:
+                            - high
+                            - medium
+                            - low
+                        validationStatus:
+                          type: object
+                          properties:
+                            isValid:
+                              type: boolean
+                            errorCount:
+                              type: number
+                            warningCount:
+                              type: number
+                          required:
+                            - isValid
+                            - errorCount
+                            - warningCount
+                      required:
+                        - reportId
+                        - report
+                        - facility
+                        - project
+                        - submitter
+                        - daysInQueue
+                        - priority
+                        - validationStatus
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      total:
+                        type: number
+                      totalPages:
+                        type: number
+                    required:
+                      - page
+                      - limit
+                      - total
+                      - totalPages
+                  summary:
+                    type: object
+                    properties:
+                      totalPending:
+                        type: number
+                      byPriority:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      averageDaysInQueue:
+                        type: number
+                      oldestSubmission:
+                        type: string
+                        nullable: true
+                    required:
+                      - totalPending
+                      - byPriority
+                      - averageDaysInQueue
+                      - oldestSubmission
+                required:
+                  - queue
+                  - pagination
+                  - summary
+  /api/statements/notification-preferences:
+    get:
+      tags:
+        - statements
+      responses:
+        "200":
+          description: Notification preferences retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                  emailNotifications:
+                    type: boolean
+                    default: true
+                  reportSubmitted:
+                    type: boolean
+                    default: true
+                  reportApproved:
+                    type: boolean
+                    default: true
+                  reportRejected:
+                    type: boolean
+                    default: true
+                  changesRequested:
+                    type: boolean
+                    default: true
+                  reminderNotifications:
+                    type: boolean
+                    default: true
+                  reminderDays:
+                    type: integer
+                    default: 7
+                required:
+                  - userId
+    put:
+      tags:
+        - statements
+      requestBody:
+        description: Notification preferences
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emailNotifications:
+                  type: boolean
+                  default: true
+                reportSubmitted:
+                  type: boolean
+                  default: true
+                reportApproved:
+                  type: boolean
+                  default: true
+                reportRejected:
+                  type: boolean
+                  default: true
+                changesRequested:
+                  type: boolean
+                  default: true
+                reminderNotifications:
+                  type: boolean
+                  default: true
+                reminderDays:
+                  type: integer
+                  default: 7
+      responses:
+        "200":
+          description: Notification preferences updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                  emailNotifications:
+                    type: boolean
+                    default: true
+                  reportSubmitted:
+                    type: boolean
+                    default: true
+                  reportApproved:
+                    type: boolean
+                    default: true
+                  reportRejected:
+                    type: boolean
+                    default: true
+                  changesRequested:
+                    type: boolean
+                    default: true
+                  reminderNotifications:
+                    type: boolean
+                    default: true
+                  reminderDays:
+                    type: integer
+                    default: 7
+                required:
+                  - userId
+  

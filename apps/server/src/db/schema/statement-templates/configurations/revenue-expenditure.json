@@ -1,0 +1,72 @@
+{
+  "statementCode": "REV_EXP",
+  "statementName": "Statement of Revenue and Expenditure",
+  "columns": [
+    {
+      "columnCode": "DESCRIPTION",
+      "columnName": "Description",
+      "dataType": "TEXT",
+      "source": "STATIC",
+      "displayOrder": 1,
+      "isVisible": true
+    },
+    {
+      "columnCode": "NOTE",
+      "columnName": "Note",
+      "dataType": "NUMBER",
+      "source": "STATIC",
+      "displayOrder": 2,
+      "isVisible": true
+    },
+    {
+      "columnCode": "CURRENT_FY",
+      "columnName": "FY 2025/2026 (FRW)",
+      "dataType": "CURRENCY",
+      "source": "CURRENT_PERIOD",
+      "format": {
+        "currencySymbol": "FRW",
+        "decimalPlaces": 0,
+        "showZeroAs": "-"
+      },
+      "displayOrder": 3,
+      "isVisible": true
+    },
+    {
+      "columnCode": "PRIOR_FY",
+      "columnName": "FY 2024/2025 (FRW)",
+      "dataType": "CURRENCY",
+      "source": "PRIOR_PERIOD",
+      "format": {
+        "currencySymbol": "FRW",
+        "decimalPlaces": 0,
+        "showZeroAs": "-"
+      },
+      "displayOrder": 4,
+      "isVisible": true
+    }
+  ],
+  "validationRules": [
+    {
+      "ruleCode": "REVENUE_EXPENSE_BALANCE",
+      "ruleName": "Revenue minus Expenses equals Surplus/Deficit",
+      "formula": "TOTAL_REVENUE - TOTAL_EXPENSES = SURPLUS_DEFICIT",
+      "errorMessage": "Revenue minus expenses must equal surplus/deficit",
+      "severity": "ERROR",
+      "isActive": true
+    }
+  ],
+  "statementMetadata": {
+    "title": "Statement of Revenue and Expenditure",
+    "showNotes": true,
+    "showPriorPeriod": true,
+    "currencyFormat": {
+      "symbol": "FRW",
+      "decimalPlaces": 0,
+      "thousandsSeparator": ","
+    },
+    "showZeroValues": false,
+    "enableValidation": true,
+    "exportFormats": ["PDF", "EXCEL", "CSV"],
+    "defaultExportFormat": "PDF"
+  }
+}

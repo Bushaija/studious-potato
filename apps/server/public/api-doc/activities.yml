@@ -1,0 +1,1122 @@
+/api/activities:
+    get:
+      tags:
+        - activities
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+          required: false
+          name: categoryId
+          in: query
+        - schema:
+            type: string
+            enum:
+              - HIV
+              - Malaria
+              - TB
+          required: false
+          name: projectType
+          in: query
+        - schema:
+            type: string
+            enum:
+              - hospital
+              - health_center
+          required: false
+          name: facilityType
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: activityType
+          in: query
+        - schema:
+            type: string
+            enum:
+              - "true"
+              - "false"
+          required: false
+          name: isTotalRow
+          in: query
+        - schema:
+            type: string
+            enum:
+              - "true"
+              - "false"
+          required: false
+          name: isAnnualOnly
+          in: query
+        - schema:
+            type: string
+            enum:
+              - "true"
+              - "false"
+          required: false
+          name: isActive
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: List of activities with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        categoryId:
+                          type: integer
+                        projectType:
+                          type: string
+                          nullable: true
+                          enum:
+                            - HIV
+                            - Malaria
+                            - TB
+                        facilityType:
+                          type: string
+                          nullable: true
+                          enum:
+                            - hospital
+                            - health_center
+                        code:
+                          type: string
+                          nullable: true
+                        name:
+                          type: string
+                        description:
+                          type: string
+                          nullable: true
+                        activityType:
+                          type: string
+                          nullable: true
+                        displayOrder:
+                          type: integer
+                        isTotalRow:
+                          type: boolean
+                        isAnnualOnly:
+                          type: boolean
+                        fieldMappings:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        computationRules:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        validationRules:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        metadata:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        isActive:
+                          type: boolean
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - categoryId
+                        - projectType
+                        - facilityType
+                        - code
+                        - name
+                        - description
+                        - activityType
+                        - displayOrder
+                        - isTotalRow
+                        - isAnnualOnly
+                        - fieldMappings
+                        - computationRules
+                        - validationRules
+                        - metadata
+                        - isActive
+                        - createdAt
+                        - updatedAt
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+                      total:
+                        type: number
+                      pages:
+                        type: number
+                    required:
+                      - page
+                      - limit
+                      - total
+                      - pages
+                required:
+                  - data
+                  - pagination
+    post:
+      tags:
+        - activities
+      requestBody:
+        description: The activity to create
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categoryId:
+                  type: integer
+                projectType:
+                  type: string
+                  enum:
+                    - HIV
+                    - Malaria
+                    - TB
+                facilityType:
+                  type: string
+                  enum:
+                    - hospital
+                    - health_center
+                code:
+                  type: string
+                  maxLength: 100
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                description:
+                  type: string
+                activityType:
+                  type: string
+                  maxLength: 100
+                displayOrder:
+                  type: integer
+                isTotalRow:
+                  type: boolean
+                  default: false
+                isAnnualOnly:
+                  type: boolean
+                  default: false
+                fieldMappings:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                computationRules:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                validationRules:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                isActive:
+                  type: boolean
+                  default: true
+              required:
+                - categoryId
+                - name
+                - displayOrder
+      responses:
+        "201":
+          description: The created activity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  categoryId:
+                    type: integer
+                  projectType:
+                    type: string
+                    nullable: true
+                    enum:
+                      - HIV
+                      - Malaria
+                      - TB
+                  facilityType:
+                    type: string
+                    nullable: true
+                    enum:
+                      - hospital
+                      - health_center
+                  code:
+                    type: string
+                    nullable: true
+                  name:
+                    type: string
+                  description:
+                    type: string
+                    nullable: true
+                  activityType:
+                    type: string
+                    nullable: true
+                  displayOrder:
+                    type: integer
+                  isTotalRow:
+                    type: boolean
+                  isAnnualOnly:
+                    type: boolean
+                  fieldMappings:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  computationRules:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationRules:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  isActive:
+                    type: boolean
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - categoryId
+                  - projectType
+                  - facilityType
+                  - code
+                  - name
+                  - description
+                  - activityType
+                  - displayOrder
+                  - isTotalRow
+                  - isAnnualOnly
+                  - fieldMappings
+                  - computationRules
+                  - validationRules
+                  - metadata
+                  - isActive
+                  - createdAt
+                  - updatedAt
+        "400":
+          description: Invalid activity data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+  /api/activities/bulk:
+    post:
+      tags:
+        - activities
+      requestBody:
+        description: Activities to create in bulk
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                activities:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      categoryId:
+                        type: integer
+                      projectType:
+                        type: string
+                        enum:
+                          - HIV
+                          - Malaria
+                          - TB
+                      facilityType:
+                        type: string
+                        enum:
+                          - hospital
+                          - health_center
+                      code:
+                        type: string
+                        maxLength: 100
+                      name:
+                        type: string
+                        minLength: 1
+                        maxLength: 300
+                      description:
+                        type: string
+                      activityType:
+                        type: string
+                        maxLength: 100
+                      displayOrder:
+                        type: integer
+                      isTotalRow:
+                        type: boolean
+                        default: false
+                      isAnnualOnly:
+                        type: boolean
+                        default: false
+                      fieldMappings:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      computationRules:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      validationRules:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      metadata:
+                        type: object
+                        additionalProperties:
+                          nullable: true
+                      isActive:
+                        type: boolean
+                        default: true
+                    required:
+                      - categoryId
+                      - name
+                      - displayOrder
+              required:
+                - activities
+      responses:
+        "201":
+          description: Bulk create results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        categoryId:
+                          type: integer
+                        projectType:
+                          type: string
+                          nullable: true
+                          enum:
+                            - HIV
+                            - Malaria
+                            - TB
+                        facilityType:
+                          type: string
+                          nullable: true
+                          enum:
+                            - hospital
+                            - health_center
+                        code:
+                          type: string
+                          nullable: true
+                        name:
+                          type: string
+                        description:
+                          type: string
+                          nullable: true
+                        activityType:
+                          type: string
+                          nullable: true
+                        displayOrder:
+                          type: integer
+                        isTotalRow:
+                          type: boolean
+                        isAnnualOnly:
+                          type: boolean
+                        fieldMappings:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        computationRules:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        validationRules:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        metadata:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        isActive:
+                          type: boolean
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - categoryId
+                        - projectType
+                        - facilityType
+                        - code
+                        - name
+                        - description
+                        - activityType
+                        - displayOrder
+                        - isTotalRow
+                        - isAnnualOnly
+                        - fieldMappings
+                        - computationRules
+                        - validationRules
+                        - metadata
+                        - isActive
+                        - createdAt
+                        - updatedAt
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: number
+                        error:
+                          type: string
+                      required:
+                        - index
+                        - error
+                required:
+                  - created
+                  - errors
+        "400":
+          description: Invalid bulk data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+  /api/activities/{id}:
+    get:
+      tags:
+        - activities
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: The activity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  categoryId:
+                    type: integer
+                  projectType:
+                    type: string
+                    nullable: true
+                    enum:
+                      - HIV
+                      - Malaria
+                      - TB
+                  facilityType:
+                    type: string
+                    nullable: true
+                    enum:
+                      - hospital
+                      - health_center
+                  code:
+                    type: string
+                    nullable: true
+                  name:
+                    type: string
+                  description:
+                    type: string
+                    nullable: true
+                  activityType:
+                    type: string
+                    nullable: true
+                  displayOrder:
+                    type: integer
+                  isTotalRow:
+                    type: boolean
+                  isAnnualOnly:
+                    type: boolean
+                  fieldMappings:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  computationRules:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationRules:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  isActive:
+                    type: boolean
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - categoryId
+                  - projectType
+                  - facilityType
+                  - code
+                  - name
+                  - description
+                  - activityType
+                  - displayOrder
+                  - isTotalRow
+                  - isAnnualOnly
+                  - fieldMappings
+                  - computationRules
+                  - validationRules
+                  - metadata
+                  - isActive
+                  - createdAt
+                  - updatedAt
+        "404":
+          description: Activity not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    patch:
+      tags:
+        - activities
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: The activity data to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categoryId:
+                  type: integer
+                projectType:
+                  type: string
+                  enum:
+                    - HIV
+                    - Malaria
+                    - TB
+                facilityType:
+                  type: string
+                  enum:
+                    - hospital
+                    - health_center
+                code:
+                  type: string
+                  maxLength: 100
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+                description:
+                  type: string
+                activityType:
+                  type: string
+                  maxLength: 100
+                displayOrder:
+                  type: integer
+                isTotalRow:
+                  type: boolean
+                  default: false
+                isAnnualOnly:
+                  type: boolean
+                  default: false
+                fieldMappings:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                computationRules:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                validationRules:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+                isActive:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: The updated activity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  categoryId:
+                    type: integer
+                  projectType:
+                    type: string
+                    nullable: true
+                    enum:
+                      - HIV
+                      - Malaria
+                      - TB
+                  facilityType:
+                    type: string
+                    nullable: true
+                    enum:
+                      - hospital
+                      - health_center
+                  code:
+                    type: string
+                    nullable: true
+                  name:
+                    type: string
+                  description:
+                    type: string
+                    nullable: true
+                  activityType:
+                    type: string
+                    nullable: true
+                  displayOrder:
+                    type: integer
+                  isTotalRow:
+                    type: boolean
+                  isAnnualOnly:
+                    type: boolean
+                  fieldMappings:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  computationRules:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  validationRules:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      nullable: true
+                  isActive:
+                    type: boolean
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - categoryId
+                  - projectType
+                  - facilityType
+                  - code
+                  - name
+                  - description
+                  - activityType
+                  - displayOrder
+                  - isTotalRow
+                  - isAnnualOnly
+                  - fieldMappings
+                  - computationRules
+                  - validationRules
+                  - metadata
+                  - isActive
+                  - createdAt
+                  - updatedAt
+        "404":
+          description: Activity not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    delete:
+      tags:
+        - activities
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "204":
+          description: The activity was deleted
+        "404":
+          description: Activity not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/activities/reorder:
+    patch:
+      tags:
+        - activities
+      requestBody:
+        description: Activity order updates
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                activityOrders:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      displayOrder:
+                        type: integer
+                    required:
+                      - id
+                      - displayOrder
+              required:
+                - activityOrders
+      responses:
+        "200":
+          description: Reordered activities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        categoryId:
+                          type: integer
+                        projectType:
+                          type: string
+                          nullable: true
+                          enum:
+                            - HIV
+                            - Malaria
+                            - TB
+                        facilityType:
+                          type: string
+                          nullable: true
+                          enum:
+                            - hospital
+                            - health_center
+                        code:
+                          type: string
+                          nullable: true
+                        name:
+                          type: string
+                        description:
+                          type: string
+                          nullable: true
+                        activityType:
+                          type: string
+                          nullable: true
+                        displayOrder:
+                          type: integer
+                        isTotalRow:
+                          type: boolean
+                        isAnnualOnly:
+                          type: boolean
+                        fieldMappings:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        computationRules:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        validationRules:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        metadata:
+                          type: object
+                          nullable: true
+                          additionalProperties:
+                            nullable: true
+                        isActive:
+                          type: boolean
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - categoryId
+                        - projectType
+                        - facilityType
+                        - code
+                        - name
+                        - description
+                        - activityType
+                        - displayOrder
+                        - isTotalRow
+                        - isAnnualOnly
+                        - fieldMappings
+                        - computationRules
+                        - validationRules
+                        - metadata
+                        - isActive
+                        - createdAt
+                        - updatedAt
+                  message:
+                    type: string
+                required:
+                  - updated
+                  - message
+        "400":
+          description: Invalid reorder data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - message
+  /api/activities/category/{categoryId}:
+    get:
+      tags:
+        - activities
+      parameters:
+        - schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+          name: categoryId
+          in: path
+        - schema:
+            type: string
+            enum:
+              - "true"
+              - "false"
+            default: "false"
+          required: false
+          name: includeInactive
+          in: query
+        - schema:
+            type: string
+            enum:
+              - HIV
+              - Malaria
+              - TB
+          required: false
+          name: projectType
+          in: query
+        - schema:
+            type: string
+            enum:
+              - hospital
+              - health_center
+          required: false
+          name: facilityType
+          in: query
+      responses:
+        "200":
+          description: Activities for the category
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    categoryId:
+                      type: integer
+                    projectType:
+                      type: string
+                      nullable: true
+                      enum:
+                        - HIV
+                        - Malaria
+                        - TB
+                    facilityType:
+                      type: string
+                      nullable: true
+                      enum:
+                        - hospital
+                        - health_center
+                    code:
+                      type: string
+                      nullable: true
+                    name:
+                      type: string
+                    description:
+                      type: string
+                      nullable: true
+                    activityType:
+                      type: string
+                      nullable: true
+                    displayOrder:
+                      type: integer
+                    isTotalRow:
+                      type: boolean
+                    isAnnualOnly:
+                      type: boolean
+                    fieldMappings:
+                      type: object
+                      nullable: true
+                      additionalProperties:
+                        nullable: true
+                    computationRules:
+                      type: object
+                      nullable: true
+                      additionalProperties:
+                        nullable: true
+                    validationRules:
+                      type: object
+                      nullable: true
+                      additionalProperties:
+                        nullable: true
+                    metadata:
+                      type: object
+                      nullable: true
+                      additionalProperties:
+                        nullable: true
+                    isActive:
+                      type: boolean
+                    createdAt:
+                      type: string
+                    updatedAt:
+                      type: string
+                  required:
+                    - id
+                    - categoryId
+                    - projectType
+                    - facilityType
+                    - code
+                    - name
+                    - description
+                    - activityType
+                    - displayOrder
+                    - isTotalRow
+                    - isAnnualOnly
+                    - fieldMappings
+                    - computationRules
+                    - validationRules
+                    - metadata
+                    - isActive
+                    - createdAt
+                    - updatedAt
+  

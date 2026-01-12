@@ -1,0 +1,178 @@
+  /api/dashboard/summary:
+    get:
+      tags:
+        - dashboard
+      summary: Get dashboard summary statistics
+      description: Retrieve comprehensive dashboard data including facilities,
+        projects, reports, and alerts
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+          required: false
+          name: facilityId
+          in: query
+        - schema:
+            type: number
+            nullable: true
+          required: false
+          name: projectId
+          in: query
+        - schema:
+            type: number
+            nullable: true
+          required: false
+          name: reportingPeriodId
+          in: query
+      responses:
+        "200":
+          description: Dashboard summary data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  facilities:
+                    type: object
+                    properties:
+                      total:
+                        type: number
+                      byType:
+                        type: object
+                        additionalProperties:
+                          type: number
+                      byDistrict:
+                        type: object
+                        additionalProperties:
+                          type: number
+                    required:
+                      - total
+                      - byType
+                      - byDistrict
+                  projects:
+                    type: object
+                    properties:
+                      total:
+                        type: number
+                      byType:
+                        type: object
+                        additionalProperties:
+                          type: number
+                      byStatus:
+                        type: object
+                        additionalProperties:
+                          type: number
+                    required:
+                      - total
+                      - byType
+                      - byStatus
+                  reports:
+                    type: object
+                    properties:
+                      total:
+                        type: number
+                      byStatus:
+                        type: object
+                        additionalProperties:
+                          type: number
+                      pendingApproval:
+                        type: number
+                      recentlySubmitted:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                            reportCode:
+                              type: string
+                            title:
+                              type: string
+                            projectName:
+                              type: string
+                            facilityName:
+                              type: string
+                            fiscalYear:
+                              type: string
+                            status:
+                              type: string
+                              enum:
+                                - draft
+                                - submitted
+                                - approved
+                                - rejected
+                            createdBy:
+                              type: string
+                            createdAt:
+                              type: string
+                            submittedAt:
+                              type: string
+                          required:
+                            - id
+                            - reportCode
+                            - title
+                            - projectName
+                            - facilityName
+                            - fiscalYear
+                            - status
+                            - createdBy
+                            - createdAt
+                    required:
+                      - total
+                      - byStatus
+                      - pendingApproval
+                      - recentlySubmitted
+                  alerts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        type:
+                          type: string
+                          enum:
+                            - warning
+                            - error
+                            - info
+                        title:
+                          type: string
+                        message:
+                          type: string
+                        severity:
+                          type: string
+                          enum:
+                            - low
+                            - medium
+                            - high
+                            - critical
+                        entityType:
+                          type: string
+                        entityId:
+                          type: number
+                        createdAt:
+                          type: string
+                      required:
+                        - id
+                        - type
+                        - title
+                        - message
+                        - severity
+                        - createdAt
+                required:
+                  - facilities
+                  - projects
+                  - reports
+                  - alerts
+        "400":
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+  

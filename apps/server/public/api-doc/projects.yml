@@ -1,0 +1,882 @@
+  /api/projects:
+    get:
+      tags:
+        - projects
+      parameters:
+        - schema:
+            type: string
+            enum:
+              - HIV
+              - Malaria
+              - TB
+          required: false
+          name: projectType
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: facilityId
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: status
+          in: query
+        - schema:
+            type: integer
+          required: false
+          name: userId
+          in: query
+      responses:
+        "200":
+          description: The list of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    status:
+                      type: string
+                    code:
+                      type: string
+                    description:
+                      type: string
+                    projectType:
+                      type: string
+                      enum:
+                        - HIV
+                        - Malaria
+                        - TB
+                    facilityId:
+                      type: integer
+                    facility:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        facilityType:
+                          type: string
+                          enum:
+                            - hospital
+                            - health_center
+                        districtId:
+                          type: integer
+                      required:
+                        - id
+                        - name
+                        - facilityType
+                        - districtId
+                    reportingPeriodId:
+                      type: integer
+                    reportingPeriod:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        year:
+                          type: integer
+                        periodType:
+                          type: string
+                        startDate:
+                          type: string
+                        endDate:
+                          type: string
+                        status:
+                          type: string
+                      required:
+                        - id
+                        - year
+                        - periodType
+                        - startDate
+                        - endDate
+                        - status
+                    userId:
+                      type: integer
+                    user:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        email:
+                          type: string
+                        role:
+                          type: string
+                          enum:
+                            - accountant
+                            - admin
+                            - program_manager
+                      required:
+                        - id
+                        - name
+                        - email
+                        - role
+                    metadata:
+                      type: object
+                      additionalProperties:
+                        nullable: true
+                    createdAt:
+                      type: string
+                    updatedAt:
+                      type: string
+                  required:
+                    - id
+                    - name
+                    - status
+                    - code
+                    - projectType
+                    - facilityId
+                    - facility
+                    - userId
+                    - user
+                    - createdAt
+                    - updatedAt
+    post:
+      tags:
+        - projects
+      requestBody:
+        description: The project to create
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 200
+                status:
+                  type: string
+                  maxLength: 20
+                  default: ACTIVE
+                code:
+                  type: string
+                  maxLength: 10
+                description:
+                  type: string
+                projectType:
+                  type: string
+                  enum:
+                    - HIV
+                    - Malaria
+                    - TB
+                facilityId:
+                  type: integer
+                reportingPeriodId:
+                  type: integer
+                userId:
+                  type: integer
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+              required:
+                - name
+                - code
+                - projectType
+                - facilityId
+                - userId
+      responses:
+        "201":
+          description: The created project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  status:
+                    type: string
+                  code:
+                    type: string
+                  description:
+                    type: string
+                  projectType:
+                    type: string
+                    enum:
+                      - HIV
+                      - Malaria
+                      - TB
+                  facilityId:
+                    type: integer
+                  facility:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      facilityType:
+                        type: string
+                        enum:
+                          - hospital
+                          - health_center
+                      districtId:
+                        type: integer
+                    required:
+                      - id
+                      - name
+                      - facilityType
+                      - districtId
+                  reportingPeriodId:
+                    type: integer
+                  reportingPeriod:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      year:
+                        type: integer
+                      periodType:
+                        type: string
+                      startDate:
+                        type: string
+                      endDate:
+                        type: string
+                      status:
+                        type: string
+                    required:
+                      - id
+                      - year
+                      - periodType
+                      - startDate
+                      - endDate
+                      - status
+                  userId:
+                    type: integer
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                        enum:
+                          - accountant
+                          - admin
+                          - program_manager
+                    required:
+                      - id
+                      - name
+                      - email
+                      - role
+                  metadata:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - name
+                  - status
+                  - code
+                  - projectType
+                  - facilityId
+                  - facility
+                  - userId
+                  - user
+                  - createdAt
+                  - updatedAt
+        "400":
+          description: Invalid project data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+        "409":
+          description: Project with this name or code already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  /api/projects/{id}:
+    get:
+      tags:
+        - projects
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: The project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  status:
+                    type: string
+                  code:
+                    type: string
+                  description:
+                    type: string
+                  projectType:
+                    type: string
+                    enum:
+                      - HIV
+                      - Malaria
+                      - TB
+                  facilityId:
+                    type: integer
+                  facility:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      facilityType:
+                        type: string
+                        enum:
+                          - hospital
+                          - health_center
+                      districtId:
+                        type: integer
+                    required:
+                      - id
+                      - name
+                      - facilityType
+                      - districtId
+                  reportingPeriodId:
+                    type: integer
+                  reportingPeriod:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      year:
+                        type: integer
+                      periodType:
+                        type: string
+                      startDate:
+                        type: string
+                      endDate:
+                        type: string
+                      status:
+                        type: string
+                    required:
+                      - id
+                      - year
+                      - periodType
+                      - startDate
+                      - endDate
+                      - status
+                  userId:
+                    type: integer
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                        enum:
+                          - accountant
+                          - admin
+                          - program_manager
+                    required:
+                      - id
+                      - name
+                      - email
+                      - role
+                  metadata:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - name
+                  - status
+                  - code
+                  - projectType
+                  - facilityId
+                  - facility
+                  - userId
+                  - user
+                  - createdAt
+                  - updatedAt
+        "404":
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    put:
+      tags:
+        - projects
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: The project updates
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 200
+                status:
+                  type: string
+                  maxLength: 20
+                  default: ACTIVE
+                code:
+                  type: string
+                  maxLength: 10
+                description:
+                  type: string
+                projectType:
+                  type: string
+                  enum:
+                    - HIV
+                    - Malaria
+                    - TB
+                facilityId:
+                  type: integer
+                reportingPeriodId:
+                  type: integer
+                userId:
+                  type: integer
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+              required:
+                - name
+                - code
+                - projectType
+                - facilityId
+                - userId
+      responses:
+        "200":
+          description: The updated project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  status:
+                    type: string
+                  code:
+                    type: string
+                  description:
+                    type: string
+                  projectType:
+                    type: string
+                    enum:
+                      - HIV
+                      - Malaria
+                      - TB
+                  facilityId:
+                    type: integer
+                  facility:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      facilityType:
+                        type: string
+                        enum:
+                          - hospital
+                          - health_center
+                      districtId:
+                        type: integer
+                    required:
+                      - id
+                      - name
+                      - facilityType
+                      - districtId
+                  reportingPeriodId:
+                    type: integer
+                  reportingPeriod:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      year:
+                        type: integer
+                      periodType:
+                        type: string
+                      startDate:
+                        type: string
+                      endDate:
+                        type: string
+                      status:
+                        type: string
+                    required:
+                      - id
+                      - year
+                      - periodType
+                      - startDate
+                      - endDate
+                      - status
+                  userId:
+                    type: integer
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                        enum:
+                          - accountant
+                          - admin
+                          - program_manager
+                    required:
+                      - id
+                      - name
+                      - email
+                      - role
+                  metadata:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - name
+                  - status
+                  - code
+                  - projectType
+                  - facilityId
+                  - facility
+                  - userId
+                  - user
+                  - createdAt
+                  - updatedAt
+        "400":
+          description: Invalid project data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+        "404":
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    patch:
+      tags:
+        - projects
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      requestBody:
+        description: The project partial updates
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 200
+                status:
+                  type: string
+                  maxLength: 20
+                  default: ACTIVE
+                code:
+                  type: string
+                  maxLength: 10
+                description:
+                  type: string
+                projectType:
+                  type: string
+                  enum:
+                    - HIV
+                    - Malaria
+                    - TB
+                facilityId:
+                  type: integer
+                reportingPeriodId:
+                  type: integer
+                userId:
+                  type: integer
+                metadata:
+                  type: object
+                  additionalProperties:
+                    nullable: true
+      responses:
+        "200":
+          description: The updated project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  status:
+                    type: string
+                  code:
+                    type: string
+                  description:
+                    type: string
+                  projectType:
+                    type: string
+                    enum:
+                      - HIV
+                      - Malaria
+                      - TB
+                  facilityId:
+                    type: integer
+                  facility:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      facilityType:
+                        type: string
+                        enum:
+                          - hospital
+                          - health_center
+                      districtId:
+                        type: integer
+                    required:
+                      - id
+                      - name
+                      - facilityType
+                      - districtId
+                  reportingPeriodId:
+                    type: integer
+                  reportingPeriod:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      year:
+                        type: integer
+                      periodType:
+                        type: string
+                      startDate:
+                        type: string
+                      endDate:
+                        type: string
+                      status:
+                        type: string
+                    required:
+                      - id
+                      - year
+                      - periodType
+                      - startDate
+                      - endDate
+                      - status
+                  userId:
+                    type: integer
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                        enum:
+                          - accountant
+                          - admin
+                          - program_manager
+                    required:
+                      - id
+                      - name
+                      - email
+                      - role
+                  metadata:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - name
+                  - status
+                  - code
+                  - projectType
+                  - facilityId
+                  - facility
+                  - userId
+                  - user
+                  - createdAt
+                  - updatedAt
+        "400":
+          description: Invalid project data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+        "404":
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+    delete:
+      tags:
+        - projects
+      parameters:
+        - schema:
+            type: number
+            nullable: true
+            required:
+              - id
+            example: 42
+          required: true
+          name: id
+          in: path
+      responses:
+        "204":
+          description: Project deleted successfully
+        "404":
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+        "409":
+          description: Cannot delete project with existing data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+                example:
+                  message: Not Found
+  

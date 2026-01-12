@@ -1,0 +1,980 @@
+[
+    {
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ],
+        "facility-type": "hospital",
+        "province": "northern",
+        "district": "burera",
+        "hospitals": [
+            "butaro"
+        ],
+        "health-centers": [
+            "kivuye",
+            "rusasa",
+            "butaro",
+            "kinyababa",
+            "kinoni",
+            "ntaruka",
+            "gitare butaro",
+            "mucaca butaro",
+            "kirambo",
+            "nyamugari",
+            "ruhunde",
+            "cyanika",
+            "gahunga",
+            "rwerere",
+            "ndongozi",
+            "ruhombo",
+            "gatebe",
+            "rugarama"
+        ]
+    },
+    {
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ],
+        "facility-type": "hospital",
+        "province": "northern",
+        "district": "gicumbi",
+        "hospitals": [
+            "byumba district "
+        ],
+        "health-centers": [
+            "miyove",
+            "giti",
+            "rutare",
+            "tanda",
+            "muko",
+            "munyinya",
+            "rushaki",
+            "mukono",
+            "byumba",
+            "musenyi",
+            "manyagiro",
+            "rubaya",
+            "cyumba",
+            "ruvune"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "eastern",
+        "district": "kayonza",
+        "hospitals": [
+            "gahini"
+        ],
+        "health-centers": [
+            "buhabwa",
+            "gahini",
+            "mukarange",
+            "nyakabungo",
+            "rukara",
+            "ryamanyoni"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "southern",
+        "district": "gisagara",
+        "hospitals": [
+            "gakoma"
+        ],
+        "health-centers": [
+            "gakoma",
+            "gikonko",
+            "gishubi",
+            "musha",
+            "save"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "northern",
+        "district": "gakenke",
+        "hospitals": [
+            "gatonde"
+        ],
+        "health-centers": [
+            "busengo",
+            "gatonde",
+            "janja ",
+            "nyundo",
+            "rusoro",
+            "rutake"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "eastern",
+        "district": "nyagatare",
+        "hospitals": [
+            "gatunda"
+        ],
+        "health-centers": [
+            "nyarurema",
+            "nyagahita",
+            "rukomo",
+            "cyondo",
+            "kabuga",
+            "katabagemu",
+            "mimuli",
+            "muhambo"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "western",
+        "district": "rubavu",
+        "hospitals": [
+            "gisenyi"
+        ],
+        "health-centers": [
+            "gisenyi",
+            "gacuba ii",
+            "byahi",
+            "murara",
+            "kigufi",
+            "busasamana",
+            "nyundo",
+            "mudende",
+            "karambo",
+            "bugeshi",
+            "nyakiriba",
+            "busigari",
+            "kabari"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "southern",
+        "district": "ruhango",
+        "hospitals": [
+            "gitwe"
+        ],
+        "health-centers": [
+            "karambi",
+            "muremure",
+            "gf ssf vih gishweru",
+            "munanira",
+            "mwendo"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "southern",
+        "district": "muhanga",
+        "hospitals": [
+            "kabgayi"
+        ],
+        "health-centers": [
+            "gikomero ",
+            "kivumu",
+            "rugendabali",
+            "kabgayi",
+            "buramba",
+            "gasagara",
+            "gasovu",
+            "nyabinoni",
+            "shyogwe"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "southern",
+        "district": "huye",
+        "hospitals": [
+            "kabutare"
+        ],
+        "health-centers": [
+            "busoro gishamvu",
+            "cusp",
+            "karama",
+            "kinyamakara",
+            "matyazo",
+            "mbazi",
+            "rango",
+            "rubona",
+            "ruhashya",
+            "rusatira",
+            "rwaniro",
+            "simbi",
+            "police huye",
+            "sovu",
+            "maraba",
+            "mukura "
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "southern",
+        "district": "nyamagabe",
+        "hospitals": [
+            "kaduha "
+        ],
+        "health-centers": [
+            "kaduha",
+            "kibumbwe",
+            "mugano",
+            "musebeya",
+            "nyarwungo",
+            "buruhukiro",
+            "rugege"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "kigali",
+        "district": "gasabo",
+        "hospitals": [
+            "kibagabaga"
+        ],
+        "health-centers": [
+            "gikomero ii",
+            "kabuye",
+            "kacyiru",
+            "kagugu",
+            "kayanga",
+            "kimironko-remera",
+            "kinyinya",
+            "nduba",
+            "rwanda women network",
+            "solace ministries",
+            "nyacyonga",
+            "gatsata",
+            "sante avega remera"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "southern",
+        "district": "gisagara",
+        "hospitals": [
+            "kibilizi"
+        ],
+        "health-centers": [
+            "gikore",
+            "gisagara",
+            "kansi",
+            "kibayi",
+            "kibilizi",
+            "kigembe",
+            "kirarambogo",
+            "mugombwa",
+            "agahabwa"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "eastern",
+        "district": "ngoma",
+        "hospitals": [
+            "kibungo"
+        ],
+        "health-centers": [
+            "remera",
+            "rukoma sake",
+            "zaza",
+            "mutenderi",
+            "kirwa",
+            "rukira",
+            "nyange",
+            "jarama",
+            "sangaza",
+            "gituku",
+            "rubona",
+            "gashanda",
+            "kibungo",
+            "gasetsa"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "southern",
+        "district": "nyamagabe",
+        "hospitals": [
+            "kigeme "
+        ],
+        "health-centers": [
+            "cyanika",
+            "kitabi",
+            "ngara",
+            "kibilizi",
+            "nyarusiza",
+            "uwinkingi"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "eastern",
+        "district": "kirehe",
+        "hospitals": [
+            "kirehe "
+        ],
+        "health-centers": [
+            "bukora",
+            "gahara",
+            "gashomgora",
+            "kabuye",
+            "mulindi",
+            "mushikire",
+            "musaza",
+            "ntaruka",
+            "nyabitare",
+            "nyarubuye",
+            "kirehe",
+            "rusumo",
+            "nasho"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "kigali",
+        "district": "nyarugenge",
+        "hospitals": [
+            "muhima"
+        ],
+        "health-centers": [
+            "health center kanyinya  ",
+            "rwampara "
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "western",
+        "district": "ngororero",
+        "hospitals": [
+            "muhororo"
+        ],
+        "health-centers": [
+            "gashubi",
+            "muhororo",
+            "nyange a",
+            "nyange b",
+            "rubona",
+            "kageyo hiv nsp",
+            "ntaganzwa",
+            "ntobwe"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "southern",
+        "district": "nyaruguru",
+        "hospitals": [
+            "munini"
+        ],
+        "health-centers": [
+            "coko ",
+            "kabilizi ",
+            "kivu ",
+            "muganza ",
+            "ngoma ",
+            "nyamyumba ",
+            "nyantanga ",
+            "cyahinda",
+            "munini",
+            "ngera",
+            "nyabimata",
+            "ruheru",
+            "maraba ",
+            "runyombyi"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "western",
+        "district": "rutsiro",
+        "hospitals": [
+            "murunda"
+        ],
+        "health-centers": [
+            "congo",
+            "cyimbili",
+            "kabona",
+            "karumbi",
+            "kayove",
+            "kibingo",
+            "kinihira",
+            "kinunu",
+            "kivumu",
+            "mukura",
+            "murunda",
+            "mushubati",
+            "musasa",
+            "nyabirasi",
+            "rutsiro"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "northern",
+        "district": "gakenke",
+        "hospitals": [
+            "nemba"
+        ],
+        "health-centers": [
+            " kamubuga",
+            "bushoka",
+            "cyabingo",
+            "karambo",
+            "mataba",
+            "nemba",
+            "rukura",
+            "rutenderi",
+            "nganzo"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "eastern",
+        "district": "gatsibo",
+        "hospitals": [
+            "ngarama"
+        ],
+        "health-centers": [
+            "ngarama",
+            "kibondo",
+            "gituza",
+            "nyagahanga",
+            "kageyo",
+            "nyagihanga",
+            "gatsibo",
+            "shyiradh",
+            "shyira",
+            "nyakigezi ",
+            "nyakiriba",
+            "rwankerihc",
+            "kintobo",
+            "rurembohc",
+            "jomba",
+            "gakamba",
+            "birembo",
+            "ramburahc",
+            "mwiyanike",
+            " korahc",
+            "kareba",
+            "bigogwe",
+            "arusha",
+            "kabatwa",
+            "kiziguro",
+            "bugarura",
+            "gakenke",
+            "gasange",
+            "gitoki",
+            "humure",
+            "kabarore",
+            "kiziguro",
+            "muhura"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "southern",
+        "district": "muhanga",
+        "hospitals": [
+            "nyabikenke district "
+        ],
+        "health-centers": [
+            "buramba",
+            "gasagara",
+            "gitega",
+            "nyabinoni"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "eastern",
+        "district": "nyagatare",
+        "hospitals": [
+            "nyagatare "
+        ],
+        "health-centers": [
+            "bugaragara ",
+            "cyabayaga ",
+            "kabuga ",
+            "kagitumba",
+            "karangazi ",
+            "matimba  ",
+            "ndama ",
+            "ntoma ",
+            "nyagatare ",
+            "nyakigando ",
+            "rurenge ",
+            "rwempasha",
+            "tabagwe "
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "eastern",
+        "district": "bugesera",
+        "hospitals": [
+            "nyamata"
+        ],
+        "health-centers": [
+            "avega ntarama",
+            "gakurazo",
+            "gashora",
+            "gihinga",
+            "mareba",
+            "mayange",
+            "ngeruka",
+            "nyamata",
+            "rilima",
+            "ruhuha",
+            "juru",
+            "nyarugenge"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "southern",
+        "district": "nyanza",
+        "hospitals": [
+            "nyanza"
+        ],
+        "health-centers": [
+            "busoro",
+            "cyaratsi",
+            "gahombo",
+            "gatagara",
+            "hanika",
+            "kibilizi",
+            "mweya",
+            "ntyazo",
+            "nyamiyaga",
+            "nyamure",
+            "nyanza",
+            "ruyenzi",
+            "mucubira nsp gf hiv",
+            "mututu nsp hiv",
+            "nsp gf vih nyarusange"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "kigali",
+        "district": "nyarugenge",
+        "hospitals": [
+            "nyarugenge district "
+        ],
+        "health-centers": [
+            "biryogo ",
+            "mwendo",
+            "rugarama",
+            "nyarurenzi",
+            "kabusunzu",
+            "butamwa"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "kigali",
+        "district": "nyarugenge",
+        "hospitals": [
+            "nyarugenge prison "
+        ],
+        "health-centers": [
+            "bushenge",
+            "mukoma",
+            "muyange",
+            "gisakura",
+            "kamonyi",
+            "gihundwe",
+            "mont cyangugu",
+            "bweyeye",
+            "giheke",
+            "gihundwe",
+            "nkanka",
+            "nkombo",
+            "rusizi",
+            "kibogora",
+            "kibingo",
+            "mahembe",
+            "ngange",
+            "nyamasheke",
+            "ruheru",
+            "gatare",
+            "karambi",
+            "yove",
+            "cyivugiza",
+            "vih nsp hanika",
+            "kibuye",
+            "bushenge ph",
+            "gf kibuye",
+            "bubazi",
+            "kirambo",
+            "musango",
+            "rubengera",
+            "rufungo",
+            "kiziba",
+            "police karongi",
+            "mukungu",
+            "kinihira ph",
+            "buyoga",
+            "tare",
+            "kinihira",
+            "mushongi",
+            "tumba",
+            "marembo",
+            "kisaro hiv nsp",
+            "kirinda",
+            "biguhu",
+            "kirinda",
+            "munzanga",
+            "mwendo",
+            "rugabano",
+            "ssf hiv birambo",
+            "masaka",
+            "busanza gf hiv nsp",
+            "gahanga",
+            "kabuga",
+            "mibirizi",
+            "bugarama",
+            "islamique bugarama",
+            "mashesha",
+            "mibilizi",
+            "mushaka",
+            "nkungu",
+            "nyabitimbo",
+            "nyakarenzo",
+            "gikundamvura",
+            "nyakabuye",
+            "rwinzuki rbf nsp hiv",
+            "mugonero",
+            "karora ",
+            "gatare",
+            "gisovu",
+            "mpembe",
+            "mugonero",
+            "bisesero"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "southern",
+        "district": "kamonyi",
+        "hospitals": [
+            "remera-rukoma "
+        ],
+        "health-centers": [
+            "kamonyi",
+            "nyamiyaga",
+            "kayenzi",
+            "kigese",
+            "musambira",
+            "karama"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "eastern",
+        "district": "gatsibo",
+        "hospitals": [
+            "rugarama"
+        ],
+        "health-centers": [
+            "rwimbogo",
+            "rwimitereri",
+            "kabaya ds",
+            "kabaya",
+            "muramba",
+            "ramba",
+            "rubaya",
+            "sovu",
+            "gashonyi"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "southern",
+        "district": "ruhango",
+        "hospitals": [
+            "ruhango"
+        ],
+        "health-centers": [
+            "kigoma ",
+            "kinazi",
+            "nyarurama",
+            "mukoma",
+            "kizibere"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "northern",
+        "district": "musanze",
+        "hospitals": [
+            "ruhengeri referral "
+        ],
+        "health-centers": [
+            "bisate",
+            "busogo",
+            "gashaki",
+            "gasiza",
+            "kabere",
+            "karwasa",
+            "kinigi",
+            "murandi",
+            "musanze",
+            "nyakinama",
+            "ruhengeri",
+            "rwaza",
+            "shingiro",
+            "kimonyi",
+            "nyange",
+            "gataraga",
+            "ruhengeri referral "
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "northern",
+        "district": "gakenke",
+        "hospitals": [
+            "ruli"
+        ],
+        "health-centers": [
+            "coko",
+            "muhondo",
+            "nyange",
+            "ruli",
+            "rushashi",
+            "rwankuba",
+            "minazi",
+            "muyongwe"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "northern",
+        "district": "rulindo",
+        "hospitals": [
+            "rutongo"
+        ],
+        "health-centers": [
+            "bubangu",
+            "burega",
+            "masoro",
+            "remera mbogo",
+            "rulindo",
+            "rutonde",
+            "rwahi",
+            "shyorongi",
+            "kajevuba",
+            "murambi"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "eastern",
+        "district": "rwamagana",
+        "hospitals": [
+            "rwamagana"
+        ],
+        "health-centers": [
+            "avega rwamagana",
+            "karenge",
+            "munyaga",
+            "murambi",
+            "musha",
+            "muyumbu",
+            "myunyiginya",
+            "rwamagana",
+            "gishali"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    },
+    {
+        "facility-type": "hospital",
+        "province": "eastern",
+        "district": "kayonza",
+        "hospitals": [
+            "rwinkwavu "
+        ],
+        "health-centers": [
+            "rwinkwavu",
+            "nyamirama",
+            "ruramira",
+            "rutare",
+            "karama",
+            "kabarondo",
+            "cyarubare",
+            "ngego"
+        ],
+        "programs": [
+            "hiv",
+            "malaria",
+            "tb"
+        ]
+    }
+]

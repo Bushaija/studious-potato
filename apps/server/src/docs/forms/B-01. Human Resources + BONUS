@@ -1,0 +1,205 @@
+B-01. Human Resources + BONUS
+- Laboratory Technician
+- Nurse
+
+B-02. Monitoring & Evaluation
+- Supervision CHWs
+- Support group meetings
+
+B-03. Living Support to Clients/Target Populations
+- Sample transport
+- Home visit lost to follow up
+- Transport and travel for survey/surveillance
+
+B-04. Overheads (Use of goods & services)
+- Infrastructure support
+- Office supplies
+- Transport and travel (Reporting)
+- Bank charges
+
+B-05. Transfer to other reporting entities
+- Transfer to RBC
+
+
+===
+
+> B. Expenditures
+B-01. Human Resources + BONUS
+B-02. Monitoring & Evaluation
+B-03. Living Support to Clients/Target Populations
+B-04. Overheads (Use of goods & services)
+B-05. Transfer to other reporting entities
+
+===
+
+B-01. Human Resources + BONUS
+- Laboratory Technician
+- Nurse
+
+B-02. Monitoring & Evaluation
+- Supervision CHWs
+- Support group meetings
+
+B-03. Living Support to Clients/Target Populations
+- Sample transport
+- Home visit lost to follow up
+- Transport and travel for survey/surveillance
+
+B-04. Overheads (Use of goods & services)
+- Infrastructure support
+- Office supplies
+- Bank charges
+
+B-05. Transfer to other reporting entities
+- Transfer to RBC
+- Transport and travel (Reporting) // this belong to sub-category B-04
+
+===
+
+please do, in additional to that there're a few other adjustments I would like us to make: remove redudant rows. however these changes should not interrupt the data flow between our backend and client-side: complete dynamic schema driven approach.
+
+Activity Details  
+
+
+A. Receipts: 8
+- Other Incomes: 4
+- Transfers from SPIU/RBC: 4 
+
+B. Expenditures: 48
+
+B-01. Human Resources + Bonus: 8
+- Laboratory Technician: 4 
+- Nurse: 4
+
+B-02. Monitoring & Evaluation: 8             
+- Supervision CHWs: 4
+- Support group meetings: 4  
+
+
+B-03. Living Support to Clients/Target Populations: 12
+- Sample transport: 4
+- Home visit lost to follow up: 4  
+- Transport and travel for survey/surveillance: 4  
+
+
+B-04. Overheads (Use of goods & services): 16 
+- Infrastructure support: 4
+- Office supplies: 4
+- Transport and travel (Reporting): 4  
+- Bank charges: 4
+
+
+B-05. Transfer to other reporting entities: 4      
+- Transfer to RBC: 4
+
+C. Surplus / Deficit: -40
+
+D. Financial Assets: 16
+- Cash at bank: 4
+- Petty cash: 4
+- Receivables (VAT refund): 4  
+- Other Receivables: 4
+
+E. Financial Liabilities: 20  
+- Salaries on borrowed funds (BONUS): 4 
+- Payable - Maintenance & Repairs: 4
+- Payable - Office suppliers: 4
+- Payable - Transportation fees: 4 
+- VAT refund to RBC: 4
+
+F. Net Financial Assets: -4
+
+G. Closing Balance: -4
+- Accumulated Surplus/Deficit: 32
+- Prior Year Adjustment: 4
+- Surplus/Deficit of the Period: -40
+
+===
+
+==========
+
+A. Receipts
+- Other Incomes
+- Transfers from SPIU/RBC
+
+B. Expenditures
+
+B-01. Human Resources + Bonus
+- Laboratory Technician
+- Nurse
+
+B-02. Monitoring & Evaluation            
+- Supervision CHWs
+- Support group meetings  
+
+
+B-03. Living Support to Clients/Target Populations
+- Sample transport
+- Home visit lost to follow up  
+- Transport and travel for survey/surveillance  
+
+
+B-04. Overheads (Use of goods & services)6 
+- Infrastructure support
+- Office supplies
+- Transport and travel (Reporting)  
+- Bank charges
+
+
+B-05. Transfer to other reporting entities      
+- Transfer to RBC
+
+C. Surplus / Deficit
+
+D. Financial Assets
+- Cash at bank
+- Petty cash
+- Receivables (VAT refund)  
+- Other Receivables
+
+E. Financial Liabilities
+- Salaries on borrowed funds (BONUS) 
+- Payable - Maintenance & Repairs
+- Payable - Office suppliers
+- Payable - Transportation fees 
+- VAT refund to RBC
+
+F. Net Financial Assets
+
+G. Closing Balance
+- Accumulated Surplus/Deficit
+- Prior Year Adjustment
+- Surplus/Deficit of the Period
+
+
+=========
+
+
+A. Receipts (hospital)
+Transfers from SPIU/RBC 
+A. Receipts
+
+B. Expenditures (hospital)
+- Hospital Malaria Program Expenses   
+- Laboratory Testing Support  
+
+C. SURPLUS / DEFICIT (hospital)   
+C. SURPLUS / DEFICIT 
+
+D. Financial Assets (hospital)
+Cash at bank    
+Petty cash  
+
+E. Financial Liabilities (hospital)   
+Program Payables    
+
+F. Net Financial Assets (hospital)
+
+G. Closing Balance (hospital) 
+- Accumulated Surplus/Deficit
+
+
+====
+
+
+
