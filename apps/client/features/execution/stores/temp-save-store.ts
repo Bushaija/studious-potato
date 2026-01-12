@@ -93,6 +93,8 @@ export const useTempSaveStore = create<TempSaveState>()(
       
       saveTemporary: (id, formData, formValues, expandedRows, metadata) => {
         try {
+          console.log('[TempSaveStore] Saving:', { id, formValuesKeys: Object.keys(formValues || {}).length });
+          
           const now = new Date().toISOString()
           const existingSave = get().saves[id]
           
@@ -112,8 +114,10 @@ export const useTempSaveStore = create<TempSaveState>()(
           
           // Check localStorage quota before saving
           const saveSize = JSON.stringify(saveData).length
+          console.log('[TempSaveStore] Save size:', saveSize, 'bytes');
+          
           if (saveSize > 4000000) { // 4MB warning (localStorage limit is ~5-10MB)
-            console.warn('Save data is very large:', saveSize, 'bytes')
+            console.warn('[TempSaveStore] Save data is very large:', saveSize, 'bytes')
           }
           
           set(state => ({
@@ -122,8 +126,10 @@ export const useTempSaveStore = create<TempSaveState>()(
               [id]: saveData,
             },
           }))
+          
+          console.log('[TempSaveStore] Save successful for id:', id);
         } catch (error: any) {
-          console.error('Failed to save temporary data:', error)
+          console.error('[TempSaveStore] Failed to save temporary data:', error)
           
           // If localStorage is full, try to clear some space
           if (error?.name === 'QuotaExceededError' || error?.message?.includes('quota')) {
@@ -171,15 +177,28 @@ export const useTempSaveStore = create<TempSaveState>()(
       },
       
       restoreTemporary: (id) => {
-        const save = get().saves[id]
-        if (!save) return null
+        console.log('[TempSaveStore] Restoring:', id);
+        const allSaves = get().saves;
+        console.log('[TempSaveStore] Available saves:', Object.keys(allSaves));
+        
+        const save = allSaves[id]
+        if (!save) {
+          console.log('[TempSaveStore] No save found for id:', id);
+          return null
+        }
+        
+        console.log('[TempSaveStore] Found save:', { 
+          id: save.id, 
+          formValuesKeys: Object.keys(save.formValues || {}).length,
+          lastSaved: save.timestamps.lastSaved 
+        });
         
         // Update last accessed time
         get().updateLastAccessed(id)
         
         // Check version compatibility
         if (save.version !== CURRENT_VERSION) {
-          console.warn(`Temporary save version mismatch. Saved: ${save.version}, Current: ${CURRENT_VERSION}`)
+          console.warn(`[TempSaveStore] Temporary save version mismatch. Saved: ${save.version}, Current: ${CURRENT_VERSION}`)
           // You could implement migration logic here if needed
         }
         

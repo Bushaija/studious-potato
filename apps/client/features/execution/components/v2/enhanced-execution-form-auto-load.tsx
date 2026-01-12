@@ -645,11 +645,11 @@ export function EnhancedExecutionFormAutoLoad({
 
   // Build a stable draft id and metadata for this session
   const draftMeta = useMemo(() => {
-    const qpFacilityId = Number(searchParams?.get("facilityId") || 0) || 0;
+    const qpFacilityId = facilityIdProp || Number(searchParams?.get("facilityId") || 0) || 0;
     const qpFacilityType = (searchParams?.get("facilityType") as any) || facilityType;
-    const qpFacilityName = searchParams?.get("facilityName") || "";
-    const qpProgram = (searchParams?.get("program") as any) || projectType;
-    const qpReporting = searchParams?.get("reportingPeriodId") || String(currentReportingPeriod?.id ?? "") || quarter;
+    const qpFacilityName = facilityNameProp || searchParams?.get("facilityName") || "";
+    const qpProgram = programNameProp || (searchParams?.get("program") as any) || projectType;
+    const qpReporting = reportingPeriodIdProp || searchParams?.get("reportingPeriodId") || currentReportingPeriod?.id || "";
     return {
       facilityId: qpFacilityId,
       facilityName: qpFacilityName,
@@ -659,12 +659,21 @@ export function EnhancedExecutionFormAutoLoad({
       mode: effectiveMode as any,
       facilityType: qpFacilityType as any,
     };
-  }, [searchParams, facilityType, projectType, quarter, effectiveMode]);
+  }, [searchParams, facilityType, projectType, effectiveMode, currentReportingPeriod?.id, facilityIdProp, facilityNameProp, programNameProp, reportingPeriodIdProp]);
 
+  // Generate a stable draft ID - use only essential identifiers that don't change
+  // Format: exec_{facilityId}_{reportingPeriodId}_{facilityType}_{quarter}
   const draftId = useMemo(() => {
-    const raw = `${draftMeta.facilityId}_${draftMeta.reportingPeriod}_${draftMeta.programName}_${draftMeta.facilityType}_${draftMeta.facilityName}_${draftMeta.mode}`;
-    return raw.replace(/\s+/g, '_');
-  }, [draftMeta]);
+    const fId = facilityIdProp || Number(searchParams?.get("facilityId") || 0) || 0;
+    const rpId = reportingPeriodIdProp || searchParams?.get("reportingPeriodId") || currentReportingPeriod?.id || "";
+    const fType = (searchParams?.get("facilityType") as any) || facilityType;
+    
+    const raw = `exec_${fId}_${rpId}_${fType}_${quarter}`;
+    const id = raw.replace(/\s+/g, '_').toLowerCase();
+    
+    console.log('[Draft] Generated draftId:', id, { facilityId: fId, reportingPeriodId: rpId, facilityType: fType, quarter });
+    return id;
+  }, [searchParams, facilityType, quarter, currentReportingPeriod?.id, facilityIdProp, reportingPeriodIdProp]);
 
   // Select only the action to avoid re-render loops
   const saveTemporary = useTempSaveStore(s => s.saveTemporary);
@@ -699,52 +708,149 @@ export function EnhancedExecutionFormAutoLoad({
   }
 
   const saveDraft = useCallback(() => {
+    // Don't save if draftId is not stable yet
+    if (!draftMeta.facilityId || !draftMeta.reportingPeriod) {
+      console.warn("[Draft] saveDraft: draftId not stable yet, skipping save");
+      return;
+    }
+    
     try {
       const formValues = form.formData;
       const formRows: any[] = [];
       const expandedRows: string[] = [];
+      
+      console.log('[Draft] Saving draft with id:', draftId, 'formValues keys:', Object.keys(formValues).length);
+      
       saveTemporary(draftId, formRows as any, formValues as any, expandedRows, draftMeta);
+      toast.success("Draft saved", {
+        description: "Your changes have been saved locally",
+        duration: 2000,
+      });
     } catch (err) {
-      console.error("autosave:error", err);
+      console.error("[Draft] saveDraft:error", err);
+      toast.error("Failed to save draft", {
+        description: "Could not save your changes locally",
+      });
     }
   }, [saveTemporary, draftId, draftMeta, form.formData]);
 
-  // Auto-save when debounced server compute is done and form is dirty
+  // Auto-save function (silent, no toast)
+  const autoSaveDraft = useCallback(() => {
+    // Don't save if draftId is not stable yet
+    if (!draftMeta.facilityId || !draftMeta.reportingPeriod) {
+      return;
+    }
+    
+    try {
+      const formValues = form.formData;
+      const formRows: any[] = [];
+      const expandedRows: string[] = [];
+      
+      console.log('[Draft] Auto-saving draft with id:', draftId, 'formValues keys:', Object.keys(formValues).length);
+      
+      saveTemporary(draftId, formRows as any, formValues as any, expandedRows, draftMeta);
+    } catch (err) {
+      console.error("[Draft] autosave:error", err);
+    }
+  }, [saveTemporary, draftId, draftMeta, form.formData]);
+
+  // Auto-save when form is dirty (debounced)
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   useEffect(() => {
     if (!form.isDirty || isReadOnly) return;
-    saveDraft();
-    // Only depend on data and id; saveTemporary is stable via selector
-  }, [form.formData, form.isDirty, draftId, isReadOnly]);
+    
+    // Clear any existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    // Debounce auto-save by 2 seconds
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSaveDraft();
+    }, 2000);
+    
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [form.formData, form.isDirty, isReadOnly, autoSaveDraft]);
 
   // Restore draft once after activities are ready
   const restoredRef = useRef(false);
+  const previousDraftIdRef = useRef<string | null>(null);
+  
   useEffect(() => {
-    if (restoredRef.current) return;
-    const hasActivities = Array.isArray(form.activities) && (form.activities as any).length > 0;
-    if (!hasActivities) return;
+    console.log('[Draft] Restore effect running:', { 
+      draftId, 
+      restoredRef: restoredRef.current, 
+      previousDraftId: previousDraftIdRef.current,
+      hasActivities: form.activities && Object.keys(form.activities).length > 0,
+      facilityId: draftMeta.facilityId,
+      reportingPeriod: draftMeta.reportingPeriod,
+      mode,
+      existingExecutionExists: existingExecution?.exists
+    });
+    
+    // Skip if already restored with this draftId
+    if (restoredRef.current && previousDraftIdRef.current === draftId) {
+      console.log('[Draft] Already restored for this draftId, skipping');
+      return;
+    }
+    
+    // Wait for activities to be loaded
+    const hasActivities = form.activities && Object.keys(form.activities).length > 0;
+    if (!hasActivities) {
+      console.log('[Draft] Activities not loaded yet, waiting...');
+      return;
+    }
+    
+    // Wait for draftId to be stable (has required parts)
+    if (!draftMeta.facilityId || !draftMeta.reportingPeriod) {
+      console.log('[Draft] draftId not stable yet (missing facilityId or reportingPeriod)');
+      return;
+    }
 
     // Skip temporary restore in edit/readOnly mode when we have initial data - we want to load the saved execution data
     if ((mode === "edit" || mode === "readOnly") && initialData && Object.keys(initialData).length > 0) {
+      console.log('[Draft] Edit/readOnly mode with initialData, skipping restore');
       restoredRef.current = true;
+      previousDraftIdRef.current = draftId;
       return;
     }
 
     // Skip restore if we're auto-loading existing execution data
     if (existingExecution?.exists && !initialData) {
+      console.log('[Draft] Existing execution found, skipping draft restore');
       restoredRef.current = true;
+      previousDraftIdRef.current = draftId;
       return;
     }
 
+    // Try to restore the draft
+    console.log('[Draft] Attempting to restore draft with id:', draftId);
     const save = restoreTemporary(draftId);
+    console.log('[Draft] Restore result:', save ? { hasFormValues: !!save.formValues, keys: Object.keys(save.formValues || {}).length } : 'null');
+    
     if (save && save.formValues && Object.keys(save.formValues).length > 0) {
       // Merge to preserve schema-initialized keys; prefer saved values
       const merged = { ...form.formData, ...(save.formValues as any) } as any;
+      console.log('[Draft] Restoring merged data with', Object.keys(merged).length, 'keys');
       form.setFormData(merged);
-      restoredRef.current = true;
+      
+      // Show toast to inform user that draft was restored
+      toast.success("Draft restored", {
+        description: "Your previous work has been restored",
+        duration: 3000,
+      });
     } else {
-      restoredRef.current = true;
+      console.log('[Draft] No saved draft found for id:', draftId);
     }
-  }, [draftId, form.activities?.length, restoreTemporary, mode, initialData, existingExecution?.exists]);
+    
+    restoredRef.current = true;
+    previousDraftIdRef.current = draftId;
+  }, [draftId, draftMeta.facilityId, draftMeta.reportingPeriod, form.activities, restoreTemporary, mode, initialData, existingExecution?.exists, form.formData, form.setFormData]);
 
   // Smart submission handler that uses create or update based on existing data
   const handleSmartSubmission = useCallback(async () => {
@@ -923,9 +1029,6 @@ export function EnhancedExecutionFormAutoLoad({
               isValid={(form as any).canCreateReport}
               validationErrors={form.validationErrors}
               submitLabel={existingExecution?.exists ? `Update Execution (${quarter})` : "Submit Execution"}
-              showStatementButtons
-              onGenerateStatement={() => { }}
-              onViewStatement={() => { }}
               lastSaved={lastSavedIso ? new Date(lastSavedIso) : undefined}
             />
           )}

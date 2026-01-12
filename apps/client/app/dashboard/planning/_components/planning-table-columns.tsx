@@ -331,8 +331,10 @@ export function getPlanningTableColumns({
 
         const isAdmin = user?.role === "admin" || user?.role === "superadmin";
         const isDaf = user?.role === "daf";
+        const isAccountant = user?.role === "accountant";
         const isPending = planning.approvalStatus === "PENDING";
         const isDraft = planning.approvalStatus === "DRAFT";
+        const isRejected = planning.approvalStatus === "REJECTED";
 
         const handleApprovalAction = async (comments?: string) => {
           try {
@@ -391,8 +393,8 @@ export function getPlanningTableColumns({
                   View Details
                 </DropdownMenuItem>
 
-                {/* Hide Edit for DAF users */}
-                {isDraft && !isDaf && (
+                {/* Hide Edit for DAF users, show for DRAFT or REJECTED (for accountants to revise) */}
+                {((isDraft && !isDaf) || (isRejected && isAccountant)) && (
                   <DropdownMenuItem
                     onClick={() => router.push(`/dashboard/planning/edit/${planning.id}`)}
                     disabled={isLoading}

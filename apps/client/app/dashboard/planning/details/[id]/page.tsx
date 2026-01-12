@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { ApprovalStatus } from "@/types/planning-approval";
+import { useUser } from "@/components/providers/session-provider";
 
 // Lazy load heavy components
 const EnhancedPlanningForm = dynamic(
@@ -68,12 +69,22 @@ export default function PlanningDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const planningId = params.id as string;
+  const user = useUser();
 
   const { data: planning, isLoading, error, refetch } = usePlanningDetail(planningId);
   
   const handleRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
+
+  // Role and status checks for edit button visibility
+  const isDaf = user?.role === "daf";
+  const isAccountant = user?.role === "accountant";
+  const isDraft = planning?.approvalStatus === "DRAFT";
+  const isRejected = planning?.approvalStatus === "REJECTED";
+  
+  // Show edit button for: DRAFT (non-DAF users) or REJECTED (accountants only)
+  const canEdit = (isDraft && !isDaf) || (isRejected && isAccountant);
 
   if (!planningId) {
     router.push("/dashboard/planning");
@@ -173,15 +184,17 @@ export default function PlanningDetailsPage() {
               Back to Planning List
             </Button>
             
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => router.push(`/dashboard/planning/edit/${planningId}`)}
-              className="gap-2"
-            >
-              <Edit className="h-4 w-4" />
-              Quick Edit
-            </Button>
+            {canEdit && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => router.push(`/dashboard/planning/edit/${planningId}`)}
+                className="gap-2"
+              >
+                <Edit className="h-4 w-4" />
+                Edit
+              </Button>
+            )}
           </div>
           
           <div>

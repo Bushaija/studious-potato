@@ -724,16 +724,44 @@ export const update: AppRouteHandler<UpdateRoute> = async (c) => {
     // Recalculate computed values with nested structure
     const computedValues = await calculateNestedComputedValues(normalizedFormData);
 
+    // Determine if approval status should be reset to PENDING
+    // When an accountant updates a REJECTED plan, it should go back to PENDING for re-review
+    const shouldResetToPending = existing.approvalStatus === 'REJECTED' && 
+                                  userContext.role === 'accountant';
+
+    const updateData: any = {
+      ...body,
+      formData: normalizedFormData,
+      computedValues: computedValues,
+      validationState: { isValid: true, lastValidated: new Date().toISOString() },
+      updatedBy: userContext.userId,
+      updatedAt: new Date(),
+    };
+
+    // Reset approval status to PENDING if accountant is updating a rejected plan
+    if (shouldResetToPending) {
+      updateData.approvalStatus = 'PENDING';
+      updateData.reviewedBy = null;
+      updateData.reviewedAt = null;
+      updateData.reviewComments = null;
+    }
+
     await db.update(schemaFormDataEntries)
-      .set({
-        ...body,
-        formData: normalizedFormData,
-        computedValues: computedValues,
-        validationState: { isValid: true, lastValidated: new Date().toISOString() },
-        updatedBy: userContext.userId,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(schemaFormDataEntries.id, planningId));
+
+    // Send notification to admins if a rejected plan was resubmitted for review
+    if (shouldResetToPending) {
+      try {
+        const adminIds = await notificationService.getAdminUsersForNotification();
+        if (adminIds.length > 0) {
+          await notificationService.notifyPendingReview(planningId, adminIds);
+        }
+      } catch (notificationError) {
+        console.error('Failed to send resubmission notification:', notificationError);
+        // Don't fail the update if notification fails
+      }
+    }
 
     const updated = await db.query.schemaFormDataEntries.findFirst({
       where: eq(schemaFormDataEntries.id, planningId),
