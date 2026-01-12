@@ -492,52 +492,68 @@ export function useExecutionForm({
       // Map expense to payable based on name patterns
       // B-01 (HR) → E_1 (Salaries payable)
       // B-02 (M&E) → E_2 (Supervision), E_3 (Meetings)
-      // B-03 (Service delivery) → E_4, E_5, E_6
-      // B-04 (Overheads) → E_7, E_8, E_9, E_10, E_11, E_12, E_13
+      // B-03 (Service delivery) → E_8, E_9, E_10, E_11
+      // B-04 (Overheads) → E_12, E_13, E_14, E_15
       
-      if (expenseName.includes('laboratory') || expenseName.includes('nurse') || expenseName.includes('doctor') || expenseName.includes('technician') || expenseName.includes('accountant') || expenseName.includes('pharmacist') || expenseName.includes('salary') || expenseName.includes('coordinator') || expenseName.includes('staff') || expenseName.includes('supervisor')) {
-        // HR expenses → Salaries payable (E_1)
+      if (expenseName.includes('laboratory') || expenseName.includes('nurse') || expenseName.includes('doctor') || expenseName.includes('technician') || expenseName.includes('accountant') || expenseName.includes('pharmacist') || expenseName.includes('salary') || expenseName.includes('coordinator') || expenseName.includes('staff') || expenseName.includes('chw supervisor')) {
+        // B-01: HR expenses → Payable 1: Salaries (E_1)
         const payableCode = payableCodes.find(code => code.includes('_E_1'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
-      } else if (expenseName.includes('supervision') && !expenseName.includes('supervisor')) {
-        // Supervision → E_2
+      } else if (expenseName.includes('support group meeting')) {
+        // B-02: Support group meetings → Payable 2 (E_2)
         const payableCode = payableCodes.find(code => code.includes('_E_2'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
-      } else if (expenseName.includes('meeting')) {
-        // Meetings → E_3
+      } else if (expenseName.includes('census training')) {
+        // B-02: Census training → Payable 3 (E_3)
         const payableCode = payableCodes.find(code => code.includes('_E_3'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
-      } else if (expenseName.includes('sample transport')) {
-        // Sample transport → E_4
+      } else if (expenseName.includes('clinical mentorship') || expenseName.includes('mentorship')) {
+        // B-02: Clinical mentorship → Payable 4 (E_4)
         const payableCode = payableCodes.find(code => code.includes('_E_4'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
-      } else if (expenseName.includes('home visit')) {
-        // Home visits → E_5
+      } else if (expenseName.includes('annual') && expenseName.includes('meeting')) {
+        // B-02: Annual coordination meeting → Payable 5 (E_5)
         const payableCode = payableCodes.find(code => code.includes('_E_5'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
-      } else if (expenseName.includes('travel') || expenseName.includes('surveillance')) {
-        // Travel surveillance → E_6
+      } else if (expenseName.includes('mdt meeting') || expenseName.includes('quarterly') && expenseName.includes('meeting')) {
+        // B-02: MDT meetings → Payable 6 (E_6)
         const payableCode = payableCodes.find(code => code.includes('_E_6'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
+      } else if (expenseName.includes('supervision') && expenseName.includes('dqa')) {
+        // B-02: Supervision and DQA → Payable 7 (E_7)
+        const payableCode = payableCodes.find(code => code.includes('_E_7'));
+        if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
+      } else if (expenseName.includes('sample transport')) {
+        // B-03: Sample transport → Payable 8 (E_8)
+        const payableCode = payableCodes.find(code => code.includes('_E_8'));
+        if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
+      } else if (expenseName.includes('home visit')) {
+        // B-03: Home visits → Payable 9 (E_9)
+        const payableCode = payableCodes.find(code => code.includes('_E_9'));
+        if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
+      } else if (expenseName.includes('outreach') && expenseName.includes('hiv')) {
+        // B-03: Outreach for HIV testing → Payable 10 (E_10)
+        const payableCode = payableCodes.find(code => code.includes('_E_10'));
+        if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
+      } else if (expenseName.includes('wad') || expenseName.includes('celebration')) {
+        // B-03: WAD celebration → Payable 11 (E_11)
+        const payableCode = payableCodes.find(code => code.includes('_E_11'));
+        if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
       } else if (expenseName.includes('communication') && expenseName.includes('all')) {
-        // Communication - All → E_12 (Payable 12)
+        // B-04: Communication - All → Payable 12 (E_12)
         const payableCode = payableCodes.find(code => code.includes('_E_12'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
       } else if (expenseName.includes('maintenance')) {
-        // Maintenance → E_13 (Payable 13)
+        // B-04: Maintenance → Payable 13 (E_13)
         const payableCode = payableCodes.find(code => code.includes('_E_13'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
       } else if (expenseName === 'fuel' || (expenseName.includes('fuel') && !expenseName.includes('refund'))) {
-        // Fuel → E_14 (Payable 14)
+        // B-04: Fuel → Payable 14 (E_14)
         const payableCode = payableCodes.find(code => code.includes('_E_14'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
-      } else if (expenseName.includes('office supplies') || expenseName.includes('supplies')) {
-        // Office supplies → E_15 (Payable 15)
+      } else if (expenseName.includes('office supplies') || (expenseName.includes('supplies') && !expenseName.includes('consumable'))) {
+        // B-04: Office supplies → Payable 15 (E_15)
         const payableCode = payableCodes.find(code => code.includes('_E_15'));
-        if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
-      } else if (expenseName.includes('transport reporting') || expenseName.includes('transport and travel (reporting)') || expenseName.includes('transport (mission') || expenseName.includes('transport (reporting)')) {
-        // Transport reporting → E_11
-        const payableCode = payableCodes.find(code => code.includes('_E_11'));
         if (payableCode) expenseToPayableMap[expenseCode] = payableCode;
       } else if (expenseName.includes('bank charges')) {
         // Bank charges - no payable (paid immediately)
@@ -701,10 +717,12 @@ export function useExecutionForm({
     if (sectionD?.subCategories?.['D-01']?.items) {
       sectionD.subCategories['D-01'].items.forEach((item: any) => {
         if (item.code && (
-          item.code.includes('VAT_AIRTIME') || 
-          item.code.includes('VAT_INTERNET') || 
-          item.code.includes('VAT_INFRASTRUCTURE') || 
-          item.code.includes('VAT_SUPPLIES')
+          item.code.includes('VAT_COMMUNICATION_ALL') || 
+          item.code.includes('VAT_MAINTENANCE') || 
+          item.code.includes('VAT_FUEL') || 
+          item.code.includes('VAT_SUPPLIES') ||
+          // Also check for item names to catch any format variations
+          item.name?.toLowerCase().includes('vat receivable')
         )) {
           vatReceivableCodes.push(item.code);
         }

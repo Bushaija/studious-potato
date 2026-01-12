@@ -413,11 +413,13 @@ function SectionDRenderer({ section, ctx, projectType, facilityType, quarter, ac
     }
 
     // Map VAT categories to their UI codes for opening balance lookup
+    // VAT receivable codes are generated as: PROJECT_EXEC_FACILITY_D_VAT_CATEGORY
+    // e.g., HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL
     const vatCategoryToUICode: Record<VATApplicableCategory, string> = {
-      'communication_all': '_D_1',
-      'maintenance': '_D_2',
-      'fuel': '_D_3',
-      'office_supplies': '_D_4',
+      'communication_all': '_D_VAT_COMMUNICATION_ALL',
+      'maintenance': '_D_VAT_MAINTENANCE',
+      'fuel': '_D_VAT_FUEL',
+      'office_supplies': '_D_VAT_SUPPLIES',
     };
 
     // Calculate opening balances for each VAT category from previous quarter
@@ -431,7 +433,7 @@ function SectionDRenderer({ section, ctx, projectType, facilityType, quarter, ac
     // Only get opening balances if we're not in Q1
     if (previousQuarterBalances?.exists) {
       Object.entries(vatCategoryToUICode).forEach(([category, uiCodeSuffix]) => {
-        // Construct the full UI code (e.g., "HIV_EXEC_HOSPITAL_D_4")
+        // Construct the full UI code (e.g., "HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL")
         // We need to get the prefix from an existing activity code
         const sampleCode = Object.keys(ctx.formData).find(k => k.includes('_D_')) || '';
         const prefix = sampleCode.split('_D_')[0];

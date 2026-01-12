@@ -39,7 +39,7 @@ import { buildPreviousQuarterBalances, extractClosingBalances } from "@/lib/util
 
 /**
  * Migrate old numeric VAT codes to new descriptive codes for backward compatibility
- * Maps old codes like D_4, D_5, D_6, D_7 to new codes like D_VAT_AIRTIME, D_VAT_INTERNET, etc.
+ * Maps old codes to new codes like D_VAT_COMMUNICATION_ALL, D_VAT_MAINTENANCE, etc.
  * 
  * @param activities - Array of activity objects with code property
  * @param executionId - Optional execution ID for logging purposes
@@ -49,12 +49,18 @@ function migrateVATCodes(activities: any[], executionId?: number): {
   activities: any[];
   migratedCodes: Array<{ oldCode: string; newCode: string; }>;
 } {
-  // Mapping from old numeric suffixes to new descriptive suffixes
+  // Mapping from old codes to new descriptive codes
+  // New VAT categories: COMMUNICATION_ALL, MAINTENANCE, FUEL, SUPPLIES
   const oldToNewMapping: Record<string, string> = {
-    '_D_4': '_D_VAT_AIRTIME',
-    '_D_5': '_D_VAT_INTERNET',
-    '_D_6': '_D_VAT_INFRASTRUCTURE',
+    // Legacy numeric codes
+    '_D_4': '_D_VAT_COMMUNICATION_ALL',
+    '_D_5': '_D_VAT_COMMUNICATION_ALL',
+    '_D_6': '_D_VAT_MAINTENANCE',
     '_D_7': '_D_VAT_SUPPLIES',
+    // Legacy descriptive codes (old category names)
+    '_D_VAT_AIRTIME': '_D_VAT_COMMUNICATION_ALL',
+    '_D_VAT_INTERNET': '_D_VAT_COMMUNICATION_ALL',
+    '_D_VAT_INFRASTRUCTURE': '_D_VAT_MAINTENANCE',
   };
 
   const migratedCodes: Array<{ oldCode: string; newCode: string; }> = [];
@@ -277,20 +283,23 @@ async function buildUIFriendlyPayload(
 
     // If not found and code looks like a new VAT code, try old format
     if (code.includes('_D_VAT_')) {
-      const oldCodeMapping: Record<string, string> = {
-        '_D_VAT_AIRTIME': '_D_4',
-        '_D_VAT_INTERNET': '_D_5',
-        '_D_VAT_INFRASTRUCTURE': '_D_6',
-        '_D_VAT_SUPPLIES': '_D_7',
+      // Map new VAT codes to old codes for backward compatibility
+      const oldCodeMapping: Record<string, string[]> = {
+        '_D_VAT_COMMUNICATION_ALL': ['_D_4', '_D_5', '_D_VAT_AIRTIME', '_D_VAT_INTERNET'],
+        '_D_VAT_MAINTENANCE': ['_D_6', '_D_VAT_INFRASTRUCTURE'],
+        '_D_VAT_FUEL': ['_D_VAT_FUEL'],
+        '_D_VAT_SUPPLIES': ['_D_7', '_D_VAT_SUPPLIES'],
       };
 
-      for (const [newSuffix, oldSuffix] of Object.entries(oldCodeMapping)) {
+      for (const [newSuffix, oldSuffixes] of Object.entries(oldCodeMapping)) {
         if (code.includes(newSuffix)) {
-          const oldCode = code.replace(newSuffix, oldSuffix);
-          value = valueByCode.get(oldCode);
-          if (value) {
-            console.log(`[VAT Code Lookup] Fallback: ${code} not found, using old code ${oldCode}`);
-            return value;
+          for (const oldSuffix of oldSuffixes) {
+            const oldCode = code.replace(newSuffix, oldSuffix);
+            value = valueByCode.get(oldCode);
+            if (value) {
+              console.log(`[VAT Code Lookup] Fallback: ${code} not found, using old code ${oldCode}`);
+              return value;
+            }
           }
         }
       }
@@ -2916,7 +2925,7 @@ export const checkExisting: AppRouteHandler<CheckExistingRoute> = async (c) => {
 
         console.log(`🔍 [SECTION F DEBUG] D_items after catalog: ${D_items.length} items`);
 
-        // Add VAT receivable activities from saved data (they use special codes like D_VAT_AIRTIME)
+        // Add VAT receivable activities from saved data (they use special codes like D_VAT_COMMUNICATION_ALL)
         // These are auto-calculated on the client and saved with custom codes
         console.log('🔍 [SECTION F DEBUG] Checking for VAT receivables in valueByCode...');
         let vatReceivablesAdded = 0;

@@ -6,6 +6,12 @@
  * 
  * UPDATED: VAT receivables are now classified in Section D (Financial Assets) instead of Section E,
  * as they represent amounts owed TO the facility by RRA, making them assets rather than liabilities.
+ * 
+ * VAT-based expenses (4 categories):
+ * - Communication - All
+ * - Maintenance for vehicles, ICT, and medical equipments
+ * - Fuel
+ * - Office Supplies
  */
 
 import { VAT_APPLICABLE_CATEGORIES, type VATApplicableCategory } from './vat-applicable-expenses';
@@ -21,11 +27,11 @@ import { VAT_APPLICABLE_CATEGORIES, type VATApplicableCategory } from './vat-app
  * 
  * @example
  * ```typescript
- * getVATReceivableCode('HIV', 'hospital', 'airtime')
- * // Returns: "HIV_EXEC_HOSPITAL_D_VAT_AIRTIME"
+ * getVATReceivableCode('HIV', 'hospital', 'communication_all')
+ * // Returns: "HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL"
  * 
- * getVATReceivableCode('MAL', 'health_center', 'internet')
- * // Returns: "MAL_EXEC_HEALTH_CENTER_D_VAT_INTERNET"
+ * getVATReceivableCode('MAL', 'health_center', 'maintenance')
+ * // Returns: "MAL_EXEC_HEALTH_CENTER_D_VAT_MAINTENANCE"
  * ```
  */
 export function getVATReceivableCode(
@@ -36,11 +42,11 @@ export function getVATReceivableCode(
   const prefix = `${projectType}_EXEC_${facilityType.toUpperCase()}`;
   
   // Map VAT categories to Section D codes (Financial Assets)
-  // These codes should be added to the dynamic_activities table
+  // These codes match the seed data in execution-categories-activities.ts
   const vatCodeMap: Record<VATApplicableCategory, string> = {
-    [VAT_APPLICABLE_CATEGORIES.AIRTIME]: `${prefix}_D_VAT_AIRTIME`,
-    [VAT_APPLICABLE_CATEGORIES.INTERNET]: `${prefix}_D_VAT_INTERNET`,
-    [VAT_APPLICABLE_CATEGORIES.INFRASTRUCTURE]: `${prefix}_D_VAT_INFRASTRUCTURE`,
+    [VAT_APPLICABLE_CATEGORIES.COMMUNICATION_ALL]: `${prefix}_D_VAT_COMMUNICATION_ALL`,
+    [VAT_APPLICABLE_CATEGORIES.MAINTENANCE]: `${prefix}_D_VAT_MAINTENANCE`,
+    [VAT_APPLICABLE_CATEGORIES.FUEL]: `${prefix}_D_VAT_FUEL`,
     [VAT_APPLICABLE_CATEGORIES.OFFICE_SUPPLIES]: `${prefix}_D_VAT_SUPPLIES`,
   };
   
@@ -55,19 +61,19 @@ export function getVATReceivableCode(
  * 
  * @example
  * ```typescript
- * getVATReceivableLabel('airtime')
- * // Returns: "VAT Receivable - Communication Airtime"
+ * getVATReceivableLabel('communication_all')
+ * // Returns: "VAT Receivable 1: Communication - All"
  * 
- * getVATReceivableLabel('infrastructure')
- * // Returns: "VAT Receivable - Infrastructure Support"
+ * getVATReceivableLabel('maintenance')
+ * // Returns: "VAT Receivable 2: Maintenance"
  * ```
  */
 export function getVATReceivableLabel(vatCategory: VATApplicableCategory): string {
   const labelMap: Record<VATApplicableCategory, string> = {
-    [VAT_APPLICABLE_CATEGORIES.AIRTIME]: 'VAT Receivable - Communication Airtime',
-    [VAT_APPLICABLE_CATEGORIES.INTERNET]: 'VAT Receivable - Communication Internet',
-    [VAT_APPLICABLE_CATEGORIES.INFRASTRUCTURE]: 'VAT Receivable - Infrastructure Support',
-    [VAT_APPLICABLE_CATEGORIES.OFFICE_SUPPLIES]: 'VAT Receivable - Office Supplies',
+    [VAT_APPLICABLE_CATEGORIES.COMMUNICATION_ALL]: 'VAT Receivable 1: Communication - All',
+    [VAT_APPLICABLE_CATEGORIES.MAINTENANCE]: 'VAT Receivable 2: Maintenance',
+    [VAT_APPLICABLE_CATEGORIES.FUEL]: 'VAT Receivable 3: Fuel',
+    [VAT_APPLICABLE_CATEGORIES.OFFICE_SUPPLIES]: 'VAT Receivable 4: Office supplies',
   };
   
   return labelMap[vatCategory];
@@ -84,9 +90,9 @@ export function getVATReceivableLabel(vatCategory: VATApplicableCategory): strin
  * ```typescript
  * getAllVATReceivableCodes('HIV', 'hospital')
  * // Returns: [
- * //   "HIV_EXEC_HOSPITAL_D_VAT_AIRTIME",
- * //   "HIV_EXEC_HOSPITAL_D_VAT_INTERNET",
- * //   "HIV_EXEC_HOSPITAL_D_VAT_INFRASTRUCTURE",
+ * //   "HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL",
+ * //   "HIV_EXEC_HOSPITAL_D_VAT_MAINTENANCE",
+ * //   "HIV_EXEC_HOSPITAL_D_VAT_FUEL",
  * //   "HIV_EXEC_HOSPITAL_D_VAT_SUPPLIES"
  * // ]
  * ```
@@ -108,7 +114,7 @@ export function getAllVATReceivableCodes(
  * 
  * @example
  * ```typescript
- * isVATReceivableCode("HIV_EXEC_HOSPITAL_D_VAT_AIRTIME") // true
+ * isVATReceivableCode("HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL") // true
  * isVATReceivableCode("HIV_EXEC_HOSPITAL_D_1") // false
  * ```
  */
@@ -124,7 +130,7 @@ export function isVATReceivableCode(code: string): boolean {
  * 
  * @example
  * ```typescript
- * getVATCategoryFromCode("HIV_EXEC_HOSPITAL_D_VAT_AIRTIME") // "airtime"
+ * getVATCategoryFromCode("HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL") // "communication_all"
  * getVATCategoryFromCode("HIV_EXEC_HOSPITAL_D_1") // null
  * ```
  */
@@ -135,10 +141,16 @@ export function getVATCategoryFromCode(code: string): VATApplicableCategory | nu
   
   const codeLower = code.toLowerCase();
   
-  if (codeLower.includes('_vat_airtime')) return VAT_APPLICABLE_CATEGORIES.AIRTIME;
-  if (codeLower.includes('_vat_internet')) return VAT_APPLICABLE_CATEGORIES.INTERNET;
-  if (codeLower.includes('_vat_infrastructure')) return VAT_APPLICABLE_CATEGORIES.INFRASTRUCTURE;
+  // New category names
+  if (codeLower.includes('_vat_communication_all')) return VAT_APPLICABLE_CATEGORIES.COMMUNICATION_ALL;
+  if (codeLower.includes('_vat_maintenance')) return VAT_APPLICABLE_CATEGORIES.MAINTENANCE;
+  if (codeLower.includes('_vat_fuel')) return VAT_APPLICABLE_CATEGORIES.FUEL;
   if (codeLower.includes('_vat_supplies')) return VAT_APPLICABLE_CATEGORIES.OFFICE_SUPPLIES;
+  
+  // Legacy category names (for backward compatibility)
+  if (codeLower.includes('_vat_airtime')) return VAT_APPLICABLE_CATEGORIES.COMMUNICATION_ALL;
+  if (codeLower.includes('_vat_internet')) return VAT_APPLICABLE_CATEGORIES.COMMUNICATION_ALL;
+  if (codeLower.includes('_vat_infrastructure')) return VAT_APPLICABLE_CATEGORIES.MAINTENANCE;
   
   return null;
 }

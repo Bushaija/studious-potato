@@ -4,13 +4,26 @@
  * This utility generates mappings between Section B expense activities and Section E payable activities
  * based on the seeded activities data structure. Each expense item maps to a specific payable category.
  * 
- * Mapping Rules:
- * - B-01 (Human Resources) → E_1 (payable 1: salaries)
- * - B-02 (M&E) → E_2 (supervision), E_3 (meetings)
- * - B-03 (Living Support) → E_4 (sample transport), E_5 (home visits), E_6 (travel surveillance)
- * - B-04 (Overheads) → E_7 (infrastructure), E_8 (supplies), E_9 (transport reporting), E_10 (bank charges)
+ * HIV Mapping Rules:
+ * - B-01 (Human Resources) → E_1 (Payable 1: Salaries)
+ * - B-02 (M&E):
+ *   - Support group meetings → E_2 (Payable 2: Support group meetings)
+ *   - Census training → E_3 (Payable 3: Conduct census training)
+ *   - Clinical mentorship → E_4 (Payable 4: Clinical mentorship)
+ *   - Annual coordination meeting → E_5 (Payable 5: Annual coordination meeting)
+ *   - MDT meetings → E_6 (Payable 6: MDT meeting)
+ *   - Supervision and DQA → E_7 (Payable 7: Supervision DQA)
+ * - B-03 (Living Support):
+ *   - Sample transportation → E_8 (Payable 8: Sample transportation)
+ *   - Home visits → E_9 (Payable 9: Home visit)
+ *   - Outreach HIV testing → E_10 (Payable 10: Outreach for HIV testing)
+ *   - WAD celebration → E_11 (Payable 11: WAD celebration)
+ * - B-04 (Overheads - VAT-based):
+ *   - Communication - All → E_12 (Payable 12: Communication - All)
+ *   - Maintenance → E_13 (Payable 13: Maintenance)
+ *   - Fuel → E_14 (Payable 14: Fuel)
+ *   - Office supplies → E_15 (Payable 15: Office supplies)
  * - B-05 (Transfers) → null (always paid, no payable)
- * - E_11 (VAT refund) → special case, not mapped from expenses
  */
 
 export interface ExpenseToPayableMapping {
@@ -88,24 +101,43 @@ export function generateExpenseToPayableMapping(
       switch (subCatCode) {
         case 'B-01': // Human Resources + Bonus
           // All B-01 expenses map to "payable 1: salaries"
-          payableCode = findPayableByPattern(payablesByName, ['salaries']);
+          payableCode = findPayableByPattern(payablesByName, ['salaries', 'payable 1']);
           break;
 
-        case 'B-02': // Monitoring & Evaluation
-          if (expenseNameLower.includes('supervision')) {
-            payableCode = findPayableByPattern(payablesByName, ['supervision']);
-          } else if (expenseNameLower.includes('meeting')) {
-            payableCode = findPayableByPattern(payablesByName, ['meetings']);
+        case 'B-02': // Monitoring & Evaluation - HIV specific mappings
+          if (expenseNameLower.includes('support group meeting')) {
+            payableCode = findPayableByPattern(payablesByName, ['support group', 'payable 2']);
+          } else if (expenseNameLower.includes('census training')) {
+            payableCode = findPayableByPattern(payablesByName, ['census training', 'payable 3']);
+          } else if (expenseNameLower.includes('clinical mentorship') || expenseNameLower.includes('mentorship')) {
+            payableCode = findPayableByPattern(payablesByName, ['clinical mentorship', 'mentorship', 'payable 4']);
+          } else if (expenseNameLower.includes('annual') && expenseNameLower.includes('meeting')) {
+            payableCode = findPayableByPattern(payablesByName, ['annual', 'cordination meeting', 'payable 5']);
+          } else if (expenseNameLower.includes('mdt') || (expenseNameLower.includes('quarterly') && expenseNameLower.includes('meeting'))) {
+            payableCode = findPayableByPattern(payablesByName, ['mdt', 'payable 6']);
+          } else if (expenseNameLower.includes('supervision') && expenseNameLower.includes('dqa')) {
+            payableCode = findPayableByPattern(payablesByName, ['supervision dqa', 'payable 7']);
+          } else if (expenseNameLower.includes('supervision')) {
+            // Malaria: Supervision CHWs
+            payableCode = findPayableByPattern(payablesByName, ['supervision', 'payable 2']);
+          } else if (expenseNameLower.includes('cordination') || expenseNameLower.includes('coordination')) {
+            // Malaria: Coordination meeting on data quality
+            payableCode = findPayableByPattern(payablesByName, ['cordination', 'coordination', 'payable 3']);
+          } else if (expenseNameLower.includes('mission')) {
+            // TB: Mission fees
+            payableCode = findPayableByPattern(payablesByName, ['mission', 'payable 2']);
           }
           break;
 
         case 'B-03': // Living Support to Clients
           if (expenseNameLower.includes('sample') && expenseNameLower.includes('transport')) {
-            payableCode = findPayableByPattern(payablesByName, ['sample transport']);
+            payableCode = findPayableByPattern(payablesByName, ['sample transport', 'payable 8']);
           } else if (expenseNameLower.includes('home') && expenseNameLower.includes('visit')) {
-            payableCode = findPayableByPattern(payablesByName, ['home visits']);
-          } else if (expenseNameLower.includes('travel') && expenseNameLower.includes('survey')) {
-            payableCode = findPayableByPattern(payablesByName, ['travel survellance', 'travel surveillance']);
+            payableCode = findPayableByPattern(payablesByName, ['home visit', 'payable 9']);
+          } else if (expenseNameLower.includes('outreach') && expenseNameLower.includes('hiv')) {
+            payableCode = findPayableByPattern(payablesByName, ['outreach', 'hiv testing', 'payable 10']);
+          } else if (expenseNameLower.includes('wad') || expenseNameLower.includes('celebration')) {
+            payableCode = findPayableByPattern(payablesByName, ['wad', 'celebration', 'payable 11']);
           }
           break;
 
@@ -118,16 +150,15 @@ export function generateExpenseToPayableMapping(
             payableCode = findPayableByPattern(payablesByName, ['payable 14', 'fuel']);
           } else if (expenseNameLower.includes('office') && expenseNameLower.includes('supplies')) {
             payableCode = findPayableByPattern(payablesByName, ['payable 15', 'office supplies', 'supplies']);
-          } else if (expenseNameLower.includes('transport') && expenseNameLower.includes('reporting')) {
-            payableCode = findPayableByPattern(payablesByName, ['transport reporting']);
           } else if (expenseNameLower.includes('bank') && expenseNameLower.includes('charges')) {
-            payableCode = findPayableByPattern(payablesByName, ['bank charges']);
+            // Bank charges - no payable (paid immediately)
+            payableCode = null;
           } else if (expenseNameLower.includes('car') && expenseNameLower.includes('hiring')) {
             payableCode = findPayableByPattern(payablesByName, ['car hiring']);
           } else if (expenseNameLower.includes('consumable')) {
             payableCode = findPayableByPattern(payablesByName, ['consumable']);
-          } else if (expenseNameLower.includes('transport') && expenseNameLower.includes('travel')) {
-            payableCode = findPayableByPattern(payablesByName, ['transport', 'travel']);
+          } else if (expenseNameLower.includes('transport') && (expenseNameLower.includes('travel') || expenseNameLower.includes('reporting'))) {
+            payableCode = findPayableByPattern(payablesByName, ['transport', 'travel', 'reporting']);
           }
           break;
 

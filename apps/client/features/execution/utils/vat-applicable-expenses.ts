@@ -33,17 +33,15 @@ export type VATApplicableCategory = typeof VAT_APPLICABLE_CATEGORIES[keyof typeo
  * ```
  */
 export function isVATApplicable(expenseCode: string, activityName: string): boolean {
-  const nameLower = activityName.toLowerCase();
+  const nameLower = activityName.toLowerCase().trim();
   
-  return (
-    nameLower.includes('communication - all') ||
-    nameLower.includes('communication-all') ||
-    (nameLower.includes('communication') && nameLower.includes('all')) ||
-    nameLower.includes('maintenance for vehicles') ||
-    nameLower.includes('maintenance') ||
-    nameLower === 'fuel' ||
-    nameLower.includes('office supplies')
-  );
+  // Check for the 4 VAT-applicable expense types
+  const isCommunicationAll = nameLower.includes('communication') && nameLower.includes('all');
+  const isMaintenance = nameLower.includes('maintenance');
+  const isFuel = nameLower === 'fuel' || (nameLower.includes('fuel') && !nameLower.includes('refund'));
+  const isOfficeSupplies = nameLower.includes('office supplies') || nameLower.includes('office supply');
+  
+  return isCommunicationAll || isMaintenance || isFuel || isOfficeSupplies;
 }
 
 /**
@@ -62,12 +60,13 @@ export function isVATApplicable(expenseCode: string, activityName: string): bool
  * ```
  */
 export function getVATCategory(activityName: string): VATApplicableCategory | null {
-  const nameLower = activityName.toLowerCase();
+  const nameLower = activityName.toLowerCase().trim();
   
+  // Order matters - check more specific patterns first
   if (nameLower.includes('communication') && nameLower.includes('all')) return VAT_APPLICABLE_CATEGORIES.COMMUNICATION_ALL;
   if (nameLower.includes('maintenance')) return VAT_APPLICABLE_CATEGORIES.MAINTENANCE;
-  if (nameLower === 'fuel' || nameLower.includes('fuel')) return VAT_APPLICABLE_CATEGORIES.FUEL;
-  if (nameLower.includes('office supplies')) return VAT_APPLICABLE_CATEGORIES.OFFICE_SUPPLIES;
+  if (nameLower === 'fuel' || (nameLower.includes('fuel') && !nameLower.includes('refund'))) return VAT_APPLICABLE_CATEGORIES.FUEL;
+  if (nameLower.includes('office supplies') || nameLower.includes('office supply')) return VAT_APPLICABLE_CATEGORIES.OFFICE_SUPPLIES;
   
   return null;
 }

@@ -2,8 +2,11 @@
  * Activity Code Mapper Utility
  * 
  * Provides mapping between UI schema activity codes and actual formData activity codes.
- * This is necessary because the UI schema uses simplified codes (e.g., _D_4, _D_5)
- * while the actual formData stores data under descriptive codes (e.g., _D_VAT_AIRTIME, _D_VAT_INTERNET).
+ * This is necessary because the UI schema uses simplified codes (e.g., _D_D-01_1)
+ * while the actual formData stores data under descriptive codes (e.g., _D_VAT_COMMUNICATION_ALL).
+ * 
+ * VAT receivable codes are generated as: PROJECT_EXEC_FACILITY_D_VAT_CATEGORY
+ * e.g., HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL
  * 
  * Requirements: 1.1, 1.2, 1.3, 1.4
  */
@@ -13,20 +16,32 @@ import type { PreviousQuarterBalances } from '@/features/execution/types/quarter
 /**
  * Mapping rules for activity codes
  * Maps UI schema suffixes to actual formData suffixes
+ * 
+ * VAT receivable codes are generated as: PROJECT_EXEC_FACILITY_D_VAT_CATEGORY
+ * e.g., HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL
  */
 const CODE_MAPPINGS: Record<string, string> = {
-  // VAT receivables (old numeric codes to new descriptive codes)
-  '_D_4': '_D_VAT_AIRTIME',
-  '_D_5': '_D_VAT_INTERNET',
-  '_D_6': '_D_VAT_INFRASTRUCTURE',
-  '_D_7': '_D_VAT_SUPPLIES',
+  // VAT receivables - new category names (matching seed data)
+  '_D_VAT_COMMUNICATION_ALL': '_D_VAT_COMMUNICATION_ALL',
+  '_D_VAT_MAINTENANCE': '_D_VAT_MAINTENANCE',
+  '_D_VAT_FUEL': '_D_VAT_FUEL',
+  '_D_VAT_SUPPLIES': '_D_VAT_SUPPLIES',
   
-  // D-01 subcategory items (subcategory format to regular format)
-  '_D_D-01_1': '_D_VAT_AIRTIME',
-  '_D_D-01_2': '_D_VAT_INTERNET',
-  '_D_D-01_3': '_D_VAT_INFRASTRUCTURE',
+  // D-01 subcategory items (subcategory format to VAT format)
+  '_D_D-01_1': '_D_VAT_COMMUNICATION_ALL',
+  '_D_D-01_2': '_D_VAT_MAINTENANCE',
+  '_D_D-01_3': '_D_VAT_FUEL',
   '_D_D-01_4': '_D_VAT_SUPPLIES',
-  '_D_D-01_5': '_D_4', // Other receivables
+  '_D_D-01_5': '_D_D-01_5', // Other receivables (keep as-is)
+  
+  // Legacy VAT receivables (old category names for backward compatibility)
+  '_D_VAT_AIRTIME': '_D_VAT_COMMUNICATION_ALL',
+  '_D_VAT_INTERNET': '_D_VAT_COMMUNICATION_ALL',
+  '_D_VAT_INFRASTRUCTURE': '_D_VAT_MAINTENANCE',
+  '_D_4': '_D_VAT_COMMUNICATION_ALL',
+  '_D_5': '_D_VAT_COMMUNICATION_ALL',
+  '_D_6': '_D_VAT_MAINTENANCE',
+  '_D_7': '_D_VAT_SUPPLIES',
   
   // G-01 subcategory items (subcategory format to regular format)
   '_G_G-01_1': '_G_1',
@@ -37,14 +52,14 @@ const CODE_MAPPINGS: Record<string, string> = {
 /**
  * Map UI schema code to actual formData code
  * 
- * @param uiCode - UI schema code (e.g., "HIV_EXEC_HOSPITAL_D_4")
+ * @param uiCode - UI schema code (e.g., "HIV_EXEC_HOSPITAL_D_D-01_1")
  * @param projectType - Project type (e.g., "HIV")
  * @param facilityType - Facility type (e.g., "hospital")
  * @returns Actual formData code or the original code if no mapping exists
  * 
  * @example
- * mapUICodeToFormDataCode("HIV_EXEC_HOSPITAL_D_4", "HIV", "hospital")
- * // Returns: "HIV_EXEC_HOSPITAL_D_VAT_AIRTIME"
+ * mapUICodeToFormDataCode("HIV_EXEC_HOSPITAL_D_D-01_1", "HIV", "hospital")
+ * // Returns: "HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL"
  * 
  * mapUICodeToFormDataCode("HIV_EXEC_HOSPITAL_D_1", "HIV", "hospital")
  * // Returns: "HIV_EXEC_HOSPITAL_D_1" (no mapping needed)
@@ -71,14 +86,14 @@ export function mapUICodeToFormDataCode(
 /**
  * Map actual formData code to UI schema code
  * 
- * @param formDataCode - Actual formData code (e.g., "HIV_EXEC_HOSPITAL_D_VAT_AIRTIME")
+ * @param formDataCode - Actual formData code (e.g., "HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL")
  * @param projectType - Project type (e.g., "HIV")
  * @param facilityType - Facility type (e.g., "hospital")
  * @returns UI schema code or the original code if no mapping exists
  * 
  * @example
- * mapFormDataCodeToUICode("HIV_EXEC_HOSPITAL_D_VAT_AIRTIME", "HIV", "hospital")
- * // Returns: "HIV_EXEC_HOSPITAL_D_4"
+ * mapFormDataCodeToUICode("HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL", "HIV", "hospital")
+ * // Returns: "HIV_EXEC_HOSPITAL_D_D-01_1"
  * 
  * mapFormDataCodeToUICode("HIV_EXEC_HOSPITAL_D_1", "HIV", "hospital")
  * // Returns: "HIV_EXEC_HOSPITAL_D_1" (no mapping needed)
@@ -108,21 +123,21 @@ export function mapFormDataCodeToUICode(
  * This function handles the code mismatch between UI schema codes and actual formData codes.
  * It attempts to map the UI code to the formData code and then looks up the balance.
  * 
- * @param uiCode - UI schema code (e.g., "HIV_EXEC_HOSPITAL_D_4")
+ * @param uiCode - UI schema code (e.g., "HIV_EXEC_HOSPITAL_D_D-01_1")
  * @param previousQuarterBalances - Previous quarter balances from API
  * @param projectType - Project type (e.g., "HIV")
  * @param facilityType - Facility type (e.g., "hospital")
  * @returns Opening balance or 0 if not found
  * 
  * @example
- * // Q1 closing balance for VAT Airtime: 3000
+ * // Q1 closing balance for VAT Communication: 3000
  * getOpeningBalanceWithMapping(
- *   "HIV_EXEC_HOSPITAL_D_4",
+ *   "HIV_EXEC_HOSPITAL_D_D-01_1",
  *   previousQuarterBalances,
  *   "HIV",
  *   "hospital"
  * )
- * // Returns: 3000 (found under "HIV_EXEC_HOSPITAL_D_VAT_AIRTIME")
+ * // Returns: 3000 (found under "HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL")
  */
 export function getOpeningBalanceWithMapping(
   uiCode: string,

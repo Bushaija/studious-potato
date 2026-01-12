@@ -195,7 +195,7 @@ function extractClosingBalances(execution: any): { D: Record<string, number>; E:
   }
 
   // VAT receivables are already included in ui.D.items with correct activity codes
-  // (e.g., HIV_EXEC_HOSPITAL_D_VAT_AIRTIME), so no need to add them separately
+  // (e.g., HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL), so no need to add them separately
   // The extraction above (lines 179-185) already handles them correctly
   console.log('[Rollover] VAT receivables already included in Section D items');
   console.log('Final Section D balances:', JSON.parse(JSON.stringify(closingBalances.D)));

@@ -86,8 +86,9 @@ export function extractClosingBalances(
     }
     
     // Extract Section D (Financial Assets) closing balances
+    // Note: VAT receivables are now included in Section D with codes like _D_VAT_COMMUNICATION_ALL
     Object.entries(activities).forEach(([code, activityData]) => {
-      if (code.includes("_D_") && code !== "HIV_EXEC_HEALTH_CENTER_D_VAT_AIRTIME") { // Exclude VAT receivable from Section D
+      if (code.includes("_D_")) {
         const quarterlyValues = activityData as QuarterlyValues;
         const quarterKey = quarter.toLowerCase();
         const closingBalance = (quarterlyValues as any)?.[quarterKey] || 0;
