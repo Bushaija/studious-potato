@@ -531,7 +531,7 @@ export class AggregationService {
         const sectionActivities = activityCatalog.filter(a =>
           a.category === section &&
           !a.isSection &&
-          !a.name.match(/^[A-G]\.\s/) // Exclude total row activities
+          !a.name.match(/^[A-GX]\.\s/) // Exclude total row activities
         );
 
         // CRITICAL FIX: aggregatedData already contains correct totals from cumulative_balance
@@ -603,7 +603,7 @@ export class AggregationService {
     });
 
     // Group activities by section and subcategory
-    const sectionCodes = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+    const sectionCodes = ['A', 'B', 'X', 'C', 'D', 'E', 'F', 'G'];
 
     for (const section of sectionCodes) {
       const sectionName = this.getSectionName(section);
@@ -758,7 +758,7 @@ export class AggregationService {
         // Add individual activities for other sections
         for (const activity of sectionActivities) {
           // Skip total row activities
-          if (activity.name.match(/^[A-G]\.\s/)) continue;
+          if (activity.name.match(/^[A-GX]\.\s/)) continue;
 
           const activityValues: Record<string, number> = {};
           let activityTotal = 0;
@@ -856,6 +856,7 @@ export class AggregationService {
     const order: Record<string, number> = {
       'A': 100,
       'B': 200,
+      'X': 250,
       'C': 300,
       'D': 400,
       'E': 500,
@@ -881,6 +882,7 @@ export class AggregationService {
     const names: Record<string, string> = {
       'A': 'Receipts',
       'B': 'Expenditures',
+      'X': 'Miscellaneous Adjustments',
       'C': 'Surplus / Deficit',
       'D': 'Financial Assets',
       'E': 'Financial Liabilities',

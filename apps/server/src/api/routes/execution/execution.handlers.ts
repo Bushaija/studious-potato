@@ -388,9 +388,10 @@ async function buildUIFriendlyPayload(
     }
   }
 
-  // Build A, B, D, E, G from catalog, merging user-entered values
+  // Build A, B, X, D, E, G from catalog, merging user-entered values
   const A_items: any[] = [];
   const B_groups: Record<string, { code: string; label: string; total: number; items: any[] }> = {};
+  const X_items: any[] = [];
   const D_items: any[] = [];
   const E_items: any[] = [];
   const G_items: any[] = [];
@@ -444,6 +445,7 @@ async function buildUIFriendlyPayload(
   // Now process each catalog record and build the UI sections
   let A_total = 0;
   let B_total = 0;
+  let X_total = 0;
   let D_total = 0;
   let E_total = 0;
   let F_total = 0;
@@ -463,6 +465,8 @@ async function buildUIFriendlyPayload(
       }
       B_groups[groupLabel].total += pushItem(rec, B_groups[groupLabel].items);
       B_total += B_groups[groupLabel].total;
+    } else if (section === 'X') {
+      X_total += pushItem(rec, X_items);
     } else if (section === 'D') {
       D_total += pushItem(rec, D_items);
     } else if (section === 'E') {
@@ -580,6 +584,7 @@ async function buildUIFriendlyPayload(
     A: { label: 'Receipts', total: A_total, items: A_items },
     B: { label: 'Expenditures', total: B_total, groups: Object.values(B_groups).sort((x: any, y: any) => x.code.localeCompare(y.code)) },
     C: { label: 'Surplus / Deficit', total: surplus_deficit },
+    X: { label: 'Miscellaneous Adjustments', total: X_total, items: X_items },
     D: { label: 'Financial Assets', total: D_total, items: D_items },
     E: { label: 'Financial Liabilities', total: E_total, items: E_items },
     F: { label: 'Net Financial Assets (D - E)', total: F_total },
@@ -2852,9 +2857,10 @@ export const checkExisting: AppRouteHandler<CheckExistingRoute> = async (c) => {
           }
         }
 
-        // Build A, B, D, E, G from catalog, merging user-entered values
+        // Build A, B, X, D, E, G from catalog, merging user-entered values
         const A_items: any[] = [];
         const B_groups: Record<string, { code: string; label: string; total: number; items: any[] }> = {};
+        const X_items: any[] = [];
         const D_items: any[] = [];
         const E_items: any[] = [];
         const G_items: any[] = [];
@@ -2941,6 +2947,12 @@ export const checkExisting: AppRouteHandler<CheckExistingRoute> = async (c) => {
           B_groups[sub].total += pushItem(rec, B_groups[sub].items);
         }
 
+        // Build X (Miscellaneous Adjustments)
+        const xCatalog = acts
+          .filter(a => (a.fieldMappings as any)?.category === 'X' && !(a.isTotalRow as any))
+          .sort((x: any, y: any) => (x.displayOrder || 0) - (y.displayOrder || 0));
+        for (const rec of xCatalog) pushItem(rec, X_items);
+
         // Build D/E/G
         const dCatalog = acts
           .filter(a => (a.fieldMappings as any)?.category === 'D' && !(a.isTotalRow as any))
@@ -3020,6 +3032,7 @@ export const checkExisting: AppRouteHandler<CheckExistingRoute> = async (c) => {
         // Calculate totals from actual items (computed values are often 0/incorrect)
         const A_total_calculated = A_items.reduce((s, x) => s + x.total, 0);
         const B_total_calculated = Object.values(B_groups).reduce((s: number, g: any) => s + g.total, 0);
+        const X_total_calculated = X_items.reduce((s, x) => s + x.total, 0);
         
         // CRITICAL FIX: For stock sections (D, E), use cumulative_balance instead of total
         // D and E are balance sheet items (point-in-time), not income statement items (flow)
@@ -3102,6 +3115,7 @@ export const checkExisting: AppRouteHandler<CheckExistingRoute> = async (c) => {
           A: { label: 'Receipts', total: A_total, items: A_items },
           B: { label: 'Expenditures', total: B_total, groups: Object.values(B_groups).sort((x: any, y: any) => x.code.localeCompare(y.code)) },
           C: { label: 'Surplus / Deficit', total: surplus_deficit },
+          X: { label: 'Miscellaneous Adjustments', total: X_total_calculated, items: X_items },
           D: { label: 'Financial Assets', total: D_total, items: D_items },
           E: { label: 'Financial Liabilities', total: E_total, items: E_items },
           F: { label: 'Net Financial Assets (D - E)', total: F_total },

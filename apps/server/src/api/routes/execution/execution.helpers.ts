@@ -19,11 +19,11 @@ export function parseCode(code: string) {
   // - 'HOSPITAL' (1 word)
   // - 'HEALTH_CENTER' (2 words: 'HEALTH', 'CENTER')
   // 
-  // Strategy: The section is always a single letter (A-G)
-  // Find the first single-letter part after 'EXEC' that matches A-G
+  // Strategy: The section is always a single letter (A-G, X)
+  // Find the first single-letter part after 'EXEC' that matches A-G or X
   let sectionIndex = -1;
   for (let i = execIndex + 1; i < parts.length; i++) {
-    if (parts[i].length === 1 && /[A-G]/.test(parts[i])) {
+    if (parts[i].length === 1 && /[A-GX]/.test(parts[i])) {
       sectionIndex = i;
       break;
     }

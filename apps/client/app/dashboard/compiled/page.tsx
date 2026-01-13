@@ -113,11 +113,11 @@ const ReportHeader = ({
   previousFiscalYear?: number | null
 }) => (
   <div className="mb-6">
-    <div className="flex items-start justify-between">
-      <div className="text-left">
-        <h1 className="text-lg font-bold mb-2">
+    <div className="flex items-center justify-between">
+      <div className="text-center">
+        <h1 className="text-lg text-center font-bold mb-2">
           Compiled Financial Report
-          {showPreviousFiscalYear && previousFiscalYear && (
+          {/* {showPreviousFiscalYear && previousFiscalYear && (
             <span className="ml-2 text-sm font-normal text-muted-foreground">
               (FY {previousFiscalYear})
             </span>
@@ -126,14 +126,13 @@ const ReportHeader = ({
             <span className="ml-2 text-sm font-normal text-muted-foreground">
               (FY {currentFiscalYear})
             </span>
-          )}
+          )} */}
         </h1>
-        <div className="text-gray-600 text-sm space-y-1">
+        {/* <div className="text-gray-600 text-sm space-y-1">
           <p>{project}</p>
           {reportingPeriod && <p>Reporting Period: {reportingPeriod}</p>}
           {scopeInfo && <p>Scope: {scopeInfo}</p>}
-          {/* {facilityCount !== undefined && <p>Facilities: {facilityCount}</p>} */}
-        </div>
+        </div> */}
       </div>
 
       <div className="flex flex-col gap-3 items-end">
@@ -153,7 +152,7 @@ const ReportHeader = ({
         )}
 
         {/* Export Actions */}
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <Button
             onClick={onExportPDF}
             disabled={isExporting}
@@ -172,7 +171,7 @@ const ReportHeader = ({
             <Download className="mr-2 h-4 w-4" />
             {isExporting ? 'Exporting...' : 'Export DOCX'}
           </Button>
-        </div>
+        </div> */}
       </div>
     </div>
   </div>
