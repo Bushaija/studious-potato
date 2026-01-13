@@ -8,7 +8,6 @@
 import "dotenv/config";
 import { db } from "@/db";
 import { statementTemplates } from "@/db/schema";
-import { sql } from "drizzle-orm";
 import { getEventCodeIdMap } from "./utils/get-event-map";
 import { 
   assetsAndLiabilitiesTemplates, 

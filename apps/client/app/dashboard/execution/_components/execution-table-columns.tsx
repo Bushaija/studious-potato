@@ -249,6 +249,15 @@ export function getExecutionTableColumns({
         const metadata = row.original.metadata as any;
         const formData = row.original.formData as any;
         
+        // Helper function to check if an activity is "Accumulated Surplus/Deficit"
+        // This is a stock item that has the same value across all quarters (from year-to-year rollover)
+        // It should NOT be used to determine which quarters have been entered
+        const isAccumulatedSurplusDeficit = (code: string): boolean => {
+          const codeLower = code.toLowerCase();
+          // Pattern: _G_1 (e.g., HIV_EXEC_HOSPITAL_G_1) but NOT _G_G-01_ (Prior Year Adjustments)
+          return codeLower.includes('_g_1') && !codeLower.includes('_g_g-01');
+        };
+        
         // Helper function to determine which quarters have data
         const getExecutionQuarters = () => {
           const activities = formData?.activities || {};
@@ -258,6 +267,9 @@ export function getExecutionTableColumns({
           if (Array.isArray(activities)) {
             // Array format: activities = [{code: "A1", q1: 100, q2: 0, ...}, ...]
             for (const activity of activities) {
+              // Skip Accumulated Surplus/Deficit - it's a stock item with same value all quarters
+              if (activity.code && isAccumulatedSurplusDeficit(activity.code)) continue;
+              
               if (activity.q1 && activity.q1 > 0 && !executedQuarters.includes('Q1')) executedQuarters.push('Q1');
               if (activity.q2 && activity.q2 > 0 && !executedQuarters.includes('Q2')) executedQuarters.push('Q2');
               if (activity.q3 && activity.q3 > 0 && !executedQuarters.includes('Q3')) executedQuarters.push('Q3');
@@ -266,6 +278,9 @@ export function getExecutionTableColumns({
           } else if (typeof activities === 'object') {
             // Object format: activities = {A1: {q1: 100, q2: 0, ...}, A2: {...}}
             for (const activityCode of Object.keys(activities)) {
+              // Skip Accumulated Surplus/Deficit - it's a stock item with same value all quarters
+              if (isAccumulatedSurplusDeficit(activityCode)) continue;
+              
               const activity = activities[activityCode];
               if (activity && typeof activity === 'object') {
                 if (activity.q1 && activity.q1 > 0 && !executedQuarters.includes('Q1')) executedQuarters.push('Q1');
