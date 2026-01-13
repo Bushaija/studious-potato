@@ -21,8 +21,12 @@ export interface ClosingBalances {
   D: Record<string, number>;
   /** Section E (Financial Liabilities) closing balances by activity code */
   E: Record<string, number>;
+  /** Section G (Closing Balance / Equity) closing balances by activity code */
+  G: Record<string, number>;
   /** VAT Receivables closing balances by category code */
   VAT: Record<string, number>;
+  /** G. Closing Balance total from previous fiscal year (used as Accumulated Surplus for new year) */
+  closingBalanceTotal?: number;
 }
 
 /**
@@ -60,7 +64,7 @@ export interface PreviousQuarterBalances {
 export interface QuarterSequence {
   /** Current quarter */
   current: Quarter;
-  /** Previous quarter or null if Q1 */
+  /** Previous quarter or null if Q1 (unless cross-fiscal-year rollover) */
   previous: Quarter | null;
   /** Next quarter or null if Q4 */
   next: Quarter | null;
@@ -70,6 +74,8 @@ export interface QuarterSequence {
   hasNext: boolean;
   /** Whether this is Q1 */
   isFirstQuarter: boolean;
+  /** Whether the previous quarter is from a different fiscal year (Q4 → Q1 rollover) */
+  isCrossFiscalYearRollover?: boolean;
 }
 
 /**

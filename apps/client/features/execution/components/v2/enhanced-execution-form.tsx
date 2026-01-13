@@ -526,6 +526,7 @@ export function EnhancedExecutionForm({ projectType, facilityType, quarter, mode
       updateVATExpense: isReadOnly ? () => {} : form.updateVATExpense,
       clearVAT: isReadOnly ? () => {} : form.clearVAT,
       clearPayable: isReadOnly ? () => {} : form.clearPayable,
+      clearOtherReceivable: isReadOnly ? () => {} : form.clearOtherReceivable,
       applyPriorYearAdjustment: isReadOnly ? () => {} : form.applyPriorYearAdjustment,
       applyPriorYearCashAdjustment: isReadOnly ? () => {} : form.applyPriorYearCashAdjustment,
       validationErrors: form.validationErrors,

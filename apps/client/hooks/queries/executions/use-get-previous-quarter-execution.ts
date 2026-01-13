@@ -10,10 +10,12 @@ interface UseGetPreviousQuarterExecutionParams {
   reportingPeriodId?: number;
   currentQuarter: Quarter;
   enabled?: boolean;
+  /** Previous fiscal year's reporting period ID (for Q1 cross-fiscal-year rollover) */
+  previousFiscalYearReportingPeriodId?: number;
 }
 
 /**
- * Get the previous quarter identifier
+ * Get the previous quarter identifier within the same fiscal year
  */
 function getPreviousQuarter(currentQuarter: Quarter): Quarter | null {
   const quarterMap: Record<Quarter, Quarter | null> = {
@@ -31,7 +33,8 @@ function getPreviousQuarter(currentQuarter: Quarter): Quarter | null {
  * This hook fetches the execution data from the previous quarter to enable
  * automatic balance rollover when creating Q2, Q3, or Q4 executions.
  * 
- * For Q1 or when previous quarter doesn't exist, returns null data.
+ * For Q1, it supports cross-fiscal-year rollover by fetching Q4 from the
+ * previous fiscal year if previousFiscalYearReportingPeriodId is provided.
  * 
  * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5
  * 
@@ -44,17 +47,41 @@ export function useGetPreviousQuarterExecution({
   reportingPeriodId,
   currentQuarter,
   enabled = true,
+  previousFiscalYearReportingPeriodId,
 }: UseGetPreviousQuarterExecutionParams) {
   const previousQuarter = getPreviousQuarter(currentQuarter);
   
-  // Only fetch if we have a previous quarter and all required IDs
+  // For Q1, we need to check for cross-fiscal-year rollover (Q4 from previous year)
+  const isQ1CrossFiscalYear = currentQuarter === "Q1" && !!previousFiscalYearReportingPeriodId;
+  
+  // Determine which reporting period to query
+  const targetReportingPeriodId = isQ1CrossFiscalYear 
+    ? previousFiscalYearReportingPeriodId 
+    : reportingPeriodId;
+  
+  // Determine which quarter to fetch
+  const targetQuarter = isQ1CrossFiscalYear ? "Q4" : previousQuarter;
+  
+  // Only fetch if we have a target quarter and all required IDs
+  // For Q1, we can fetch if we have the previous fiscal year's reporting period
   const shouldFetch = Boolean(
     enabled &&
-    previousQuarter &&
+    targetQuarter &&
     projectId &&
     facilityId &&
-    reportingPeriodId
+    targetReportingPeriodId
   );
+
+  console.log('🔍 [useGetPreviousQuarterExecution] Config:', {
+    currentQuarter,
+    previousQuarter,
+    isQ1CrossFiscalYear,
+    targetQuarter,
+    targetReportingPeriodId,
+    reportingPeriodId,
+    previousFiscalYearReportingPeriodId,
+    shouldFetch
+  });
 
   return useQuery({
     queryKey: [
@@ -62,12 +89,13 @@ export function useGetPreviousQuarterExecution({
       "previous-quarter",
       projectId,
       facilityId,
-      reportingPeriodId,
+      targetReportingPeriodId,
       currentQuarter,
-      previousQuarter,
+      targetQuarter,
     ],
     queryFn: async () => {
-      if (!previousQuarter || !projectId || !facilityId || !reportingPeriodId) {
+      if (!targetQuarter || !projectId || !facilityId || !targetReportingPeriodId) {
+        console.log('📊 [useGetPreviousQuarterExecution] Missing required params, returning empty');
         return {
           previousQuarterBalances: {
             exists: false,
@@ -87,12 +115,20 @@ export function useGetPreviousQuarterExecution({
         };
       }
 
-      // Fetch executions for the previous quarter
+      console.log('📊 [useGetPreviousQuarterExecution] Fetching:', {
+        projectId,
+        facilityId,
+        reportingPeriodId: targetReportingPeriodId,
+        quarter: targetQuarter,
+        isQ1CrossFiscalYear
+      });
+
+      // Fetch executions for the target quarter
       const response = await getExecutions({
         projectId,
         facilityId,
-        reportingPeriodId,
-        quarter: previousQuarter,
+        reportingPeriodId: targetReportingPeriodId,
+        quarter: targetQuarter,
         limit: 1,
       });
 
@@ -100,11 +136,16 @@ export function useGetPreviousQuarterExecution({
       if (response.data && response.data.length > 0) {
         const previousExecution = response.data[0];
         
+        console.log('📊 [useGetPreviousQuarterExecution] Found previous execution:', {
+          id: previousExecution.id,
+          quarter: previousExecution.formData?.context?.quarter,
+          isQ1CrossFiscalYear
+        });
+        
         // Extract closing balances from the previous execution
-        // The API response includes previousQuarterBalances for each execution
         const previousQuarterBalances: PreviousQuarterBalances = {
           exists: true,
-          quarter: previousQuarter,
+          quarter: targetQuarter,
           executionId: previousExecution.id,
           closingBalances: extractClosingBalances(previousExecution),
           totals: calculateTotals(previousExecution),
@@ -112,11 +153,12 @@ export function useGetPreviousQuarterExecution({
 
         const quarterSequence: QuarterSequence = {
           current: currentQuarter,
-          previous: previousQuarter,
+          previous: targetQuarter,
           next: getNextQuarter(currentQuarter),
           hasPrevious: true,
           hasNext: getNextQuarter(currentQuarter) !== null,
-          isFirstQuarter: false,
+          isFirstQuarter: currentQuarter === "Q1",
+          isCrossFiscalYearRollover: isQ1CrossFiscalYear,
         };
 
         return {
@@ -138,7 +180,7 @@ export function useGetPreviousQuarterExecution({
         } as PreviousQuarterBalances,
         quarterSequence: {
           current: currentQuarter,
-          previous: previousQuarter,
+          previous: targetQuarter,
           next: getNextQuarter(currentQuarter),
           hasPrevious: false,
           hasNext: getNextQuarter(currentQuarter) !== null,
@@ -166,55 +208,168 @@ function getNextQuarter(currentQuarter: Quarter): Quarter | null {
 
 /**
  * Extract closing balances from execution data
+ * Includes Section D (Financial Assets), Section E (Financial Liabilities), 
+ * Section G (Closing Balance/Equity), and VAT Receivables
  */
-function extractClosingBalances(execution: any): { D: Record<string, number>; E: Record<string, number>; VAT: Record<string, number> } {
-  const closingBalances = { D: {}, E: {}, VAT: {} } as { D: Record<string, number>; E: Record<string, number>; VAT: Record<string, number> };
+function extractClosingBalances(execution: any): { 
+  D: Record<string, number>; 
+  E: Record<string, number>; 
+  G: Record<string, number>;
+  VAT: Record<string, number>;
+  closingBalanceTotal?: number;
+} {
+  const closingBalances = { D: {}, E: {}, G: {}, VAT: {} } as { 
+    D: Record<string, number>; 
+    E: Record<string, number>; 
+    G: Record<string, number>;
+    VAT: Record<string, number>;
+    closingBalanceTotal?: number;
+  };
 
-  // Extract from formData.activities, vatReceivables, or ui structure
-  const activities = execution.formData?.activities || {};
-  const vatReceivables = execution.formData?.vatReceivables || {};
-  const ui = execution.ui || {};
+  // Extract from formData.activities - this is the primary source
+  // Activities can be stored as an object keyed by code or as an array
+  const rawActivities = execution.formData?.activities || {};
+  const activities: Record<string, any> = Array.isArray(rawActivities)
+    ? rawActivities.reduce((acc: Record<string, any>, act: any) => {
+        if (act?.code) acc[act.code] = act;
+        return acc;
+      }, {})
+    : rawActivities;
+  
+  // Also check computedValues for totals (G. Closing Balance is computed)
+  const computedValues = execution.computedValues || {};
 
   // Get the quarter key
   const quarter = execution.formData?.context?.quarter?.toLowerCase() || 'q1';
 
-  // Extract Section D (Financial Assets) closing balances
-  if (ui.D?.items) {
-    ui.D.items.forEach((item: any) => {
-      if (item.code && item[quarter] !== undefined) {
-        closingBalances.D[item.code] = Number(item[quarter]) || 0;
-      }
-    });
-  } else {
-    // Fallback to activities
-    Object.entries(activities).forEach(([code, data]: [string, any]) => {
-      if (code.includes('_D_') && data[quarter] !== undefined) {
-        closingBalances.D[code] = Number(data[quarter]) || 0;
-      }
-    });
-  }
+  console.log('[Rollover] Extracting closing balances:', {
+    executionId: execution.id,
+    quarter,
+    activitiesCount: Object.keys(activities).length,
+    hasComputedValues: !!computedValues,
+    computedValuesKeys: Object.keys(computedValues),
+    sampleActivityKeys: Object.keys(activities).slice(0, 10)
+  });
 
-  // VAT receivables are already included in ui.D.items with correct activity codes
-  // (e.g., HIV_EXEC_HOSPITAL_D_VAT_COMMUNICATION_ALL), so no need to add them separately
-  // The extraction above (lines 179-185) already handles them correctly
-  console.log('[Rollover] VAT receivables already included in Section D items');
-  console.log('Final Section D balances:', JSON.parse(JSON.stringify(closingBalances.D)));
+  // Extract Section D (Financial Assets) closing balances
+  Object.entries(activities).forEach(([code, data]: [string, any]) => {
+    if (code.includes('_D_')) {
+      const value = Number(data[quarter]) || 0;
+      if (value !== 0) {
+        closingBalances.D[code] = value;
+      }
+    }
+  });
+
+  console.log('[Rollover] Section D balances:', JSON.parse(JSON.stringify(closingBalances.D)));
 
   // Extract Section E (Financial Liabilities) closing balances
-  if (ui.E?.items) {
-    ui.E.items.forEach((item: any) => {
-      if (item.code && item[quarter] !== undefined) {
-        closingBalances.E[item.code] = Number(item[quarter]) || 0;
+  Object.entries(activities).forEach(([code, data]: [string, any]) => {
+    if (code.includes('_E_')) {
+      const value = Number(data[quarter]) || 0;
+      if (value !== 0) {
+        closingBalances.E[code] = value;
+      }
+    }
+  });
+
+  console.log('[Rollover] Section E balances:', JSON.parse(JSON.stringify(closingBalances.E)));
+
+  // Extract Section G (Closing Balance / Equity) closing balances
+  // This is critical for cross-fiscal-year rollover where G. Closing Balance becomes Accumulated Surplus
+  let closingBalanceTotal = 0;
+  
+  console.log('[Rollover] Extracting Section G:', {
+    activitiesGKeys: Object.keys(activities).filter(k => k.includes('_G_')),
+    computedValuesKeys: Object.keys(computedValues)
+  });
+  
+  // Extract Section G activities
+  Object.entries(activities).forEach(([code, data]: [string, any]) => {
+    if (code.includes('_G_')) {
+      const value = Number(data[quarter]) || 0;
+      closingBalances.G[code] = value;
+      
+      console.log('[Rollover] Section G activity:', { 
+        code, 
+        quarterValue: value,
+        isClosingBalanceTotal: code.includes('_G_5')
+      });
+      
+      // Check if this is the G. Closing Balance total row (ends with _G_5)
+      // Activity code pattern: {PROJECT}_EXEC_{FACILITY}_G_5
+      if (code.includes('_G_5')) {
+        closingBalanceTotal = value;
+        console.log('[Rollover] Found G. Closing Balance total from activities:', value);
+      }
+    }
+  });
+  
+  // If we didn't find the closing balance total in activities, try computedValues
+  // The G. Closing Balance might be stored in computedValues as it's a computed total
+  if (closingBalanceTotal === 0 && computedValues) {
+    // Check for closingBalance or equity in computedValues
+    const possibleKeys = ['closingBalance', 'equity', 'gTotal', 'G', 'netAssets'];
+    for (const key of possibleKeys) {
+      if (computedValues[key]) {
+        const value = typeof computedValues[key] === 'object' 
+          ? Number(computedValues[key][quarter]) || 0
+          : Number(computedValues[key]) || 0;
+        if (value !== 0) {
+          closingBalanceTotal = value;
+          console.log(`[Rollover] Found G. Closing Balance total from computedValues.${key}:`, value);
+          break;
+        }
+      }
+    }
+  }
+  
+  // If still no closing balance total, calculate it from Section G components
+  // G. Closing Balance = Accumulated Surplus/Deficit + Prior Year Adjustments + Surplus/Deficit of Period
+  if (closingBalanceTotal === 0) {
+    let accumulatedSurplus = 0;
+    let priorYearAdjustments = 0;
+    let surplusDeficitPeriod = 0;
+    
+    Object.entries(closingBalances.G).forEach(([code, value]) => {
+      // Accumulated Surplus/Deficit is _G_1
+      if (code.includes('_G_1') && !code.includes('G-01')) {
+        accumulatedSurplus = value;
+      }
+      // Prior Year Adjustments are in G-01 subcategory (_G_G-01_1, _G_G-01_2, _G_G-01_3)
+      else if (code.includes('_G_G-01_')) {
+        priorYearAdjustments += value;
+      }
+      // Surplus/Deficit of Period is _G_4
+      else if (code.includes('_G_4') && !code.includes('G-01')) {
+        surplusDeficitPeriod = value;
       }
     });
-  } else {
-    // Fallback to activities
-    Object.entries(activities).forEach(([code, data]: [string, any]) => {
-      if (code.includes('_E_') && data[quarter] !== undefined) {
-        closingBalances.E[code] = Number(data[quarter]) || 0;
-      }
+    
+    // Also check computedValues for Surplus/Deficit of Period (C = A - B)
+    if (surplusDeficitPeriod === 0 && computedValues.surplusDeficit) {
+      surplusDeficitPeriod = typeof computedValues.surplusDeficit === 'object'
+        ? Number(computedValues.surplusDeficit[quarter]) || 0
+        : Number(computedValues.surplusDeficit) || 0;
+    }
+    
+    closingBalanceTotal = accumulatedSurplus + priorYearAdjustments + surplusDeficitPeriod;
+    console.log('[Rollover] Calculated G. Closing Balance total:', {
+      accumulatedSurplus,
+      priorYearAdjustments,
+      surplusDeficitPeriod,
+      closingBalanceTotal
     });
   }
+  
+  closingBalances.closingBalanceTotal = closingBalanceTotal;
+  
+  console.log('[Rollover] Final closingBalances:', {
+    D: Object.keys(closingBalances.D).length,
+    E: Object.keys(closingBalances.E).length,
+    G: Object.keys(closingBalances.G).length,
+    closingBalanceTotal: closingBalances.closingBalanceTotal
+  });
 
   return closingBalances;
 }

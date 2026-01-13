@@ -47,6 +47,8 @@ interface ActivityQuarterValues {
   vatCleared?: Record<string, number>;     // VAT cleared per quarter (for VAT-applicable expenses)
   // Payable tracking fields (quarter-specific)
   payableCleared?: Record<string, number>; // Payable cleared per quarter (for payables in Section E)
+  // Other Receivable tracking fields (quarter-specific)
+  otherReceivableCleared?: Record<string, number>; // Other receivable cleared per quarter (for Other Receivables in Section D)
   // Prior year adjustment tracking (quarter-specific)
   priorYearAdjustment?: Record<string, number>; // Prior year adjustment per quarter (for payables/receivables)
 }
@@ -237,6 +239,7 @@ export function useExecutionForm({
         vatAmount: existing?.vatAmount ?? {},
         vatCleared: existing?.vatCleared ?? {},
         payableCleared: existing?.payableCleared ?? {},
+        otherReceivableCleared: existing?.otherReceivableCleared ?? {},
         priorYearAdjustment: existing?.priorYearAdjustment ?? {},
       };
 
@@ -364,6 +367,16 @@ export function useExecutionForm({
       return sum + payableCleared;
     }, 0);
 
+    // Calculate total Other Receivables cleared (increases cash when receivables are collected)
+    const otherReceivableCodes = Object.keys(formData).filter(code => 
+      code.includes('_D_') && (code.includes('D-01_5') || code.includes('Other'))
+    );
+    const totalOtherReceivablesCleared = otherReceivableCodes.reduce((sum, code) => {
+      const receivableData = formData[code];
+      const receivableCleared = Number(receivableData?.otherReceivableCleared?.[quarterKey]) || 0;
+      return sum + receivableCleared;
+    }, 0);
+
     // Calculate total prior year cash adjustments from Section G (G-01 Cash)
     // These adjustments directly affect Cash at Bank
     const priorYearCashAdjustmentCodes = Object.keys(formData).filter(code => 
@@ -391,8 +404,8 @@ export function useExecutionForm({
 
     // Calculate Cash at Bank as CUMULATIVE:
     // Current Quarter Cash = Previous Quarter Cash + Current Quarter Receipts - Current Quarter Paid Expenses 
-    //                        - Misc Adjustments + VAT Cleared - Payables Cleared + Prior Year Cash Adjustments
-    const calculatedCashAtBank = previousQuarterCash + totalReceipts - totalPaidExpenses - totalMiscAdjustments + totalVATCleared - totalPayablesCleared + totalPriorYearCashAdjustments;
+    //                        - Misc Adjustments + VAT Cleared - Payables Cleared + Other Receivables Cleared + Prior Year Cash Adjustments
+    const calculatedCashAtBank = previousQuarterCash + totalReceipts - totalPaidExpenses - totalMiscAdjustments + totalVATCleared - totalPayablesCleared + totalOtherReceivablesCleared + totalPriorYearCashAdjustments;
 
     console.log('💰 [Cash at Bank Calculation]:', {
       quarter,
@@ -404,9 +417,10 @@ export function useExecutionForm({
       totalMiscAdjustments,
       totalVATCleared,
       totalPayablesCleared,
+      totalOtherReceivablesCleared,
       priorYearCashCode,
       totalPriorYearCashAdjustments,
-      calculation: `${previousQuarterCash} + ${totalReceipts} - ${totalPaidExpenses} - ${totalMiscAdjustments} + ${totalVATCleared} - ${totalPayablesCleared} + ${totalPriorYearCashAdjustments}`,
+      calculation: `${previousQuarterCash} + ${totalReceipts} - ${totalPaidExpenses} - ${totalMiscAdjustments} + ${totalVATCleared} - ${totalPayablesCleared} + ${totalOtherReceivablesCleared} + ${totalPriorYearCashAdjustments}`,
       calculatedCashAtBank,
       currentValue: formData[cashAtBankCode]?.[quarterKey]
     });
@@ -431,6 +445,7 @@ export function useExecutionForm({
             vatAmount: existingData.vatAmount ?? {},
             vatCleared: existingData.vatCleared ?? {},
             payableCleared: existingData.payableCleared ?? {},
+            otherReceivableCleared: existingData.otherReceivableCleared ?? {},
             // Preserve priorYearAdjustment from prev state
             priorYearAdjustment: prev[cashAtBankCode]?.priorYearAdjustment ?? {},
           }
@@ -678,6 +693,7 @@ export function useExecutionForm({
           vatAmount: existingData.vatAmount ?? {},
           vatCleared: existingData.vatCleared ?? {},
           payableCleared: existingData.payableCleared ?? {},
+          otherReceivableCleared: existingData.otherReceivableCleared ?? {},
           priorYearAdjustment: existingData.priorYearAdjustment ?? {},
         };
       }
@@ -870,6 +886,7 @@ export function useExecutionForm({
             vatAmount: existingData.vatAmount ?? {},
             vatCleared: existingData.vatCleared ?? {},
             payableCleared: existingData.payableCleared ?? {},
+            otherReceivableCleared: existingData.otherReceivableCleared ?? {},
             priorYearAdjustment: existingData.priorYearAdjustment ?? {},
           };
           
@@ -951,8 +968,11 @@ export function useExecutionForm({
     const otherReceivablesData = formData[otherReceivablesCode];
     const priorYearAdjustment = Number(otherReceivablesData?.priorYearAdjustment?.[quarterKey]) || 0;
     
-    // Other Receivables = Opening Balance + Miscellaneous Adjustments + Prior Year Adjustment
-    const calculatedOtherReceivables = openingBalance + totalMiscAdjustments + priorYearAdjustment;
+    // Get cleared amount for Other Receivables
+    const clearedAmount = Number(otherReceivablesData?.otherReceivableCleared?.[quarterKey]) || 0;
+    
+    // Other Receivables = Opening Balance + Miscellaneous Adjustments + Prior Year Adjustment - Cleared Amount
+    const calculatedOtherReceivables = openingBalance + totalMiscAdjustments + priorYearAdjustment - clearedAmount;
     
     console.log('📋 [Other Receivables Calculation]:', {
       quarter,
@@ -960,6 +980,7 @@ export function useExecutionForm({
       openingBalance,
       totalMiscAdjustments,
       priorYearAdjustment,
+      clearedAmount,
       calculatedOtherReceivables,
       currentValue: formData[otherReceivablesCode]?.[quarterKey]
     });
@@ -984,6 +1005,7 @@ export function useExecutionForm({
             vatAmount: existingData.vatAmount ?? {},
             vatCleared: existingData.vatCleared ?? {},
             payableCleared: existingData.payableCleared ?? {},
+            otherReceivableCleared: existingData.otherReceivableCleared ?? {},
             // Preserve priorYearAdjustment from prev state
             priorYearAdjustment: prev[otherReceivablesCode]?.priorYearAdjustment ?? {},
           }
@@ -1144,6 +1166,7 @@ export function useExecutionForm({
             vatAmount: prev[activityCode]?.vatAmount ?? {},
             vatCleared: prev[activityCode]?.vatCleared ?? {},
             payableCleared: prev[activityCode]?.payableCleared ?? {},
+            otherReceivableCleared: prev[activityCode]?.otherReceivableCleared ?? {},
           },
         };
         (next[activityCode] as any)[quarterKey] = value;
@@ -1173,6 +1196,7 @@ export function useExecutionForm({
             vatAmount: prev[activityCode]?.vatAmount ?? {},
             vatCleared: prev[activityCode]?.vatCleared ?? {},
             payableCleared: prev[activityCode]?.payableCleared ?? {},
+            otherReceivableCleared: prev[activityCode]?.otherReceivableCleared ?? {},
           },
         };
         onDataChange?.(next);
@@ -1218,6 +1242,7 @@ export function useExecutionForm({
             vatAmount: existing?.vatAmount ?? {},
             vatCleared: existing?.vatCleared ?? {},
             payableCleared: existing?.payableCleared ?? {},
+            otherReceivableCleared: existing?.otherReceivableCleared ?? {},
             priorYearAdjustment: existing?.priorYearAdjustment ?? {},
           },
         };
@@ -1268,6 +1293,7 @@ export function useExecutionForm({
             vatAmount: vatAmountObj,
             vatCleared: existing?.vatCleared ?? {},
             payableCleared: existing?.payableCleared ?? {},
+            otherReceivableCleared: existing?.otherReceivableCleared ?? {},
             priorYearAdjustment: existing?.priorYearAdjustment ?? {},
             totalInvoiceAmount: totalAmount,  // Store total invoice amount for reference
           },
@@ -1383,6 +1409,65 @@ export function useExecutionForm({
       form.setValue(`${cashAtBankCode}.${quarterKey}`, currentCashBalance - clearAmount, { shouldDirty: true });
     },
     [form, onDataChange, quarter, formData]
+  );
+
+  /**
+   * Clear Other Receivable (collect a receivable)
+   * This function records when other receivables are collected, reducing the receivable and increasing Cash at Bank
+   * Accounting entry: Dr Cash at Bank, Cr Other Receivables
+   */
+  const clearOtherReceivable = useCallback(
+    (receivableCode: string, clearAmount: number) => {
+      const quarterKey = quarter.toLowerCase() as 'q1' | 'q2' | 'q3' | 'q4';
+
+      setFormData(prev => {
+        const existing = prev[receivableCode];
+
+        // Create quarter-specific other receivable cleared object
+        // IMPORTANT: Add to existing cleared amount, don't replace it
+        const previousCleared = (typeof existing?.otherReceivableCleared === 'object' && existing.otherReceivableCleared !== null)
+          ? (existing.otherReceivableCleared[quarterKey] || 0)
+          : 0;
+        const newTotalCleared = previousCleared + clearAmount;
+        
+        const otherReceivableClearedObj = typeof existing?.otherReceivableCleared === 'object' && existing.otherReceivableCleared !== null
+          ? { ...existing.otherReceivableCleared, [quarterKey]: newTotalCleared }
+          : { [quarterKey]: newTotalCleared };
+
+        console.log('💰 [clearOtherReceivable] Clearing receivable:', {
+          receivableCode,
+          clearAmount,
+          previousCleared,
+          newTotalCleared,
+          quarter: quarterKey
+        });
+
+        const next = {
+          ...prev,
+          [receivableCode]: {
+            q1: existing?.q1 ?? 0,
+            q2: existing?.q2 ?? 0,
+            q3: existing?.q3 ?? 0,
+            q4: existing?.q4 ?? 0,
+            comment: existing?.comment ?? "",
+            paymentStatus: existing?.paymentStatus,
+            amountPaid: existing?.amountPaid,
+            netAmount: existing?.netAmount ?? {},
+            vatAmount: existing?.vatAmount ?? {},
+            vatCleared: existing?.vatCleared ?? {},
+            payableCleared: existing?.payableCleared ?? {},
+            otherReceivableCleared: otherReceivableClearedObj,
+            priorYearAdjustment: existing?.priorYearAdjustment ?? {},
+          },
+        };
+
+        onDataChange?.(next);
+        return next;
+      });
+
+      form.setValue(`${receivableCode}.otherReceivableCleared.${quarterKey}`, clearAmount, { shouldDirty: true });
+    },
+    [form, onDataChange, quarter]
   );
 
   /**
@@ -1564,6 +1649,7 @@ export function useExecutionForm({
             vatAmount: priorYearData?.vatAmount ?? {},
             vatCleared: priorYearData?.vatCleared ?? {},
             payableCleared: priorYearData?.payableCleared ?? {},
+            otherReceivableCleared: priorYearData?.otherReceivableCleared ?? {},
             priorYearAdjustment: priorYearData?.priorYearAdjustment ?? {},
           },
           // Update the target payable/receivable with priorYearAdjustment tracking
@@ -1579,6 +1665,7 @@ export function useExecutionForm({
             vatAmount: targetData?.vatAmount ?? {},
             vatCleared: targetData?.vatCleared ?? {},
             payableCleared: targetData?.payableCleared ?? {},
+            otherReceivableCleared: targetData?.otherReceivableCleared ?? {},
             priorYearAdjustment: {
               ...(targetData?.priorYearAdjustment ?? {}),
               [quarterKey]: newTargetPriorYearAdj,
@@ -1660,6 +1747,7 @@ export function useExecutionForm({
             vatAmount: cashAdjustmentData?.vatAmount ?? {},
             vatCleared: cashAdjustmentData?.vatCleared ?? {},
             payableCleared: cashAdjustmentData?.payableCleared ?? {},
+            otherReceivableCleared: cashAdjustmentData?.otherReceivableCleared ?? {},
             priorYearAdjustment: cashAdjustmentData?.priorYearAdjustment ?? {},
           },
         };
@@ -1931,9 +2019,19 @@ export function useExecutionForm({
           const sectionPart = codeParts.find((part: string) => /^[A-G]$/i.test(part));
           const sectionCode = sectionPart?.toUpperCase() || '';
 
-
-          // Stock sections (D, E) use latest quarter with data (including explicit zeros)
-          if (sectionCode === 'D' || sectionCode === 'E') {
+          // Special case: Accumulated Surplus/Deficit stays the SAME across all quarters
+          // It's auto-calculated from previous fiscal year's closing balance and doesn't change
+          // The cumulative balance should be the same value (not a sum)
+          const isAccumulatedSurplus = activity.name?.toLowerCase().includes('accumulated') && 
+            (activity.name?.toLowerCase().includes('surplus') || activity.name?.toLowerCase().includes('deficit'));
+          
+          if (isAccumulatedSurplus) {
+            // For Accumulated Surplus/Deficit, use the Q1 value (which is the same for all quarters)
+            // The cumulative balance is also the same value (not a sum)
+            cumulativeBalance = q1; // Q1 value = Q2 value = Q3 value = Q4 value = cumulative
+          }
+          // Stock/Balance sheet sections (D, E) use latest quarter with data
+          else if (sectionCode === 'D' || sectionCode === 'E') {
             // Check quarters in reverse order (Q4 -> Q3 -> Q2 -> Q1)
             // Use the latest quarter value based on the computed q1..q4 amounts
             // This ensures auto-calculated rows (like VAT receivables) behave consistently
@@ -1961,7 +2059,7 @@ export function useExecutionForm({
               cumulativeBalance = undefined;
             }
           } else {
-            // Flow sections (A, B, C, F, G) use cumulative sum
+            // Flow sections (A, B, C, F) and Section G items (except Accumulated Surplus) use cumulative sum
             cumulativeBalance = q1 + q2 + q3 + q4;
           }
         }
@@ -1978,10 +2076,15 @@ export function useExecutionForm({
       // Collect all children (both direct items and subcategories) with their display orders
       const allChildren: Array<{ type: 'item' | 'subcategory'; displayOrder: number; data: any }> = [];
 
-      // Add direct items
+      // Add direct items (excluding total rows which are computed from children)
       if (categoryInfo.items) {
         console.log(`  📄 Adding ${categoryInfo.items.length} direct items`);
         categoryInfo.items.forEach((item: any) => {
+          // Skip total rows - they are computed from children and should not be included
+          if (item.isTotalRow) {
+            console.log(`    - ${item.name} (displayOrder: ${item.displayOrder}) [SKIPPED - total row]`);
+            return;
+          }
           console.log(`    - ${item.name} (displayOrder: ${item.displayOrder})`);
           allChildren.push({
             type: 'item',
@@ -2019,6 +2122,7 @@ export function useExecutionForm({
           console.log(`     Items to process: ${subCategoryInfo.items?.length || 0}`);
           
           const childRows = (subCategoryInfo.items || [])
+            .filter((item: any) => !item.isTotalRow) // Exclude total rows
             .sort((a: any, b: any) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
             .map(buildActivityRow);
 
@@ -2211,8 +2315,39 @@ export function useExecutionForm({
     const gIdx = sections.findIndex(s => s.id === "G");
     if (gIdx >= 0) {
       const gSection = sections[gIdx];
-      const surplusChild = gSection.children?.find(r => String(r.title).toLowerCase().includes("surplus/deficit of the period"));
+      
+      console.log('🔍 [G Section Debug] Before update:', {
+        childrenCount: gSection.children?.length,
+        childrenTitles: gSection.children?.map(c => c.title),
+        realTimeSurplusDeficit
+      });
+      
+      // Find Surplus/Deficit of the Period - try multiple search patterns
+      let surplusChild = gSection.children?.find(r => String(r.title).toLowerCase().includes("surplus/deficit of the period"));
+      if (!surplusChild) {
+        // Try alternative search patterns
+        surplusChild = gSection.children?.find(r => String(r.title).toLowerCase().includes("surplus") && String(r.title).toLowerCase().includes("period"));
+      }
+      if (!surplusChild) {
+        // Try searching in nested children (subcategories)
+        for (const child of gSection.children || []) {
+          if (child.children) {
+            const nested = child.children.find((r: any) => String(r.title).toLowerCase().includes("surplus/deficit"));
+            if (nested) {
+              console.log('⚠️ [G Section Debug] Found surplusChild in nested children:', nested.title);
+              surplusChild = nested;
+              break;
+            }
+          }
+        }
+      }
+      
       if (surplusChild) {
+        console.log('🔍 [G Section Debug] Found surplusChild:', {
+          title: surplusChild.title,
+          beforeUpdate: { q1: (surplusChild as any).q1, q2: (surplusChild as any).q2, q3: (surplusChild as any).q3, q4: (surplusChild as any).q4, cumulativeBalance: (surplusChild as any).cumulativeBalance }
+        });
+        
         // Use the real-time calculated surplus/deficit for faster updates
         (surplusChild as any).q1 = realTimeSurplusDeficit.q1;
         (surplusChild as any).q2 = realTimeSurplusDeficit.q2;
@@ -2221,10 +2356,30 @@ export function useExecutionForm({
         (surplusChild as any).cumulativeBalance = realTimeSurplusDeficit.cumulativeBalance;
         (surplusChild as any).isCalculated = true;
         (surplusChild as any).isEditable = false;
+        
+        console.log('🔍 [G Section Debug] After surplusChild update:', {
+          q1: (surplusChild as any).q1, q2: (surplusChild as any).q2, q3: (surplusChild as any).q3, q4: (surplusChild as any).q4, cumulativeBalance: (surplusChild as any).cumulativeBalance
+        });
+      } else {
+        console.warn('⚠️ [G Section Debug] surplusChild NOT FOUND! Children:', gSection.children?.map(c => ({ title: c.title, isSubcategory: c.isSubcategory })));
       }
 
-      // Re-sum G header from its children
+      // Re-sum G header from its children (including subcategories)
+      // G. Closing Balance cumulative = sum of children's cumulative balances
+      // - Accumulated Surplus/Deficit cumulative = Q1 value (same for all quarters)
+      // - Prior Year Adjustments cumulative = sum of Q1+Q2+Q3+Q4 (flow)
+      // - Surplus/Deficit of Period cumulative = sum of Q1+Q2+Q3+Q4 (flow)
       if (gSection.children) {
+        console.log('🔍 [G Section Debug] Children before re-sum:', gSection.children.map(c => ({
+          title: c.title,
+          isSubcategory: c.isSubcategory,
+          q1: (c as any).q1,
+          q2: (c as any).q2,
+          q3: (c as any).q3,
+          q4: (c as any).q4,
+          cumulativeBalance: (c as any).cumulativeBalance
+        })));
+        
         const gTotals = gSection.children.reduce((acc, r) => {
           acc.q1 += Number((r as any).q1 || 0);
           acc.q2 += Number((r as any).q2 || 0);
@@ -2233,6 +2388,8 @@ export function useExecutionForm({
           acc.cumulativeBalance += Number((r as any).cumulativeBalance || 0);
           return acc;
         }, { q1: 0, q2: 0, q3: 0, q4: 0, cumulativeBalance: 0 });
+
+        console.log('🔍 [G Section Debug] gTotals after re-sum:', gTotals);
 
         (sections[gIdx] as any).q1 = gTotals.q1;
         (sections[gIdx] as any).q2 = gTotals.q2;
@@ -2319,6 +2476,85 @@ export function useExecutionForm({
     console.groupEnd();
     
     return totals as { q1: number; q2: number; q3: number; q4: number; cumulativeBalance: number };
+  }
+
+  // --- Helper: compute Section G totals directly from formData (Closing Balance) ---
+  // G. Closing Balance = Accumulated Surplus/Deficit + Prior Year Adjustments + Surplus/Deficit of Period
+  // IMPORTANT: G. Closing Balance is a BALANCE SHEET item (like D, E, F)
+  // The cumulative balance should be the LATEST quarter value, not the sum of all quarters
+  function computeSectionGFromFormData() {
+    const totals = { q1: 0, q2: 0, q3: 0, q4: 0, cumulativeBalance: 0 };
+    
+    // Accumulated Surplus quarterly values (same value for all quarters)
+    let accumulatedSurplusQ1 = 0;
+    let accumulatedSurplusQ2 = 0;
+    let accumulatedSurplusQ3 = 0;
+    let accumulatedSurplusQ4 = 0;
+    
+    // Prior Year Adjustments quarterly values
+    let priorYearQ1 = 0;
+    let priorYearQ2 = 0;
+    let priorYearQ3 = 0;
+    let priorYearQ4 = 0;
+    
+    const gCodes: string[] = [];
+    Object.entries(formData).forEach(([code, values]) => {
+      if (!code.includes('_G_')) return;
+      gCodes.push(code);
+      
+      const q1Val = Number(values.q1) || 0;
+      const q2Val = Number(values.q2) || 0;
+      const q3Val = Number(values.q3) || 0;
+      const q4Val = Number(values.q4) || 0;
+      
+      // Accumulated Surplus/Deficit (_G_1, not in G-01 subcategory): same value for all quarters
+      if (code.includes('_G_1') && !code.includes('G-01')) {
+        accumulatedSurplusQ1 = q1Val;
+        accumulatedSurplusQ2 = q2Val;
+        accumulatedSurplusQ3 = q3Val;
+        accumulatedSurplusQ4 = q4Val;
+      }
+      // Prior Year Adjustments (G-01 subcategory: _G_G-01_1, _G_G-01_2, _G_G-01_3)
+      else if (code.includes('_G_G-01_')) {
+        priorYearQ1 += q1Val;
+        priorYearQ2 += q2Val;
+        priorYearQ3 += q3Val;
+        priorYearQ4 += q4Val;
+      }
+      // Note: Surplus/Deficit of Period (_G_4) is NOT in formData because it's a computed activity
+      // We use realTimeSurplusDeficit instead (calculated from A - B)
+    });
+    
+    // Calculate quarterly totals:
+    // G. Closing Balance = Accumulated Surplus + Prior Year Adjustments + Surplus/Deficit of Period
+    totals.q1 = accumulatedSurplusQ1 + priorYearQ1 + realTimeSurplusDeficit.q1;
+    totals.q2 = accumulatedSurplusQ2 + priorYearQ2 + realTimeSurplusDeficit.q2;
+    totals.q3 = accumulatedSurplusQ3 + priorYearQ3 + realTimeSurplusDeficit.q3;
+    totals.q4 = accumulatedSurplusQ4 + priorYearQ4 + realTimeSurplusDeficit.q4;
+    
+    // G. Closing Balance cumulative = sum of children's cumulative balances
+    // - Accumulated Surplus/Deficit cumulative = Q1 value (same for all quarters)
+    // - Prior Year Adjustments cumulative = sum of Q1+Q2+Q3+Q4 (flow)
+    // - Surplus/Deficit of Period cumulative = sum of Q1+Q2+Q3+Q4 (flow)
+    const accumulatedSurplusCumulative = accumulatedSurplusQ1; // Same value for all quarters
+    const priorYearAdjustmentsCumulative = priorYearQ1 + priorYearQ2 + priorYearQ3 + priorYearQ4;
+    const surplusDeficitPeriodCumulative = realTimeSurplusDeficit.cumulativeBalance;
+    
+    totals.cumulativeBalance = accumulatedSurplusCumulative + priorYearAdjustmentsCumulative + surplusDeficitPeriodCumulative;
+    
+    console.log('🔍 [computeSectionGFromFormData] Section G calculation:', {
+      gCodes: gCodes.length,
+      quarterly: { q1: totals.q1, q2: totals.q2, q3: totals.q3, q4: totals.q4 },
+      components: {
+        accumulatedSurplus: { q1: accumulatedSurplusQ1, q2: accumulatedSurplusQ2, q3: accumulatedSurplusQ3, q4: accumulatedSurplusQ4 },
+        priorYearAdjustments: { q1: priorYearQ1, q2: priorYearQ2, q3: priorYearQ3, q4: priorYearQ4 },
+        surplusDeficitPeriod: { q1: realTimeSurplusDeficit.q1, q2: realTimeSurplusDeficit.q2, q3: realTimeSurplusDeficit.q3, q4: realTimeSurplusDeficit.q4 }
+      },
+      cumulativeBalance: totals.cumulativeBalance,
+      note: 'G is a balance sheet item - cumulative = latest quarter value'
+    });
+    
+    return totals;
   }
 
   // --- Helper: compute Section D totals directly from formData (includes VAT codes) ---
@@ -2412,14 +2648,24 @@ export function useExecutionForm({
     } as any;
     const key = map[letter];
     if (!key || !computedValues) {
-      // If no server totals or invalid key, compute manually for Section D and E as fallback
+      // If no server totals or invalid key, compute manually for Section D, E, and G as fallback
       if (letter === 'D') {
         return computeSectionDFromFormData();
       }
       if (letter === 'E') {
         return computeSectionEFromFormData();
       }
+      if (letter === 'G') {
+        return computeSectionGFromFormData();
+      }
       return { q1: 0, q2: 0, q3: 0, q4: 0, cumulativeBalance: 0 };
+    }
+
+    // For Section G, always use the manual calculation to ensure correct cumulative balance
+    // The cumulative balance should be the sum of children's cumulative balances (vertical sum)
+    // not the sum of Q1+Q2+Q3+Q4 (horizontal sum)
+    if (letter === 'G') {
+      return computeSectionGFromFormData();
     }
 
     let t = (computedValues as any)[key] || {};
@@ -2517,8 +2763,13 @@ export function useExecutionForm({
     // Check if this is a computed asset (like "Other Receivables (auto from Miscellaneous)")
     const isComputedAsset = activityType === 'COMPUTED_ASSET';
     
+    // Check if this is Accumulated Surplus/Deficit (auto-calculated from previous fiscal year)
+    const isAccumulatedSurplus = activityName?.toLowerCase().includes('accumulated') && 
+      (activityName?.toLowerCase().includes('surplus') || activityName?.toLowerCase().includes('deficit'));
+    
     // Only blanket-compute C and F; G leaves are editable except the specific computed row handled in table model
-    const isComputed = ["C", "F"].includes(sectionLetter) || isComputedAsset || isOpeningBalance;
+    // Accumulated Surplus/Deficit is also computed (auto-filled from previous fiscal year's closing balance)
+    const isComputed = ["C", "F"].includes(sectionLetter) || isComputedAsset || isOpeningBalance || isAccumulatedSurplus;
     
     // Section X (Miscellaneous Adjustments) activities are editable for current quarter only
     const isMiscellaneousAdjustment = activityType === 'MISCELLANEOUS_ADJUSTMENT';
@@ -2529,6 +2780,8 @@ export function useExecutionForm({
       message = "Opening balance is automatically set from previous quarter closing balance";
     } else if (isComputedAsset) {
       message = "Auto-calculated from Miscellaneous Adjustments";
+    } else if (isAccumulatedSurplus) {
+      message = "Auto-calculated from previous fiscal year's closing balance";
     } else if (isComputed) {
       message = "Computed from totals";
     }
@@ -2601,7 +2854,8 @@ export function useExecutionForm({
       return true; // Locked for all quarters except current
     }
 
-    // Special case: "Accumulated Surplus/Deficit" should only be editable in Q1
+    // Special case: "Accumulated Surplus/Deficit" is ALWAYS read-only (auto-calculated from previous fiscal year)
+    // It remains constant across all quarters (Q1-Q4) of the fiscal year
     // Check if this is an accumulated surplus/deficit row by looking at the activity name
     const activityData = table.flatMap(section => {
       if (section.children) {
@@ -2618,10 +2872,8 @@ export function useExecutionForm({
     if (activityData && activityData.title) {
       const titleLower = activityData.title.toLowerCase();
       if (titleLower.includes('accumulated') && (titleLower.includes('surplus') || titleLower.includes('deficit'))) {
-        // Accumulated Surplus/Deficit is only editable in Q1
-        if (q !== 'Q1') {
-          return true; // Locked for Q2, Q3, Q4
-        }
+        // Accumulated Surplus/Deficit is ALWAYS read-only - auto-calculated from previous fiscal year's closing balance
+        return true; // Locked for ALL quarters (Q1, Q2, Q3, Q4)
       }
     }
 
@@ -2735,6 +2987,7 @@ export function useExecutionForm({
     updateVATExpense,
     clearVAT,
     clearPayable,
+    clearOtherReceivable,
     applyPriorYearAdjustment,
     applyPriorYearCashAdjustment,
 

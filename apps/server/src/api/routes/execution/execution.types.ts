@@ -118,11 +118,12 @@ export const previousQuarterBalancesSchema = z.object({
 
 export const quarterSequenceSchema = z.object({
   current: z.enum(["Q1", "Q2", "Q3", "Q4"]).describe("Current quarter"),
-  previous: z.enum(["Q1", "Q2", "Q3", "Q4"]).nullable().describe("Previous quarter or null if Q1"),
+  previous: z.enum(["Q1", "Q2", "Q3", "Q4"]).nullable().describe("Previous quarter or null if Q1 (unless cross-fiscal-year rollover)"),
   next: z.enum(["Q1", "Q2", "Q3", "Q4"]).nullable().describe("Next quarter or null if Q4"),
   hasPrevious: z.boolean().describe("Whether a previous quarter exists"),
   hasNext: z.boolean().describe("Whether a next quarter exists"),
   isFirstQuarter: z.boolean().describe("Whether this is Q1"),
+  isCrossFiscalYearRollover: z.boolean().optional().describe("Whether the previous quarter is from a different fiscal year (Q4 → Q1 rollover)"),
 });
 
 // Cascade recalculation impact metadata

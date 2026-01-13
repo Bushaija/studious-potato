@@ -527,15 +527,24 @@ async function buildUIFriendlyPayload(
         currentQuarter
       );
 
+      // Determine if we have cross-fiscal-year rollover (Q1 with Q4 from previous year)
+      const hasCrossFiscalYearPrevious = currentQuarter === "Q1" && previousExecution !== null;
+
       // Build quarter sequence metadata for the current quarter
-      quarterSequence = buildQuarterSequence(currentQuarter);
+      quarterSequence = buildQuarterSequence(currentQuarter, hasCrossFiscalYearPrevious);
 
       if (previousExecution) {
         // Build previous quarter balances using the actual previous quarter
+        // For Q1, this will be Q4 from the previous fiscal year
+        const previousQuarterLabel = currentQuarter === "Q1" ? "Q4" : quarterSequence.previous;
         previousQuarterBalances = buildPreviousQuarterBalances(
           previousExecution as any,
-          quarterSequence.previous
+          previousQuarterLabel
         );
+        
+        if (currentQuarter === "Q1") {
+          console.log(`[Cross-Fiscal-Year Rollover] Q1 opening with Q4 closing balances from previous fiscal year`);
+        }
       } else {
         // No previous quarter execution found
         previousQuarterBalances = {
@@ -819,10 +828,15 @@ export const list: AppRouteHandler<ListRoute> = async (c) => {
                 key.currentQuarter
               );
 
-              const quarterSequence = buildQuarterSequence(key.currentQuarter);
+              // Determine if we have cross-fiscal-year rollover (Q1 with Q4 from previous year)
+              const hasCrossFiscalYearPrevious = key.currentQuarter === "Q1" && previousExecution !== null;
+              const quarterSequence = buildQuarterSequence(key.currentQuarter, hasCrossFiscalYearPrevious);
+              
+              // For Q1, the previous quarter is Q4 from the previous fiscal year
+              const previousQuarterLabel = key.currentQuarter === "Q1" && previousExecution ? "Q4" : quarterSequence.previous;
               const previousQuarterBalances = buildPreviousQuarterBalances(
                 previousExecution,
-                quarterSequence.previous
+                previousQuarterLabel
               );
 
               return {
@@ -1393,14 +1407,23 @@ export const create: AppRouteHandler<CreateRoute> = async (c) => {
           quarter as Quarter
         );
 
+        // Determine if we have cross-fiscal-year rollover (Q1 with Q4 from previous year)
+        const hasCrossFiscalYearPrevious = quarter === "Q1" && previousExecution !== null;
+
         // Build quarter sequence metadata
-        quarterSequence = buildQuarterSequence(quarter as Quarter);
+        quarterSequence = buildQuarterSequence(quarter as Quarter, hasCrossFiscalYearPrevious);
 
         // Build previous quarter balances
+        // For Q1, the previous quarter is Q4 from the previous fiscal year
+        const previousQuarterLabel = quarter === "Q1" && previousExecution ? "Q4" : quarterSequence.previous;
         previousQuarterBalances = buildPreviousQuarterBalances(
           previousExecution,
-          quarterSequence.previous
+          previousQuarterLabel
         );
+        
+        if (quarter === "Q1" && previousExecution) {
+          console.log(`[Cross-Fiscal-Year Rollover] New Q1 execution created with Q4 closing balances from previous fiscal year`);
+        }
       } catch (error) {
         // Log error but don't fail the request
         console.error('Error fetching previous quarter data for create response:', error);
@@ -1796,13 +1819,18 @@ export const update: AppRouteHandler<UpdateRoute> = async (c) => {
           updatedQuarter as Quarter
         );
 
+        // Determine if we have cross-fiscal-year rollover (Q1 with Q4 from previous year)
+        const hasCrossFiscalYearPrevious = updatedQuarter === "Q1" && previousExecution !== null;
+
         // Build quarter sequence metadata
-        quarterSequence = buildQuarterSequence(updatedQuarter as Quarter);
+        quarterSequence = buildQuarterSequence(updatedQuarter as Quarter, hasCrossFiscalYearPrevious);
 
         // Build previous quarter balances
+        // For Q1, the previous quarter is Q4 from the previous fiscal year
+        const previousQuarterLabel = updatedQuarter === "Q1" && previousExecution ? "Q4" : quarterSequence.previous;
         previousQuarterBalances = buildPreviousQuarterBalances(
           previousExecution,
-          quarterSequence.previous
+          previousQuarterLabel
         );
       } catch (error) {
         // Log error but don't fail the request

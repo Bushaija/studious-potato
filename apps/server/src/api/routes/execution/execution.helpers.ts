@@ -73,57 +73,43 @@ function getLatestQuarterValue(
 
 /**
  * Determines if a Section G activity is a flow item (cumulative sum) or stock item (latest quarter)
+ * 
+ * Section G cumulative balance calculation:
+ * - Accumulated Surplus/Deficit: STOCK - same value for all quarters (use Q1 value)
+ * - Prior Year Adjustments (G-01): FLOW - sum of Q1+Q2+Q3+Q4
+ * - Surplus/Deficit of Period: FLOW - sum of Q1+Q2+Q3+Q4 (computed as A - B)
+ * - G. Closing Balance: Sum of children's cumulative balances
+ * 
  * @param code - Activity code
  * @param name - Activity name/label (optional)
- * @returns true if flow item, false if stock item
+ * @returns true if flow item (cumulative sum), false if stock item (same value for all quarters)
  */
 function isSectionGFlowItem(code: string, name?: string): boolean {
   const codeLower = code.toLowerCase();
   const nameLower = (name || '').toLowerCase();
 
-  // Special case: "Accumulated" + "Surplus/Deficit" = Stock (running balance)
-  // This is a balance sheet item showing cumulative position, not a flow
+  // Special case: "Accumulated" + "Surplus/Deficit" = Stock (same value for all quarters)
+  // This is NOT a flow item - it stays the same across all quarters of the fiscal year
+  // The cumulative balance should be the Q1 value (which is the same for all quarters)
   if ((nameLower.includes('accumulated') || codeLower.includes('accumulated')) &&
     (nameLower.includes('surplus') || nameLower.includes('deficit'))) {
-    return false; // Stock item
+    return false; // Stock item - use Q1 value (same for all quarters)
   }
 
-  // Special case: "Prior Year" = Stock (opening balance)
-  if (nameLower.includes('prior') || nameLower.includes('opening')) {
-    return false; // Stock item
+  // Prior Year Adjustments (G-01 subcategory) are FLOW items
+  // They accumulate across quarters
+  if (codeLower.includes('g-01') || codeLower.includes('_g_g-01_')) {
+    return true; // Flow item - sum of Q1+Q2+Q3+Q4
   }
 
-  // Flow indicators: "of the period", "current", revenue, expense items
-  const flowKeywords = [
-    'period', 'current', 'revenue',
-    'expense', 'income', 'expenditure', 'receipt', 'flow'
-  ];
-
-  // Stock indicators: balance, closing, asset, liability, position
-  const stockKeywords = [
-    'balance', 'closing', 'asset', 'liability', 'position', 'stock'
-  ];
-
-  // Check code and name for flow keywords
-  const hasFlowKeyword = flowKeywords.some(keyword =>
-    codeLower.includes(keyword) || nameLower.includes(keyword)
-  );
-
-  // Check code and name for stock keywords
-  const hasStockKeyword = stockKeywords.some(keyword =>
-    codeLower.includes(keyword) || nameLower.includes(keyword)
-  );
-
-  // If both or neither found, default to flow (cumulative sum)
-  // This aligns with the requirement that most G items are flows
-  if (hasFlowKeyword && !hasStockKeyword) {
-    return true;
-  } else if (hasStockKeyword && !hasFlowKeyword) {
-    return false;
-  } else {
-    // Default to flow (cumulative sum) for Section G
-    return true;
+  // Surplus/Deficit of the Period is a FLOW item
+  // It's computed as A - B and accumulates across quarters
+  if (nameLower.includes('surplus') && nameLower.includes('period')) {
+    return true; // Flow item - sum of Q1+Q2+Q3+Q4
   }
+
+  // Default: treat as flow item (cumulative sum)
+  return true;
 }
 
 /**
@@ -177,7 +163,22 @@ export function calculateCumulativeBalance(
 
   // --- SECTION G (Mixed logic) ---
   if (effectiveSection === 'G') {
-    // Some Section G activities behave like flow, others like stock.
+    const nameLower = (name || '').toLowerCase();
+    const codeLower = (code || '').toLowerCase();
+    
+    // Special case: "Accumulated Surplus/Deficit" - use Q1 value (same for all quarters)
+    // This is NOT a flow item and NOT a typical stock item
+    // It stays the same across all quarters of the fiscal year
+    const isAccumulatedSurplus = 
+      (nameLower.includes('accumulated') || codeLower.includes('accumulated')) &&
+      (nameLower.includes('surplus') || nameLower.includes('deficit'));
+    
+    if (isAccumulatedSurplus) {
+      // Use Q1 value as cumulative (it's the same for all quarters)
+      return q1 ?? 0;
+    }
+    
+    // For other Section G items, use flow/stock detection
     const isFlowItem = isSectionGFlowItem(code || '', name || '');
 
     if (isFlowItem) {
@@ -349,19 +350,58 @@ export function toBalances(rollups: { bySection: any; bySubSection: any }) {
     cumulativeBalance: A.total - B.total, // Use rollup totals instead of manual sum
   };
 
-  const financialAssets = { q1: D.q1, q2: D.q2, q3: D.q3, q4: D.q4, cumulativeBalance: D.total };
-  const financialLiabilities = { q1: E.q1, q2: E.q2, q3: E.q3, q4: E.q4, cumulativeBalance: E.total };
-  // CRITICAL: Use D.total and E.total for stock sections (latest quarter values)
-  // D, E, and F are balance sheet items (stock), not income statement items (flow)
-  // D.total and E.total already contain the correct latest quarter values from rollup calculation
-  // F = D - E inherits stock behavior: F.cumulative = D.latest - E.latest
+  // CRITICAL FIX: For stock sections (D, E, F), cumulative = latest quarter's section total
+  // NOT the sum of individual activities' cumulative balances
+  // This matches the client-side calculation
+  function getLatestQuarterTotal(sec: { q1: number; q2: number; q3: number; q4: number }): number {
+    // Check quarters in reverse order (Q4 -> Q3 -> Q2 -> Q1)
+    // Use the latest quarter that has data
+    if (sec.q4 !== 0) return sec.q4;
+    if (sec.q3 !== 0) return sec.q3;
+    if (sec.q2 !== 0) return sec.q2;
+    return sec.q1;
+  }
+
+  const financialAssets = { 
+    q1: D.q1, q2: D.q2, q3: D.q3, q4: D.q4, 
+    cumulativeBalance: getLatestQuarterTotal(D) 
+  };
+  const financialLiabilities = { 
+    q1: E.q1, q2: E.q2, q3: E.q3, q4: E.q4, 
+    cumulativeBalance: getLatestQuarterTotal(E) 
+  };
+  
+  // F = D - E for each quarter
+  const fQ1 = D.q1 - E.q1;
+  const fQ2 = D.q2 - E.q2;
+  const fQ3 = D.q3 - E.q3;
+  const fQ4 = D.q4 - E.q4;
+  
+  // F cumulative = latest quarter's F value (stock section behavior)
+  // Check in reverse order (Q4 -> Q3 -> Q2 -> Q1) for the latest reported quarter
+  let fCumulative: number;
+  if (fQ4 !== 0 || (D.q4 !== 0 || E.q4 !== 0)) {
+    fCumulative = fQ4;
+  } else if (fQ3 !== 0 || (D.q3 !== 0 || E.q3 !== 0)) {
+    fCumulative = fQ3;
+  } else if (fQ2 !== 0 || (D.q2 !== 0 || E.q2 !== 0)) {
+    fCumulative = fQ2;
+  } else {
+    fCumulative = fQ1;
+  }
+  
   const netFinancialAssets = {
-    q1: D.q1 - E.q1, q2: D.q2 - E.q2, q3: D.q3 - E.q3, q4: D.q4 - E.q4,
-    cumulativeBalance: D.total - E.total, // Stock logic: latest quarter difference
+    q1: fQ1, q2: fQ2, q3: fQ3, q4: fQ4,
+    cumulativeBalance: fCumulative,
   };
 
   // Closing balance G = (Accumulated + Prior) + Surplus/Deficit of the Period
-  // Many forms store Accumulated and Prior under section G, while Surplus of Period is A-B (our 'surplus').
+  // G.total = sum of G activities' cumulative balances:
+  //   - Accumulated Surplus/Deficit: Q1 value (same for all quarters)
+  //   - Prior Year Adjustments: Q1+Q2+Q3+Q4 (flow)
+  // surplus.cumulativeBalance = A.total - B.total (Surplus/Deficit of Period)
+  // closingBalance.cumulativeBalance = G.total + surplus.cumulativeBalance
+  
   // DEBUG: Log G section details
   console.log('[toBalances] DEBUG: Section G breakdown:', {
     G_q1: G.q1,
@@ -373,16 +413,36 @@ export function toBalances(rollups: { bySection: any; bySubSection: any }) {
     surplus_q2: surplus.q2,
     surplus_q3: surplus.q3,
     surplus_q4: surplus.q4,
-    surplus_cumulative: surplus.cumulativeBalance
+    surplus_cumulative: surplus.cumulativeBalance,
+    A_total: A.total,
+    B_total: B.total
   });
   
+  // Calculate G quarterly totals (G activities + Surplus/Deficit of Period)
+  const gQ1 = (G.q1 || 0) + surplus.q1;
+  const gQ2 = (G.q2 || 0) + surplus.q2;
+  const gQ3 = (G.q3 || 0) + surplus.q3;
+  const gQ4 = (G.q4 || 0) + surplus.q4;
+  
+  // G cumulative = sum of children's cumulative balances
+  // This matches the client-side calculation
+  const gCumulative = (G.total || 0) + surplus.cumulativeBalance;
+  
   const closingBalance = {
-    q1: (G.q1 || 0) + surplus.q1,
-    q2: (G.q2 || 0) + surplus.q2,
-    q3: (G.q3 || 0) + surplus.q3,
-    q4: (G.q4 || 0) + surplus.q4,
-    cumulativeBalance: (G.total || 0) + surplus.cumulativeBalance,
+    q1: gQ1,
+    q2: gQ2,
+    q3: gQ3,
+    q4: gQ4,
+    cumulativeBalance: gCumulative,
   };
+  
+  console.log('[toBalances] DEBUG: Final G calculation:', {
+    G_total: G.total,
+    surplus_cumulative: surplus.cumulativeBalance,
+    G_cumulative: gCumulative,
+    F_cumulative: fCumulative,
+    difference: Math.abs(fCumulative - gCumulative)
+  });
 
   // CRITICAL: Always calculate isBalanced - validation should ALWAYS run
   // Even if sections have no data (default to zeros), we can still validate F = G

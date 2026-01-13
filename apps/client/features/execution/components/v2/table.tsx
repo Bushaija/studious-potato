@@ -161,7 +161,11 @@ function isPriorYearAdjustmentSubcategory(subcategoryId: string): boolean {
 
 // Helper function to check if an activity is Section D "Other Receivables" (auto-calculated from Section X)
 function isOtherReceivablesField(activityId: string): boolean {
-  return activityId.includes('_D_4');
+  // Other Receivables can be identified by:
+  // 1. Activity code containing '_D_D-01_5' (subcategory D-01, display order 5)
+  // 2. Activity code containing '_D_4' (legacy format)
+  // 3. Activity name containing 'other receivable' (checked elsewhere)
+  return activityId.includes('_D_D-01_5') || activityId.includes('_D_4');
 }
 
 // Helper function to render expense input cell (VAT or regular)
@@ -717,6 +721,20 @@ function SectionDRenderer({ section, ctx, projectType, facilityType, quarter, ac
                                   </Tooltip>
                                 </TooltipProvider>
                               )}
+                              {/* Other Receivable Clearance Control - uses same VATClearanceControl component */}
+                              {isOtherReceivables && isCurrentQuarter && (value ?? 0) > 0 && (
+                                <VATClearanceControl
+                                  vatCategory={'other_receivables' as any}
+                                  categoryLabel="Other Receivables"
+                                  receivableBalance={value ?? 0}
+                                  clearedAmount={Number(ctx.formData[item.id]?.otherReceivableCleared?.[key]) || 0}
+                                  onClearVAT={(amount) => {
+                                    ctx.clearOtherReceivable(item.id, amount);
+                                  }}
+                                  disabled={false}
+                                  readOnly={false}
+                                />
+                              )}
                             </div>
                           ) : (
                             <div className="flex flex-col items-center gap-1">
@@ -943,6 +961,14 @@ function SectionDRenderer({ section, ctx, projectType, facilityType, quarter, ac
                         });
                       }
 
+                      // Check if this is an Other Receivables item (not VAT)
+                      const isOtherReceivablesItem = isOtherReceivablesField(item.id);
+                      
+                      // Get cleared amount for Other Receivables
+                      const otherReceivableTotalCleared = isOtherReceivablesItem 
+                        ? (Number(ctx.formData[item.id]?.otherReceivableCleared?.[key]) || 0)
+                        : 0;
+
                       return (
                         <TableCell key={`${item.id}-${q}`} className="text-center">
                           {ctx.isQuarterVisible(q as any) ? (
@@ -959,7 +985,7 @@ function SectionDRenderer({ section, ctx, projectType, facilityType, quarter, ac
                                           <Calculator className="h-3 w-3 text-blue-500 cursor-help" />
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          <p className="text-xs">Auto-calculated from VAT-applicable expenses in Section B</p>
+                                          <p className="text-xs">{isOtherReceivablesItem ? 'Auto-calculated from Miscellaneous Adjustments (Section X)' : 'Auto-calculated from VAT-applicable expenses in Section B'}</p>
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
@@ -973,6 +999,20 @@ function SectionDRenderer({ section, ctx, projectType, facilityType, quarter, ac
                                       clearedAmount={totalCleared}
                                       onClearVAT={(amount) => {
                                         ctx.clearVAT(expenseCode, amount);
+                                      }}
+                                      disabled={false}
+                                      readOnly={false}
+                                    />
+                                  )}
+                                  {/* Other Receivable Clearance Control - uses same VATClearanceControl component */}
+                                  {isCurrentQuarter && isOtherReceivablesItem && value > 0 && (
+                                    <VATClearanceControl
+                                      vatCategory={'other_receivables' as any}
+                                      categoryLabel="Other Receivables"
+                                      receivableBalance={value}
+                                      clearedAmount={otherReceivableTotalCleared}
+                                      onClearVAT={(amount) => {
+                                        ctx.clearOtherReceivable(item.id, amount);
                                       }}
                                       disabled={false}
                                       readOnly={false}
@@ -1478,7 +1518,15 @@ function SectionGRenderer({ section, ctx, projectType, facilityType, quarter, ac
 
   // Separate regular items from subcategories
   const regularItems = React.useMemo(() => {
-    return section.children?.filter((item: any) => !item.isSubcategory) || [];
+    const items = section.children?.filter((item: any) => !item.isSubcategory) || [];
+    console.log('🔍 [SectionGRenderer] regularItems:', {
+      sectionId: section.id,
+      childrenCount: section.children?.length,
+      regularItemsCount: items.length,
+      regularItemIds: items.map((i: any) => i.id),
+      regularItemTitles: items.map((i: any) => i.title)
+    });
+    return items;
   }, [section.children]);
 
   const subcategories = React.useMemo(() => {

@@ -40,6 +40,9 @@ interface ExecutionFormContextValue {
   /** Clear (pay) a portion of payable (liability) */
   clearPayable: (payableCode: string, clearAmount: number) => void;
   
+  /** Clear (collect) a portion of other receivable */
+  clearOtherReceivable: (receivableCode: string, clearAmount: number) => void;
+  
   /** Apply prior year adjustment for payable or receivable */
   applyPriorYearAdjustment: (priorYearAdjustmentCode: string, targetItemCode: string, adjustmentType: 'increase' | 'decrease', amount: number) => void;
   

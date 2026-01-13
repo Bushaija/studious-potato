@@ -12,7 +12,7 @@ import { useTempSaveStore, generateSaveId } from "@/features/execution/stores/te
 import { useExecutionSubmissionHandler } from "@/hooks/use-execution-submission-handler";
 import useCheckExistingExecution from "@/hooks/queries/executions/use-check-existing-execution";
 import { toast } from "sonner";
-import { useGetCurrentReportingPeriod } from "@/hooks/queries";
+import { useGetCurrentReportingPeriod, useGetReportingPeriodsByYear } from "@/hooks/queries";
 import { useExpenseCalculations } from "@/features/execution/hooks/use-expense-calculations";
 import { getVATReceivableCode } from "@/features/execution/utils/vat-to-section-d-mapping";
 import { type VATApplicableCategory } from "@/features/execution/utils/vat-applicable-expenses";
@@ -72,6 +72,36 @@ export function EnhancedExecutionFormAutoLoad({
     ? (reportingPeriodIdProp ?? (currentReportingPeriod?.id ?? 0))
     : (reportingPeriodIdProp ?? (Number(searchParams?.get("reportingPeriodId") || currentReportingPeriod?.id || 0) || 0));
 
+  // For Q1, we need to fetch the previous fiscal year's reporting period for cross-fiscal-year rollover
+  const currentFiscalYear = currentReportingPeriod?.year;
+  const previousFiscalYear = currentFiscalYear ? currentFiscalYear - 1 : undefined;
+  
+  // Fetch previous fiscal year's reporting period (only needed for Q1)
+  const previousFiscalYearPeriodQuery = useGetReportingPeriodsByYear({
+    year: quarter === "Q1" && effectiveMode === "create" ? previousFiscalYear : undefined,
+  });
+  
+  // Get the previous fiscal year's reporting period ID
+  const previousFiscalYearReportingPeriodId = useMemo(() => {
+    if (quarter !== "Q1" || !previousFiscalYearPeriodQuery.data?.length) {
+      return undefined;
+    }
+    // Filter by periodType if available, otherwise get the first one
+    const matchingPeriod = currentReportingPeriod?.periodType
+      ? previousFiscalYearPeriodQuery.data.find((p: any) => p.periodType === currentReportingPeriod.periodType)
+      : previousFiscalYearPeriodQuery.data[0];
+    return matchingPeriod?.id;
+  }, [quarter, previousFiscalYearPeriodQuery.data, currentReportingPeriod?.periodType]);
+
+  console.log('🔄 [Cross-Fiscal-Year Rollover] Config:', {
+    quarter,
+    currentFiscalYear,
+    previousFiscalYear,
+    previousFiscalYearReportingPeriodId,
+    currentReportingPeriodId: reportingPeriodId,
+    previousFiscalYearPeriods: previousFiscalYearPeriodQuery.data
+  });
+
   // Fetch previous quarter execution data for balance rollover
   const previousQuarterQuery = useGetPreviousQuarterExecution({
     projectId,
@@ -79,6 +109,7 @@ export function EnhancedExecutionFormAutoLoad({
     reportingPeriodId,
     currentQuarter: quarter,
     enabled: effectiveMode === "create" && Boolean(projectId && facilityId && reportingPeriodId),
+    previousFiscalYearReportingPeriodId, // Pass for Q1 cross-fiscal-year rollover
   });
 
   // Prepare initial data with previous quarter balances
@@ -631,6 +662,166 @@ export function EnhancedExecutionFormAutoLoad({
   }, [otherReceivableAmount, otherReceivableCode, cashAtBank, payables, vatReceivables, form.activities, projectType, facilityType, quarter, effectiveMode, previousQuarterBalances]);
   // ===== END PAYMENT TRACKING LOGIC =====
 
+  // ===== ACCUMULATED SURPLUS/DEFICIT INITIALIZATION =====
+  // For Q1: Initialize from previous fiscal year's G. Closing Balance (cross-fiscal-year rollover)
+  // For Q2, Q3, Q4: Inherit from Q1 of the same fiscal year (same value across all quarters)
+  // This value remains constant across all 4 quarters of the fiscal year
+  const accumulatedSurplusInitializedRef = useRef(false);
+  
+  useEffect(() => {
+    // Skip if not in create mode
+    if (effectiveMode !== 'create') {
+      console.log('🔄 [Accumulated Surplus Init] Skipping: not in create mode');
+      return;
+    }
+    
+    // Skip if already initialized
+    if (accumulatedSurplusInitializedRef.current) {
+      console.log('🔄 [Accumulated Surplus Init] Skipping: already initialized');
+      return;
+    }
+    
+    // Wait for activities to be loaded
+    if (!(form.activities as any)?.G) {
+      console.log('🔄 [Accumulated Surplus Init] Waiting for Section G activities to load');
+      return;
+    }
+    
+    // Wait for previous quarter data to be loaded (for Q1 cross-fiscal-year rollover)
+    if (quarter === 'Q1' && !previousQuarterBalances) {
+      console.log('🔄 [Accumulated Surplus Init] Q1: Waiting for previous quarter data to load');
+      return;
+    }
+    
+    // Debug: Log form.activities structure
+    console.log('🔄 [Accumulated Surplus Init] form.activities:', {
+      hasActivities: !!form.activities,
+      activitiesType: typeof form.activities,
+      activitiesKeys: form.activities ? Object.keys(form.activities as any) : [],
+      hasG: !!(form.activities as any)?.G,
+      gItems: (form.activities as any)?.G?.items?.length,
+      gItemNames: (form.activities as any)?.G?.items?.map((i: any) => i.name)
+    });
+    
+    // Find the Accumulated Surplus/Deficit activity code
+    const projectPrefix = projectType.toUpperCase();
+    const facilityPrefix = facilityType === 'health_center' ? 'HEALTH_CENTER' : 'HOSPITAL';
+    
+    const sectionG = (form.activities as any).G;
+    const accumulatedSurplusActivity = sectionG?.items?.find((item: any) =>
+      item.name?.toLowerCase().includes('accumulated') && 
+      (item.name?.toLowerCase().includes('surplus') || item.name?.toLowerCase().includes('deficit'))
+    );
+    
+    const accumulatedSurplusCode = accumulatedSurplusActivity?.code || `${projectPrefix}_EXEC_${facilityPrefix}_G_1`;
+    const quarterKey = quarter.toLowerCase() as 'q1' | 'q2' | 'q3' | 'q4';
+    
+    // Check if we have previous quarter data
+    const isCrossFiscalYearRollover = quarterSequence?.isCrossFiscalYearRollover;
+    const closingBalanceTotal = previousQuarterBalances?.closingBalances?.closingBalanceTotal;
+    
+    console.log('🔄 [Accumulated Surplus Init] Checking:', {
+      quarter,
+      quarterKey,
+      accumulatedSurplusCode,
+      accumulatedSurplusActivityFound: !!accumulatedSurplusActivity,
+      accumulatedSurplusActivityName: accumulatedSurplusActivity?.name,
+      isCrossFiscalYearRollover,
+      closingBalanceTotal,
+      previousQuarterExists: previousQuarterBalances?.exists,
+      previousQuarter: previousQuarterBalances?.quarter,
+      previousSectionG: previousQuarterBalances?.closingBalances?.G,
+      formDataHasCode: !!form.formData[accumulatedSurplusCode]
+    });
+    
+    let targetValue: number | undefined;
+    
+    if (quarter === 'Q1') {
+      // For Q1: Use previous fiscal year's G. Closing Balance (cross-fiscal-year rollover)
+      if (previousQuarterBalances?.exists && closingBalanceTotal !== undefined && closingBalanceTotal !== null) {
+        targetValue = closingBalanceTotal;
+        console.log('🔄 [Accumulated Surplus Init] Q1: Using cross-fiscal-year closing balance:', targetValue);
+      } else if (previousQuarterBalances?.exists && previousQuarterBalances.closingBalances?.G) {
+        // Fallback: Try to get the Accumulated Surplus/Deficit from previous Q4
+        // This handles the case where the closing balance total wasn't calculated
+        const previousAccumulatedSurplus = previousQuarterBalances.closingBalances.G[accumulatedSurplusCode];
+        if (previousAccumulatedSurplus !== undefined && previousAccumulatedSurplus !== null) {
+          targetValue = previousAccumulatedSurplus;
+          console.log('🔄 [Accumulated Surplus Init] Q1: Using previous Q4 Accumulated Surplus:', targetValue);
+        } else {
+          console.log('🔄 [Accumulated Surplus Init] Q1: No cross-fiscal-year data available');
+          return;
+        }
+      } else {
+        console.log('🔄 [Accumulated Surplus Init] Q1: No previous quarter data available');
+        return;
+      }
+    } else {
+      // For Q2, Q3, Q4: Inherit from previous quarter's Accumulated Surplus/Deficit
+      // The Accumulated Surplus should be the SAME across all quarters of the fiscal year
+      if (previousQuarterBalances?.exists && previousQuarterBalances.closingBalances?.G) {
+        // Look for the Accumulated Surplus/Deficit value from previous quarter
+        const previousAccumulatedSurplus = previousQuarterBalances.closingBalances.G[accumulatedSurplusCode];
+        
+        if (previousAccumulatedSurplus !== undefined && previousAccumulatedSurplus !== null) {
+          targetValue = previousAccumulatedSurplus;
+          console.log('🔄 [Accumulated Surplus Init] Q2/Q3/Q4: Using previous quarter value:', targetValue);
+        } else {
+          console.log('🔄 [Accumulated Surplus Init] Q2/Q3/Q4: No previous quarter Accumulated Surplus found');
+          return;
+        }
+      } else {
+        console.log('🔄 [Accumulated Surplus Init] Q2/Q3/Q4: No previous quarter data');
+        return;
+      }
+    }
+    
+    if (targetValue === undefined) {
+      return;
+    }
+    
+    console.log('🔄 [Accumulated Surplus Init] Found activity:', {
+      accumulatedSurplusCode,
+      activityName: accumulatedSurplusActivity?.name,
+      targetValue
+    });
+    
+    // Check if the value is already set for the current quarter
+    const currentValue = form.formData[accumulatedSurplusCode]?.[quarterKey];
+    
+    if (currentValue === undefined || currentValue === 0 || currentValue === null) {
+      console.log('🔄 [Accumulated Surplus Init] Setting Accumulated Surplus/Deficit for ALL quarters:', {
+        code: accumulatedSurplusCode,
+        value: targetValue,
+        previousValue: currentValue
+      });
+      
+      // Set the Accumulated Surplus/Deficit for ALL quarters (Q1, Q2, Q3, Q4)
+      // This value stays the SAME across all quarters of the fiscal year
+      // We need to update formData directly since onFieldChange only sets the current quarter
+      const existingData = form.formData[accumulatedSurplusCode] || {};
+      const updatedData = {
+        ...existingData,
+        q1: targetValue,
+        q2: targetValue,
+        q3: targetValue,
+        q4: targetValue,
+      };
+      
+      // Use setFormData to update all quarters at once
+      form.setFormData((prev: Record<string, any>) => ({
+        ...prev,
+        [accumulatedSurplusCode]: updatedData
+      }));
+      
+      accumulatedSurplusInitializedRef.current = true;
+    } else {
+      console.log('🔄 [Accumulated Surplus Init] Value already set:', currentValue);
+      accumulatedSurplusInitializedRef.current = true;
+    }
+  }, [quarter, effectiveMode, form.activities, form.formData, previousQuarterBalances, quarterSequence, projectType, facilityType, form.setFormData]);
+  // ===== END ACCUMULATED SURPLUS/DEFICIT INITIALIZATION =====
+
   // Initialize the smart submission handler
   const { handleSubmission, isSubmitting, error } = useExecutionSubmissionHandler({
     projectType,
@@ -932,6 +1123,7 @@ export function EnhancedExecutionFormAutoLoad({
       updateVATExpense: isReadOnly ? () => { } : form.updateVATExpense,
       clearVAT: isReadOnly ? () => { } : form.clearVAT,
       clearPayable: isReadOnly ? () => { } : form.clearPayable,
+      clearOtherReceivable: isReadOnly ? () => { } : form.clearOtherReceivable,
       applyPriorYearAdjustment: isReadOnly ? () => { } : form.applyPriorYearAdjustment,
       applyPriorYearCashAdjustment: isReadOnly ? () => { } : form.applyPriorYearCashAdjustment,
       validationErrors: form.validationErrors,

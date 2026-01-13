@@ -1,12 +1,16 @@
 import type { Quarter, ExecutionRecord } from "./quarter-helpers";
 
 /**
- * Closing balances for Section D (Financial Assets), Section E (Financial Liabilities), and VAT Receivables
+ * Closing balances for Section D (Financial Assets), Section E (Financial Liabilities), 
+ * Section G (Closing Balance/Accumulated Surplus), and VAT Receivables
  */
 export interface ClosingBalances {
   D: Record<string, number>; // Activity code -> closing balance
   E: Record<string, number>; // Activity code -> closing balance
+  G: Record<string, number>; // Activity code -> closing balance (for accumulated surplus rollover)
   VAT: Record<string, number>; // VAT category -> net receivable balance
+  /** G. Closing Balance total from previous fiscal year (used as Accumulated Surplus for new year) */
+  closingBalanceTotal?: number;
 }
 
 /**
@@ -63,7 +67,7 @@ export function extractClosingBalances(
   executionData: ExecutionRecord,
   quarter: Quarter
 ): ClosingBalances {
-  const closingBalances: ClosingBalances = { D: {}, E: {}, VAT: {} };
+  const closingBalances: ClosingBalances = { D: {}, E: {}, G: {}, VAT: {} };
   
   try {
     // Access activities from formData
@@ -111,6 +115,61 @@ export function extractClosingBalances(
         }
       }
     });
+    
+    // Extract Section G (Closing Balance / Equity) closing balances
+    // This is important for cross-fiscal-year rollover where G. Closing Balance becomes Accumulated Surplus
+    let closingBalanceTotal = 0;
+    Object.entries(activities).forEach(([code, activityData]) => {
+      if (code.includes("_G_")) {
+        const quarterlyValues = activityData as QuarterlyValues;
+        const quarterKey = quarter.toLowerCase();
+        const closingBalance = (quarterlyValues as any)?.[quarterKey] || 0;
+        
+        closingBalances.G[code] = closingBalance;
+        
+        // Check if this is the G. Closing Balance total row (ends with _G_5)
+        // Activity code pattern: {PROJECT}_EXEC_{FACILITY}_G_5
+        // Note: _G_4 is "Surplus/Deficit of the Period", not the closing balance total
+        if (code.includes("_G_5")) {
+          closingBalanceTotal = closingBalance;
+        }
+      }
+    });
+    
+    // If we didn't find the closing balance total from _G_5, calculate it from components
+    // G. Closing Balance = Accumulated Surplus/Deficit + Prior Year Adjustments + Surplus/Deficit of Period
+    if (closingBalanceTotal === 0 && Object.keys(closingBalances.G).length > 0) {
+      let accumulatedSurplus = 0;
+      let priorYearAdjustments = 0;
+      let surplusDeficitPeriod = 0;
+      
+      Object.entries(closingBalances.G).forEach(([code, value]) => {
+        // Accumulated Surplus/Deficit is _G_1 (direct item, not in G-01 subcategory)
+        if (code.includes('_G_1') && !code.includes('G-01')) {
+          accumulatedSurplus = value;
+        }
+        // Prior Year Adjustments are in G-01 subcategory (_G_G-01_1, _G_G-01_2, _G_G-01_3)
+        else if (code.includes('_G_G-01_')) {
+          priorYearAdjustments += value;
+        }
+        // Surplus/Deficit of Period is _G_4 (direct item, not in G-01 subcategory)
+        else if (code.includes('_G_4') && !code.includes('G-01')) {
+          surplusDeficitPeriod = value;
+        }
+      });
+      
+      closingBalanceTotal = accumulatedSurplus + priorYearAdjustments + surplusDeficitPeriod;
+      
+      console.log('[BalanceExtractor] Calculated G. Closing Balance total:', {
+        accumulatedSurplus,
+        priorYearAdjustments,
+        surplusDeficitPeriod,
+        closingBalanceTotal
+      });
+    }
+    
+    // Store the closing balance total for easy access
+    closingBalances.closingBalanceTotal = closingBalanceTotal;
 
     // Extract VAT receivables closing balances
     // VAT receivables are stored in the execution data as net receivable amounts
@@ -140,16 +199,19 @@ export function extractClosingBalances(
       quarter,
       sectionDCount: Object.keys(closingBalances.D).length,
       sectionECount: Object.keys(closingBalances.E).length,
+      sectionGCount: Object.keys(closingBalances.G).length,
       vatCount: Object.keys(closingBalances.VAT).length,
+      closingBalanceTotal: closingBalances.closingBalanceTotal,
       sectionDBalances: closingBalances.D,
       sectionEBalances: closingBalances.E,
+      sectionGBalances: closingBalances.G,
       vatBalances: closingBalances.VAT,
     });
     
     return closingBalances;
   } catch (error) {
     console.error("Error extracting closing balances:", error);
-    return { D: {}, E: {}, VAT: {} };
+    return { D: {}, E: {}, G: {}, VAT: {} };
   }
 }
 
