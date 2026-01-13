@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
-import { Download, FileText, Send, Loader2, Filter } from "lucide-react";
+import { Download, FileText, Send, Loader2, ChevronDown } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import type { Table } from "@tanstack/react-table";
@@ -13,6 +13,7 @@ import { useUser } from "@/components/providers/session-provider";
 import { useApprovalErrorHandler } from "@/hooks/use-approval-error-handler";
 import { submitForApproval } from "@/api-client/planning-approval";
 import { useGetDistricts } from "@/hooks/queries/districts/use-get-districts";
+import { useDownloadTemplate } from "@/hooks/queries/planning/use-download-template";
 import {
   Select,
   SelectContent,
@@ -21,11 +22,41 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 const FacilityFilterDialog = dynamic(
   () => import("@/features/shared/facility-filter-dialog2").then((mod) => ({ default: mod.FacilityFilterDialog })),
   { ssr: false }
 );
+
+// Template definitions
+type TemplateOption = {
+  id: string;
+  label: string;
+  projectType: 'HIV' | 'Malaria' | 'TB';
+  facilityType: 'hospital' | 'health_center';
+  hospitalOnly?: boolean;
+};
+
+const TEMPLATE_OPTIONS: TemplateOption[] = [
+  { id: 'hiv-hospital', label: 'HIV (Hospital)', projectType: 'HIV', facilityType: 'hospital' },
+  { id: 'hiv-health-center', label: 'HIV (Health Center)', projectType: 'HIV', facilityType: 'health_center' },
+  { id: 'malaria-hospital', label: 'Malaria (Hospital)', projectType: 'Malaria', facilityType: 'hospital' },
+  { id: 'malaria-health-center', label: 'Malaria (Health Center)', projectType: 'Malaria', facilityType: 'health_center' },
+  { id: 'tb-hospital', label: 'TB', projectType: 'TB', facilityType: 'hospital', hospitalOnly: true },
+];
 
 interface PlanningTableToolbarActionsProps {
   table: Table<PlanningActivity>;
@@ -47,9 +78,11 @@ export function PlanningTableToolbarActions({
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = useUser();
+  const downloadMutation = useDownloadTemplate();
   const { handleError, handleSuccess } = useApprovalErrorHandler();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
   const { data: currentReportingPeriod } = useGetCurrentReportingPeriod();
   
   // Get current district filter from URL
@@ -82,10 +115,20 @@ export function PlanningTableToolbarActions({
     setDialogOpen(false);
   };
 
-  const handleExportAll = () => {
-    // TODO: Implement export all functionality
-    console.log("Export all planning activities");
+  const handleDownloadTemplate = (template: TemplateOption) => {
+    setTemplatesOpen(false);
+    
+    const filename = `planning_template_${template.projectType}_${template.facilityType}.xlsx`;
+    downloadMutation.mutate({
+      projectType: template.projectType,
+      facilityType: template.facilityType,
+      format: 'xlsx',
+      filename
+    });
   };
+
+  // All templates are available - TB note is shown in the label
+  const availableTemplates = TEMPLATE_OPTIONS;
 
   const handleGenerateReport = () => {
     // TODO: Implement report generation
@@ -201,17 +244,47 @@ export function PlanningTableToolbarActions({
         </Button>
       )}
 
-      {/* Export All button - Only visible to accountants */}
+      {/* Templates button with combobox - Only visible to accountants */}
       {user?.role === 'accountant' && (
-        <Button
-          onClick={handleExportAll}
-          variant="outline"
-          size="sm"
-          className="h-8"
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Export All
-        </Button>
+        <Popover open={templatesOpen} onOpenChange={setTemplatesOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              disabled={downloadMutation.isPending}
+            >
+              {downloadMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <FileText className="mr-2 h-4 w-4" />
+              )}
+              Templates
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[250px] p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search templates..." />
+              <CommandList>
+                <CommandEmpty>No template found.</CommandEmpty>
+                <CommandGroup heading="Planning Templates">
+                  {availableTemplates.map((template) => (
+                    <CommandItem
+                      key={template.id}
+                      value={template.label}
+                      onSelect={() => handleDownloadTemplate(template)}
+                      className="cursor-pointer"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      {template.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       )}
 
       {/* Generate Report button - Only visible to accountants */}
