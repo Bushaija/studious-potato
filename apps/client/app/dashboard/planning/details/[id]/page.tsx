@@ -81,10 +81,12 @@ export default function PlanningDetailsPage() {
   const isDaf = user?.role === "daf";
   const isAccountant = user?.role === "accountant";
   const isDraft = planning?.approvalStatus === "DRAFT";
+  const isPending = planning?.approvalStatus === "PENDING";
   const isRejected = planning?.approvalStatus === "REJECTED";
   
-  // Show edit button for: DRAFT (non-DAF users) or REJECTED (accountants only)
-  const canEdit = (isDraft && !isDaf) || (isRejected && isAccountant);
+  // Show edit button for: DRAFT (non-DAF users), PENDING (accountants only), or REJECTED (accountants only)
+  // APPROVED plans cannot be edited
+  const canEdit = (isDraft && !isDaf) || (isPending && isAccountant) || (isRejected && isAccountant);
 
   if (!planningId) {
     router.push("/dashboard/planning");

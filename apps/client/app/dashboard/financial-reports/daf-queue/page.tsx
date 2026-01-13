@@ -129,8 +129,8 @@ export default function DafApprovalQueuePage() {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <ClipboardCheck className="h-6 w-6 text-primary" />
-              <h1 className="text-2xl font-bold tracking-tight">DAF Approval Queue</h1>
+              {/* <ClipboardCheck className="h-6 w-6 text-primary" /> */}
+              <h1 className="text-xl font-bold tracking-tight">DAF Approval Queue</h1>
             </div>
             <p className="text-muted-foreground">
               Review and approve financial reports from your facility hierarchy

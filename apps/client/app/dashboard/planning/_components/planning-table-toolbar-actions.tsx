@@ -167,8 +167,8 @@ export function PlanningTableToolbarActions({
         </div>
       )}
       
-      {/* Hide New Plan button for DAF users */}
-      {user?.role !== 'daf' && (
+      {/* New Plan button - Only visible to accountants */}
+      {user?.role === 'accountant' && (
         <FacilityFilterDialog
           label="New Plan"
           mode="planning"
@@ -201,25 +201,31 @@ export function PlanningTableToolbarActions({
         </Button>
       )}
 
-      <Button
-        onClick={handleExportAll}
-        variant="outline"
-        size="sm"
-        className="h-8"
-      >
-        <Download className="mr-2 h-4 w-4" />
-        Export All
-      </Button>
+      {/* Export All button - Only visible to accountants */}
+      {user?.role === 'accountant' && (
+        <Button
+          onClick={handleExportAll}
+          variant="outline"
+          size="sm"
+          className="h-8"
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Export All
+        </Button>
+      )}
 
-      <Button
-        onClick={handleGenerateReport}
-        variant="outline"
-        size="sm"
-        className="h-8"
-      >
-        <FileText className="mr-2 h-4 w-4" />
-        Generate Report
-      </Button>
+      {/* Generate Report button - Only visible to accountants */}
+      {user?.role === 'accountant' && (
+        <Button
+          onClick={handleGenerateReport}
+          variant="outline"
+          size="sm"
+          className="h-8"
+        >
+          <FileText className="mr-2 h-4 w-4" />
+          Generate Report
+        </Button>
+      )}
     </div>
   );
 }
