@@ -95,22 +95,65 @@ export function EnhancedExecutionFormUpdated({
 
   function buildSubmissionActivities() {
     const entries = Object.entries(form.formData || {});
+    
+    // Helper function to find activity name from form.activities
+    // This is CRITICAL for server-side cumulative balance calculation
+    // The server uses the name to identify special activities like "Accumulated Surplus/Deficit"
+    const findActivityName = (code: string): string | undefined => {
+      if (!form.activities) return undefined;
+      
+      // Parse the section from the code (e.g., HIV_EXEC_HOSPITAL_G_1 -> G)
+      const parts = code.split('_');
+      const sectionIndex = parts.findIndex(p => p === 'EXEC') + 2; // Skip EXEC and facility type
+      // Handle HEALTH_CENTER (2 words) vs HOSPITAL (1 word)
+      const section = parts.find((p, i) => i >= sectionIndex && /^[A-GX]$/.test(p));
+      
+      if (!section) return undefined;
+      
+      const sectionData = (form.activities as any)[section];
+      if (!sectionData) return undefined;
+      
+      // Search in direct items
+      if (sectionData.items) {
+        const found = sectionData.items.find((item: any) => item.code === code);
+        if (found) return found.name;
+      }
+      
+      // Search in subcategories
+      if (sectionData.subCategories) {
+        for (const subCat of Object.values(sectionData.subCategories) as any[]) {
+          if (subCat.items) {
+            const found = subCat.items.find((item: any) => item.code === code);
+            if (found) return found.name;
+          }
+        }
+      }
+      
+      return undefined;
+    };
+    
     return entries
-      .map(([code, v]: any) => ({
-        code,
-        q1: Number(v?.q1) || 0,
-        q2: Number(v?.q2) || 0,
-        q3: Number(v?.q3) || 0,
-        q4: Number(v?.q4) || 0,
-        comment: typeof v?.comment === "string" ? v.comment : "",
-        // Include payment tracking data
-        paymentStatus: v?.paymentStatus || "unpaid",
-        amountPaid: Number(v?.amountPaid) || 0,
-        // Include VAT tracking data (if present)
-        ...(v?.netAmount && { netAmount: v.netAmount }),
-        ...(v?.vatAmount && { vatAmount: v.vatAmount }),
-        ...(v?.vatCleared && { vatCleared: v.vatCleared }),
-      }))
+      .map(([code, v]: any) => {
+        const name = findActivityName(code);
+        return {
+          code,
+          // CRITICAL: Include name for server-side cumulative balance calculation
+          // The server uses this to identify "Accumulated Surplus/Deficit" and other special activities
+          ...(name && { name }),
+          q1: Number(v?.q1) || 0,
+          q2: Number(v?.q2) || 0,
+          q3: Number(v?.q3) || 0,
+          q4: Number(v?.q4) || 0,
+          comment: typeof v?.comment === "string" ? v.comment : "",
+          // Include payment tracking data
+          paymentStatus: v?.paymentStatus || "unpaid",
+          amountPaid: Number(v?.amountPaid) || 0,
+          // Include VAT tracking data (if present)
+          ...(v?.netAmount && { netAmount: v.netAmount }),
+          ...(v?.vatAmount && { vatAmount: v.vatAmount }),
+          ...(v?.vatCleared && { vatCleared: v.vatCleared }),
+        };
+      })
       // Drop totals/computed placeholders if they carry no data
       .filter(a => (a.q1 + a.q2 + a.q3 + a.q4) !== 0 || (a.comment ?? "").trim().length > 0);
   }

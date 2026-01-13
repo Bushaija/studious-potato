@@ -175,17 +175,6 @@ export function EnhancedExecutionFormAutoLoad({
 
   }, [form.formData, quarter, projectType, facilityType]);
 
-  // Extract previousQuarterBalances and quarterSequence from the query
-  const previousQuarterBalances = useMemo<PreviousQuarterBalances | undefined>(() => {
-    const balances = initialData?.previousQuarterBalances || previousQuarterQuery.data?.previousQuarterBalances;
-    return balances;
-  }, [initialData, previousQuarterQuery.data]);
-
-  const quarterSequence = useMemo<QuarterSequence | undefined>(() => {
-    const sequence = initialData?.quarterSequence || previousQuarterQuery.data?.quarterSequence;
-    return sequence;
-  }, [initialData, previousQuarterQuery.data]);
-
   // Check for existing execution when we have the required IDs
   const shouldCheckForExisting = Boolean(
     projectId &&
@@ -208,6 +197,34 @@ export function EnhancedExecutionFormAutoLoad({
     }
   );
 
+  // Extract previousQuarterBalances and quarterSequence from the query or existing execution
+  // IMPORTANT: This must be after useCheckExistingExecution to avoid "used before declaration" error
+  const previousQuarterBalances = useMemo<PreviousQuarterBalances | undefined>(() => {
+    // Priority: initialData > existingExecution > previousQuarterQuery
+    const balances = initialData?.previousQuarterBalances 
+      || existingExecution?.previousQuarterBalances
+      || previousQuarterQuery.data?.previousQuarterBalances;
+    
+    console.log('🔄 [previousQuarterBalances] Source:', {
+      fromInitialData: !!initialData?.previousQuarterBalances,
+      fromExistingExecution: !!existingExecution?.previousQuarterBalances,
+      fromPreviousQuarterQuery: !!previousQuarterQuery.data?.previousQuarterBalances,
+      exists: balances?.exists,
+      hasClosingBalances: !!balances?.closingBalances,
+      sectionGKeys: balances?.closingBalances?.G ? Object.keys(balances.closingBalances.G) : []
+    });
+    
+    return balances;
+  }, [initialData, existingExecution?.previousQuarterBalances, previousQuarterQuery.data]);
+
+  const quarterSequence = useMemo<QuarterSequence | undefined>(() => {
+    // Priority: initialData > existingExecution > previousQuarterQuery
+    const sequence = initialData?.quarterSequence 
+      || existingExecution?.quarterSequence
+      || previousQuarterQuery.data?.quarterSequence;
+    return sequence;
+  }, [initialData, existingExecution?.quarterSequence, previousQuarterQuery.data]);
+
   // Auto-load existing data when found (use ref to prevent infinite loops)
   const autoLoadedRef = useRef(false);
 
@@ -218,6 +235,17 @@ export function EnhancedExecutionFormAutoLoad({
       // Transform the existing activities data to match the form's expected format
       const activities = entry.formData?.activities || {};
       const transformedData: Record<string, any> = {};
+
+      // DEBUG: Log Section G activities from existing execution
+      const sectionGActivities = Object.entries(activities).filter(([code]) => code.includes('_G_'));
+      console.log('📊 [Auto-Load] Section G activities from existing execution:', {
+        count: sectionGActivities.length,
+        codes: sectionGActivities.map(([code]) => code),
+        data: sectionGActivities.reduce((acc, [code, data]) => {
+          acc[code] = data;
+          return acc;
+        }, {} as Record<string, any>)
+      });
 
       // Track Section D "Other Receivables" values to reconstruct Section X
       const projectPrefix = projectType.toUpperCase();
@@ -268,6 +296,51 @@ export function EnhancedExecutionFormAutoLoad({
           };
         }
       });
+
+      // DEBUG: Log transformed Section G data
+      const transformedSectionG = Object.entries(transformedData).filter(([code]) => code.includes('_G_'));
+      console.log('📊 [Auto-Load] Transformed Section G data:', {
+        count: transformedSectionG.length,
+        codes: transformedSectionG.map(([code]) => code),
+        data: transformedSectionG.reduce((acc, [code, data]) => {
+          acc[code] = data;
+          return acc;
+        }, {} as Record<string, any>)
+      });
+
+      // CRITICAL FIX: Propagate Accumulated Surplus/Deficit Q1 value to ALL quarters
+      // Accumulated Surplus/Deficit is the SAME for the whole fiscal year (Q1=Q2=Q3=Q4)
+      // When loading existing data, if Q1 has a value but Q2/Q3/Q4 are 0, propagate Q1 to all
+      const accumulatedSurplusCode = `${projectPrefix}_EXEC_${facilityPrefix}_G_1`;
+      const accumulatedSurplusData = transformedData[accumulatedSurplusCode];
+      
+      if (accumulatedSurplusData) {
+        const q1Value = accumulatedSurplusData.q1 || 0;
+        const q2Value = accumulatedSurplusData.q2 || 0;
+        const q3Value = accumulatedSurplusData.q3 || 0;
+        const q4Value = accumulatedSurplusData.q4 || 0;
+        
+        // If Q1 has a value but other quarters are 0, propagate Q1 to all quarters
+        // This handles the case where old data was saved with only Q1 value
+        if (q1Value !== 0 && (q2Value === 0 || q3Value === 0 || q4Value === 0)) {
+          console.log('📊 [Auto-Load] Propagating Accumulated Surplus/Deficit Q1 value to all quarters:', {
+            code: accumulatedSurplusCode,
+            q1Value,
+            q2Value,
+            q3Value,
+            q4Value,
+            propagatingTo: 'Q1=Q2=Q3=Q4'
+          });
+          
+          transformedData[accumulatedSurplusCode] = {
+            ...accumulatedSurplusData,
+            q1: q1Value,
+            q2: q1Value,
+            q3: q1Value,
+            q4: q1Value,
+          };
+        }
+      }
 
       // Reconstruct Section X from Section D "Other Receivables" if not already present
       // This ensures the double-entry is properly reconstructed when loading saved data
@@ -669,12 +742,6 @@ export function EnhancedExecutionFormAutoLoad({
   const accumulatedSurplusInitializedRef = useRef(false);
   
   useEffect(() => {
-    // Skip if not in create mode
-    if (effectiveMode !== 'create') {
-      console.log('🔄 [Accumulated Surplus Init] Skipping: not in create mode');
-      return;
-    }
-    
     // Skip if already initialized
     if (accumulatedSurplusInitializedRef.current) {
       console.log('🔄 [Accumulated Surplus Init] Skipping: already initialized');
@@ -687,10 +754,17 @@ export function EnhancedExecutionFormAutoLoad({
       return;
     }
     
-    // Wait for previous quarter data to be loaded (for Q1 cross-fiscal-year rollover)
-    if (quarter === 'Q1' && !previousQuarterBalances) {
-      console.log('🔄 [Accumulated Surplus Init] Q1: Waiting for previous quarter data to load');
+    // CRITICAL: Wait for existing execution data to be loaded first
+    // If we're checking for existing execution and it hasn't loaded yet, wait
+    if (shouldCheckForExisting && isCheckingExisting) {
+      console.log('🔄 [Accumulated Surplus Init] Waiting for existing execution check to complete');
       return;
+    }
+    
+    // If existing execution was found and loaded, the data should already be in formData
+    // In this case, we should check if the value is already set from the loaded data
+    if (existingExecution?.exists && autoLoadedRef.current) {
+      console.log('🔄 [Accumulated Surplus Init] Existing execution was loaded, checking if value exists');
     }
     
     // Debug: Log form.activities structure
@@ -720,9 +794,17 @@ export function EnhancedExecutionFormAutoLoad({
     const isCrossFiscalYearRollover = quarterSequence?.isCrossFiscalYearRollover;
     const closingBalanceTotal = previousQuarterBalances?.closingBalances?.closingBalanceTotal;
     
+    // Check if the value is already set in formData (from existing execution load)
+    const existingValue = form.formData[accumulatedSurplusCode];
+    const hasExistingValue = existingValue && (
+      existingValue.q1 !== 0 || existingValue.q2 !== 0 || 
+      existingValue.q3 !== 0 || existingValue.q4 !== 0
+    );
+    
     console.log('🔄 [Accumulated Surplus Init] Checking:', {
       quarter,
       quarterKey,
+      effectiveMode,
       accumulatedSurplusCode,
       accumulatedSurplusActivityFound: !!accumulatedSurplusActivity,
       accumulatedSurplusActivityName: accumulatedSurplusActivity?.name,
@@ -731,8 +813,33 @@ export function EnhancedExecutionFormAutoLoad({
       previousQuarterExists: previousQuarterBalances?.exists,
       previousQuarter: previousQuarterBalances?.quarter,
       previousSectionG: previousQuarterBalances?.closingBalances?.G,
-      formDataHasCode: !!form.formData[accumulatedSurplusCode]
+      formDataHasCode: !!form.formData[accumulatedSurplusCode],
+      existingValue,
+      hasExistingValue,
+      existingExecutionExists: existingExecution?.exists,
+      autoLoadedRef: autoLoadedRef.current
     });
+    
+    // If we already have a value from existing execution, mark as initialized and skip
+    if (hasExistingValue) {
+      console.log('🔄 [Accumulated Surplus Init] Value already exists from loaded execution:', existingValue);
+      accumulatedSurplusInitializedRef.current = true;
+      return;
+    }
+    
+    // Skip initialization in view/edit mode if no previous quarter data
+    // In these modes, the data should already be loaded from the existing execution
+    if (effectiveMode !== 'create') {
+      console.log('🔄 [Accumulated Surplus Init] Skipping: not in create mode and no existing value');
+      accumulatedSurplusInitializedRef.current = true;
+      return;
+    }
+    
+    // Wait for previous quarter data to be loaded
+    if (!previousQuarterBalances) {
+      console.log('🔄 [Accumulated Surplus Init] Waiting for previous quarter data to load');
+      return;
+    }
     
     let targetValue: number | undefined;
     
@@ -750,10 +857,12 @@ export function EnhancedExecutionFormAutoLoad({
           console.log('🔄 [Accumulated Surplus Init] Q1: Using previous Q4 Accumulated Surplus:', targetValue);
         } else {
           console.log('🔄 [Accumulated Surplus Init] Q1: No cross-fiscal-year data available');
+          accumulatedSurplusInitializedRef.current = true;
           return;
         }
       } else {
         console.log('🔄 [Accumulated Surplus Init] Q1: No previous quarter data available');
+        accumulatedSurplusInitializedRef.current = true;
         return;
       }
     } else {
@@ -763,20 +872,29 @@ export function EnhancedExecutionFormAutoLoad({
         // Look for the Accumulated Surplus/Deficit value from previous quarter
         const previousAccumulatedSurplus = previousQuarterBalances.closingBalances.G[accumulatedSurplusCode];
         
+        console.log('🔄 [Accumulated Surplus Init] Q2/Q3/Q4: Looking for previous value:', {
+          accumulatedSurplusCode,
+          previousSectionG: previousQuarterBalances.closingBalances.G,
+          previousAccumulatedSurplus
+        });
+        
         if (previousAccumulatedSurplus !== undefined && previousAccumulatedSurplus !== null) {
           targetValue = previousAccumulatedSurplus;
           console.log('🔄 [Accumulated Surplus Init] Q2/Q3/Q4: Using previous quarter value:', targetValue);
         } else {
           console.log('🔄 [Accumulated Surplus Init] Q2/Q3/Q4: No previous quarter Accumulated Surplus found');
+          accumulatedSurplusInitializedRef.current = true;
           return;
         }
       } else {
         console.log('🔄 [Accumulated Surplus Init] Q2/Q3/Q4: No previous quarter data');
+        accumulatedSurplusInitializedRef.current = true;
         return;
       }
     }
     
     if (targetValue === undefined) {
+      accumulatedSurplusInitializedRef.current = true;
       return;
     }
     
@@ -819,7 +937,7 @@ export function EnhancedExecutionFormAutoLoad({
       console.log('🔄 [Accumulated Surplus Init] Value already set:', currentValue);
       accumulatedSurplusInitializedRef.current = true;
     }
-  }, [quarter, effectiveMode, form.activities, form.formData, previousQuarterBalances, quarterSequence, projectType, facilityType, form.setFormData]);
+  }, [quarter, effectiveMode, form.activities, form.formData, previousQuarterBalances, quarterSequence, projectType, facilityType, form.setFormData, shouldCheckForExisting, isCheckingExisting, existingExecution?.exists]);
   // ===== END ACCUMULATED SURPLUS/DEFICIT INITIALIZATION =====
 
   // Initialize the smart submission handler
@@ -875,22 +993,65 @@ export function EnhancedExecutionFormAutoLoad({
     // This includes all sections: A (Receipts), B (Expenditures), X (Miscellaneous Adjustments),
     // C (Surplus/Deficit), D (Financial Assets), E (Financial Liabilities), F (Net Financial Assets), G (Closing Balance)
     const entries = Object.entries(form.formData || {});
+    
+    // Helper function to find activity name from form.activities
+    // This is CRITICAL for server-side cumulative balance calculation
+    // The server uses the name to identify special activities like "Accumulated Surplus/Deficit"
+    const findActivityName = (code: string): string | undefined => {
+      if (!form.activities) return undefined;
+      
+      // Parse the section from the code (e.g., HIV_EXEC_HOSPITAL_G_1 -> G)
+      const parts = code.split('_');
+      const sectionIndex = parts.findIndex(p => p === 'EXEC') + 2; // Skip EXEC and facility type
+      // Handle HEALTH_CENTER (2 words) vs HOSPITAL (1 word)
+      const section = parts.find((p, i) => i >= sectionIndex && /^[A-GX]$/.test(p));
+      
+      if (!section) return undefined;
+      
+      const sectionData = (form.activities as any)[section];
+      if (!sectionData) return undefined;
+      
+      // Search in direct items
+      if (sectionData.items) {
+        const found = sectionData.items.find((item: any) => item.code === code);
+        if (found) return found.name;
+      }
+      
+      // Search in subcategories
+      if (sectionData.subCategories) {
+        for (const subCat of Object.values(sectionData.subCategories) as any[]) {
+          if (subCat.items) {
+            const found = subCat.items.find((item: any) => item.code === code);
+            if (found) return found.name;
+          }
+        }
+      }
+      
+      return undefined;
+    };
+    
     const activities = entries
-      .map(([code, v]: any) => ({
-        code,
-        q1: Number(v?.q1) || 0,
-        q2: Number(v?.q2) || 0,
-        q3: Number(v?.q3) || 0,
-        q4: Number(v?.q4) || 0,
-        comment: typeof v?.comment === "string" ? v.comment : "",
-        // Include payment tracking data
-        paymentStatus: v?.paymentStatus || "unpaid",
-        amountPaid: Number(v?.amountPaid) || 0,
-        // Include VAT tracking data (if present)
-        ...(v?.netAmount && { netAmount: v.netAmount }),
-        ...(v?.vatAmount && { vatAmount: v.vatAmount }),
-        ...(v?.vatCleared && { vatCleared: v.vatCleared }),
-      }))
+      .map(([code, v]: any) => {
+        const name = findActivityName(code);
+        return {
+          code,
+          // CRITICAL: Include name for server-side cumulative balance calculation
+          // The server uses this to identify "Accumulated Surplus/Deficit" and other special activities
+          ...(name && { name }),
+          q1: Number(v?.q1) || 0,
+          q2: Number(v?.q2) || 0,
+          q3: Number(v?.q3) || 0,
+          q4: Number(v?.q4) || 0,
+          comment: typeof v?.comment === "string" ? v.comment : "",
+          // Include payment tracking data
+          paymentStatus: v?.paymentStatus || "unpaid",
+          amountPaid: Number(v?.amountPaid) || 0,
+          // Include VAT tracking data (if present)
+          ...(v?.netAmount && { netAmount: v.netAmount }),
+          ...(v?.vatAmount && { vatAmount: v.vatAmount }),
+          ...(v?.vatCleared && { vatCleared: v.vatCleared }),
+        };
+      })
       // Drop totals/computed placeholders if they carry no data
       .filter(a => (a.q1 + a.q2 + a.q3 + a.q4) !== 0 || (a.comment ?? "").trim().length > 0);
 

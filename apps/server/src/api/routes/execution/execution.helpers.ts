@@ -63,11 +63,21 @@ function getLatestQuarterValue(
   q4: number | null | undefined
 ): number | undefined {
   // Check quarters in reverse order (Q4 -> Q3 -> Q2 -> Q1)
-  // Use the first DEFINED value (including explicit zero)
+  // Use the first quarter that has NON-ZERO data
+  // This is important for stock sections where we want the latest REPORTED quarter
+  // A quarter with 0 value might just be unfilled, not actually reported as 0
+  if (q4 !== undefined && q4 !== null && q4 !== 0) return q4;
+  if (q3 !== undefined && q3 !== null && q3 !== 0) return q3;
+  if (q2 !== undefined && q2 !== null && q2 !== 0) return q2;
+  if (q1 !== undefined && q1 !== null && q1 !== 0) return q1;
+  
+  // If all quarters are 0 or undefined, return the latest defined value (even if 0)
+  // This handles the case where a balance sheet item is legitimately 0
   if (q4 !== undefined && q4 !== null) return q4;
   if (q3 !== undefined && q3 !== null) return q3;
   if (q2 !== undefined && q2 !== null) return q2;
   if (q1 !== undefined && q1 !== null) return q1;
+  
   return undefined; // No data entered for any quarter
 }
 
@@ -91,8 +101,17 @@ function isSectionGFlowItem(code: string, name?: string): boolean {
   // Special case: "Accumulated" + "Surplus/Deficit" = Stock (same value for all quarters)
   // This is NOT a flow item - it stays the same across all quarters of the fiscal year
   // The cumulative balance should be the Q1 value (which is the same for all quarters)
-  if ((nameLower.includes('accumulated') || codeLower.includes('accumulated')) &&
-    (nameLower.includes('surplus') || nameLower.includes('deficit'))) {
+  // Detection methods:
+  // 1. Name contains "accumulated" AND ("surplus" OR "deficit")
+  // 2. Code ends with _G_1 (not in G-01 subcategory) - this is the standard code pattern
+  const isAccumulatedSurplusByName = 
+    (nameLower.includes('accumulated') || codeLower.includes('accumulated')) &&
+    (nameLower.includes('surplus') || nameLower.includes('deficit'));
+  
+  const isAccumulatedSurplusByCode = 
+    codeLower.includes('_g_1') && !codeLower.includes('_g_g-01');
+  
+  if (isAccumulatedSurplusByName || isAccumulatedSurplusByCode) {
     return false; // Stock item - use Q1 value (same for all quarters)
   }
 
@@ -169,12 +188,33 @@ export function calculateCumulativeBalance(
     // Special case: "Accumulated Surplus/Deficit" - use Q1 value (same for all quarters)
     // This is NOT a flow item and NOT a typical stock item
     // It stays the same across all quarters of the fiscal year
-    const isAccumulatedSurplus = 
+    // Detection methods:
+    // 1. Name contains "accumulated" AND ("surplus" OR "deficit")
+    // 2. Code ends with _G_1 (not in G-01 subcategory) - this is the standard code pattern
+    const isAccumulatedSurplusByName = 
       (nameLower.includes('accumulated') || codeLower.includes('accumulated')) &&
       (nameLower.includes('surplus') || nameLower.includes('deficit'));
     
+    // Check for _G_1 pattern (e.g., HIV_EXEC_HOSPITAL_G_1)
+    // But NOT _G_G-01_ which is Prior Year Adjustments subcategory
+    const isAccumulatedSurplusByCode = 
+      codeLower.includes('_g_1') && !codeLower.includes('_g_g-01');
+    
+    const isAccumulatedSurplus = isAccumulatedSurplusByName || isAccumulatedSurplusByCode;
+    
     if (isAccumulatedSurplus) {
       // Use Q1 value as cumulative (it's the same for all quarters)
+      console.log('[calculateCumulativeBalance] Accumulated Surplus/Deficit detected:', {
+        code,
+        name,
+        detectedByName: isAccumulatedSurplusByName,
+        detectedByCode: isAccumulatedSurplusByCode,
+        q1,
+        q2,
+        q3,
+        q4,
+        cumulativeBalance: q1 ?? 0
+      });
       return q1 ?? 0;
     }
     
@@ -274,7 +314,7 @@ export function computeRollups(keyed: Record<string, any>) {
 
   for (const k in keyed) {
     const a = keyed[k];
-    console.log(`[computeRollups] DEBUG: Activity ${k} -> section: ${a.section}, subSection: ${a.subSection}`);
+    console.log(`[computeRollups] DEBUG: Activity ${k} -> section: ${a.section}, subSection: ${a.subSection}, cumulative_balance: ${a.cumulative_balance}, name: ${a.name || a.label}`);
     
     // CRITICAL: Skip "Surplus/Deficit of the Period" from G section rollups
     // This item is computed as A - B and added separately in toBalances

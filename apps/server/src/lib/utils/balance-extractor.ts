@@ -123,7 +123,23 @@ export function extractClosingBalances(
       if (code.includes("_G_")) {
         const quarterlyValues = activityData as QuarterlyValues;
         const quarterKey = quarter.toLowerCase();
-        const closingBalance = (quarterlyValues as any)?.[quarterKey] || 0;
+        let closingBalance = (quarterlyValues as any)?.[quarterKey] || 0;
+        
+        // CRITICAL FIX: For Accumulated Surplus/Deficit (_G_1), use Q1 value if current quarter is 0
+        // Accumulated Surplus/Deficit is the SAME across all quarters of the fiscal year
+        // If the current quarter value is 0, fall back to Q1 value
+        if (code.includes('_G_1') && !code.includes('G-01') && closingBalance === 0) {
+          const q1Value = (quarterlyValues as any)?.q1 || 0;
+          if (q1Value !== 0) {
+            closingBalance = q1Value;
+            console.log('[BalanceExtractor] Using Q1 value for Accumulated Surplus/Deficit:', {
+              code,
+              quarterKey,
+              originalValue: 0,
+              q1Value
+            });
+          }
+        }
         
         closingBalances.G[code] = closingBalance;
         

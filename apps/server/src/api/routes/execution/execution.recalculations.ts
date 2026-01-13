@@ -123,30 +123,29 @@ function recalculateCumulativeBalances(
     const q3 = activity.q3 !== undefined && activity.q3 !== null ? Number(activity.q3) : undefined;
     const q4 = activity.q4 !== undefined && activity.q4 !== null ? Number(activity.q4) : undefined;
     
-    // For stock sections (D, E, F), use the value of the last REPORTED quarter
-    let cumulativeBalance: number | undefined;
+    // CRITICAL FIX: Use calculateCumulativeBalance helper which has special handling for:
+    // - Accumulated Surplus/Deficit (uses Q1 value, same for all quarters)
+    // - Stock sections (D, E, F) - uses latest quarter value
+    // - Flow sections (A, B, C) - sums all quarters
+    // - Section G mixed logic (flow vs stock detection)
+    const cumulativeBalance = calculateCumulativeBalance(
+      q1,
+      q2,
+      q3,
+      q4,
+      section,
+      subSection,
+      code,
+      activity.name || activity.label
+    );
     
-    const stockSections = ['D', 'E', 'F']; // Balance sheet items (F = D - E inherits stock behavior)
-    const flowSections = ['A', 'B', 'G', 'C']; // Income statement items
-    
-    const effectiveSection = subSection || section;
-    
-    if (stockSections.includes(effectiveSection || '')) {
-      // Stock logic: use value from last reported quarter
-      const quarterMap = { q1, q2, q3, q4 };
-      cumulativeBalance = quarterMap[lastReportedQuarter];
-      
-      // If undefined, try earlier quarters (fallback)
-      if (cumulativeBalance === undefined) {
-        if (lastReportedQuarter === 'q4') cumulativeBalance = q3 ?? q2 ?? q1;
-        else if (lastReportedQuarter === 'q3') cumulativeBalance = q2 ?? q1;
-        else if (lastReportedQuarter === 'q2') cumulativeBalance = q1;
-        else cumulativeBalance = q1;
-      }
-    } else {
-      // Flow logic: sum all quarters (existing behavior)
-      cumulativeBalance = (q1 || 0) + (q2 || 0) + (q3 || 0) + (q4 || 0);
-    }
+    console.log(`[recalculateCumulativeBalances] Activity ${code}:`, {
+      section,
+      subSection,
+      name: activity.name || activity.label,
+      q1, q2, q3, q4,
+      cumulativeBalance
+    });
     
     enriched[code] = {
       ...activity,
@@ -157,6 +156,20 @@ function recalculateCumulativeBalances(
   }
   
   return enriched;
+}
+
+/**
+ * Checks if an activity is the "Surplus/Deficit of the Period" computed item
+ * This item should be excluded from G section rollups because it's computed as A - B
+ * and added separately in toBalances to avoid double-counting
+ */
+function isSurplusDeficitOfPeriod(activity: ActivityData): boolean {
+  const name = (activity.name || activity.label || '').toLowerCase();
+  // Match "Surplus/Deficit of the Period" but NOT "Accumulated Surplus/Deficit"
+  return name.includes('surplus') && 
+         name.includes('deficit') && 
+         name.includes('period') && 
+         !name.includes('accumulated');
 }
 
 /**
@@ -171,6 +184,16 @@ function recalculateRollups(activities: Record<string, ActivityData>): {
   const bySubSection: Record<string, QuarterlyTotal> = {};
   
   for (const [code, activity] of Object.entries(activities)) {
+    const { section, subSection } = parseCode(code);
+    
+    // CRITICAL: Skip "Surplus/Deficit of the Period" from G section rollups
+    // This item is computed as A - B and added separately in toBalances
+    // Including it here would cause double-counting
+    if (section === 'G' && isSurplusDeficitOfPeriod(activity)) {
+      console.log(`[recalculateRollups] Skipping "Surplus/Deficit of the Period" from G rollup to avoid double-counting:`, code);
+      continue;
+    }
+    
     // For VAT-applicable expenses, use netAmount instead of q1/q2/q3/q4
     // q1/q2/q3/q4 contain total invoice (net + VAT), but we want only net amount for expense totals
     const hasVATData = activity.netAmount && (
@@ -185,7 +208,6 @@ function recalculateRollups(activities: Record<string, ActivityData>): {
     
     // Use the recalculated cumulative_balance for total
     // This is critical - total should match cumulative_balance logic per section
-    const { section, subSection } = parseCode(code);
     const cumulativeBalance = activity.cumulative_balance ?? (q1 + q2 + q3 + q4);
     
     // Aggregate by section

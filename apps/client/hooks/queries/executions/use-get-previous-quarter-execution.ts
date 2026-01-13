@@ -124,12 +124,13 @@ export function useGetPreviousQuarterExecution({
       });
 
       // Fetch executions for the target quarter
+      // IMPORTANT: API expects string parameters
       const response = await getExecutions({
-        projectId,
-        facilityId,
-        reportingPeriodId: targetReportingPeriodId,
+        projectId: String(projectId),
+        facilityId: String(facilityId),
+        reportingPeriodId: String(targetReportingPeriodId),
         quarter: targetQuarter,
-        limit: 1,
+        limit: "1",
       });
 
       // Check if we found a previous quarter execution
@@ -239,16 +240,20 @@ function extractClosingBalances(execution: any): {
   // Also check computedValues for totals (G. Closing Balance is computed)
   const computedValues = execution.computedValues || {};
 
-  // Get the quarter key
-  const quarter = execution.formData?.context?.quarter?.toLowerCase() || 'q1';
+  // Get the quarter key - handle both uppercase and lowercase
+  const quarterRaw = execution.formData?.context?.quarter || 'Q1';
+  const quarter = quarterRaw.toLowerCase();
 
   console.log('[Rollover] Extracting closing balances:', {
     executionId: execution.id,
     quarter,
+    quarterRaw,
     activitiesCount: Object.keys(activities).length,
+    activitiesIsArray: Array.isArray(rawActivities),
     hasComputedValues: !!computedValues,
     computedValuesKeys: Object.keys(computedValues),
-    sampleActivityKeys: Object.keys(activities).slice(0, 10)
+    sampleActivityKeys: Object.keys(activities).slice(0, 10),
+    sectionGKeys: Object.keys(activities).filter(k => k.includes('_G_'))
   });
 
   // Extract Section D (Financial Assets) closing balances
@@ -279,20 +284,42 @@ function extractClosingBalances(execution: any): {
   // This is critical for cross-fiscal-year rollover where G. Closing Balance becomes Accumulated Surplus
   let closingBalanceTotal = 0;
   
+  const sectionGKeys = Object.keys(activities).filter(k => k.includes('_G_'));
   console.log('[Rollover] Extracting Section G:', {
-    activitiesGKeys: Object.keys(activities).filter(k => k.includes('_G_')),
+    activitiesGKeys: sectionGKeys,
     computedValuesKeys: Object.keys(computedValues)
   });
   
-  // Extract Section G activities
+  // Extract Section G activities - include ALL values (even 0) for Accumulated Surplus
   Object.entries(activities).forEach(([code, data]: [string, any]) => {
     if (code.includes('_G_')) {
-      const value = Number(data[quarter]) || 0;
+      let value = Number(data[quarter]) || 0;
+      
+      // CRITICAL FIX: For Accumulated Surplus/Deficit (_G_1), use Q1 value if current quarter is 0
+      // Accumulated Surplus/Deficit is the SAME across all quarters of the fiscal year
+      // If the current quarter value is 0, fall back to Q1 value
+      if (code.includes('_G_1') && !code.includes('G-01') && value === 0) {
+        const q1Value = Number(data.q1) || 0;
+        if (q1Value !== 0) {
+          value = q1Value;
+          console.log('[Rollover] Using Q1 value for Accumulated Surplus/Deficit:', {
+            code,
+            quarter,
+            originalValue: 0,
+            q1Value
+          });
+        }
+      }
+      
+      // CRITICAL: Always store Section G values, even if 0
+      // This ensures Accumulated Surplus/Deficit is available for rollover
       closingBalances.G[code] = value;
       
       console.log('[Rollover] Section G activity:', { 
         code, 
         quarterValue: value,
+        rawData: data,
+        isAccumulatedSurplus: code.includes('_G_1') && !code.includes('G-01'),
         isClosingBalanceTotal: code.includes('_G_5')
       });
       
@@ -332,7 +359,7 @@ function extractClosingBalances(execution: any): {
     let surplusDeficitPeriod = 0;
     
     Object.entries(closingBalances.G).forEach(([code, value]) => {
-      // Accumulated Surplus/Deficit is _G_1
+      // Accumulated Surplus/Deficit is _G_1 (not in G-01 subcategory)
       if (code.includes('_G_1') && !code.includes('G-01')) {
         accumulatedSurplus = value;
       }
@@ -340,7 +367,7 @@ function extractClosingBalances(execution: any): {
       else if (code.includes('_G_G-01_')) {
         priorYearAdjustments += value;
       }
-      // Surplus/Deficit of Period is _G_4
+      // Surplus/Deficit of Period is _G_4 (not in G-01 subcategory)
       else if (code.includes('_G_4') && !code.includes('G-01')) {
         surplusDeficitPeriod = value;
       }
@@ -351,6 +378,13 @@ function extractClosingBalances(execution: any): {
       surplusDeficitPeriod = typeof computedValues.surplusDeficit === 'object'
         ? Number(computedValues.surplusDeficit[quarter]) || 0
         : Number(computedValues.surplusDeficit) || 0;
+    }
+    
+    // Also check computedValues.surplus for Surplus/Deficit of Period
+    if (surplusDeficitPeriod === 0 && computedValues.surplus) {
+      surplusDeficitPeriod = typeof computedValues.surplus === 'object'
+        ? Number(computedValues.surplus[quarter]) || 0
+        : Number(computedValues.surplus) || 0;
     }
     
     closingBalanceTotal = accumulatedSurplus + priorYearAdjustments + surplusDeficitPeriod;
@@ -367,7 +401,8 @@ function extractClosingBalances(execution: any): {
   console.log('[Rollover] Final closingBalances:', {
     D: Object.keys(closingBalances.D).length,
     E: Object.keys(closingBalances.E).length,
-    G: Object.keys(closingBalances.G).length,
+    G: closingBalances.G,
+    GKeys: Object.keys(closingBalances.G),
     closingBalanceTotal: closingBalances.closingBalanceTotal
   });
 

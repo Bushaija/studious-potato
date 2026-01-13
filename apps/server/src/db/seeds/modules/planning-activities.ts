@@ -107,7 +107,9 @@ HIV: [
 
     // TRC
     { facilityType: 'health_center', categoryCode: 'TRC', name: 'Conduct support group meetings', displayOrder: 1 },
-    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Conduct sample transportation from HC to DH and Supervision for CHWs & Home visit for lost followup', displayOrder: 2 },
+    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Supervision (CHWs)', displayOrder: 2 },
+    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Supervision (Home Visit)', displayOrder: 3 },
+    { facilityType: 'health_center', categoryCode: 'TRC', name: 'Conduct sample transportation from HC to DH', displayOrder: 4 },
 
     // // HPE
     // { facilityType: 'health_center', categoryCode: 'HPE', name: 'Maintenance and Repair', displayOrder: 1 },

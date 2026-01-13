@@ -3116,6 +3116,45 @@ export const checkExisting: AppRouteHandler<CheckExistingRoute> = async (c) => {
           message: "Execution data found for the specified parameters"
         };
 
+        // Fetch previous quarter balances for rollover support
+        try {
+          const currentQuarter = formData?.context?.quarter as Quarter | undefined;
+          if (currentQuarter && existingData.reportingPeriodId) {
+            const previousExecution = await fetchPreviousQuarterExecution(
+              db,
+              existingData.projectId,
+              existingData.facilityId,
+              existingData.reportingPeriodId,
+              currentQuarter
+            );
+
+            // Determine if we have cross-fiscal-year rollover (Q1 with Q4 from previous year)
+            const hasCrossFiscalYearPrevious = currentQuarter === "Q1" && previousExecution !== null;
+            const quarterSequence = buildQuarterSequence(currentQuarter, hasCrossFiscalYearPrevious);
+            
+            // For Q1, the previous quarter is Q4 from the previous fiscal year
+            const previousQuarterLabel = currentQuarter === "Q1" && previousExecution ? "Q4" : quarterSequence.previous;
+            const previousQuarterBalances = buildPreviousQuarterBalances(
+              previousExecution,
+              previousQuarterLabel
+            );
+
+            response.previousQuarterBalances = previousQuarterBalances;
+            response.quarterSequence = quarterSequence;
+            
+            console.log('[checkExisting] Previous quarter balances:', {
+              currentQuarter,
+              previousQuarterLabel,
+              exists: previousQuarterBalances?.exists,
+              hasClosingBalances: !!previousQuarterBalances?.closingBalances,
+              sectionGKeys: previousQuarterBalances?.closingBalances?.G ? Object.keys(previousQuarterBalances.closingBalances.G) : []
+            });
+          }
+        } catch (error) {
+          console.error('[checkExisting] Error fetching previous quarter balances:', error);
+          // Continue without previous quarter data
+        }
+
         // Add metadata if there were context corrections or validation issues
         if (contextResolution.warnings.length > 0 || !activityValidation.isValid) {
           response.metadata = {
