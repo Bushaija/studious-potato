@@ -46,6 +46,11 @@ export class FormulaEngine implements FormulaProcessor {
         return this.evaluateWorkingCapitalChange(formula, context);
       }
 
+      // Handle CROSS_STATEMENT_SURPLUS_DEFICIT - gets surplus/deficit from Revenue & Expenditure statement
+      if (formula.trim().toUpperCase() === 'CROSS_STATEMENT_SURPLUS_DEFICIT') {
+        return this.evaluateCrossStatementSurplusDeficit(context);
+      }
+
       // Parse and validate formula with enhanced parsing
       const operation = this.parseComplexFormula(formula);
       
@@ -135,6 +140,29 @@ export class FormulaEngine implements FormulaProcessor {
     });
     
     return cashFlowAdjustment;
+  }
+
+  /**
+   * Evaluate CROSS_STATEMENT_SURPLUS_DEFICIT formula
+   * Returns the surplus/deficit calculated from Revenue & Expenditure statement (TOTAL_REVENUE - TOTAL_EXPENSES)
+   * This is used in the Balance Sheet to show the period surplus/deficit in the equity section
+   */
+  private evaluateCrossStatementSurplusDeficit(context: FormulaContext): number {
+    // Check if cross-statement values are available
+    if (!context.crossStatementValues) {
+      console.warn('[FormulaEngine] Cross-statement values not available for CROSS_STATEMENT_SURPLUS_DEFICIT, returning 0');
+      return 0;
+    }
+
+    const surplusDeficit = context.crossStatementValues.surplusDeficit;
+    
+    if (surplusDeficit === undefined || surplusDeficit === null) {
+      console.warn('[FormulaEngine] Surplus/deficit value not set in cross-statement context, returning 0');
+      return 0;
+    }
+
+    console.log(`[FormulaEngine] CROSS_STATEMENT_SURPLUS_DEFICIT: ${surplusDeficit}`);
+    return surplusDeficit;
   }
 
   /**

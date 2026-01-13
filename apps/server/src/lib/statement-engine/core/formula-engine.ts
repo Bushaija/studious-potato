@@ -241,8 +241,10 @@ export class StatementFormulaEngine {
       
       case 'ASSETS_LIAB':
         // Balance Sheet specific validations
-        if (formula.includes('TOTAL_REVENUE') || formula.includes('TOTAL_EXPENSES')) {
-          errors.push('Income statement references not allowed in Balance Sheet');
+        // Allow CROSS_STATEMENT_SURPLUS_DEFICIT which is the approved way to get R&E surplus/deficit
+        if ((formula.includes('TOTAL_REVENUE') || formula.includes('TOTAL_EXPENSES')) 
+            && !formula.includes('CROSS_STATEMENT_SURPLUS_DEFICIT')) {
+          errors.push('Income statement references not allowed in Balance Sheet. Use CROSS_STATEMENT_SURPLUS_DEFICIT instead.');
         }
         break;
     }

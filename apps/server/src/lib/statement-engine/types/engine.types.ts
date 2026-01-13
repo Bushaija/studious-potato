@@ -120,6 +120,10 @@ export interface FormulaContext {
     current: Map<string, number>;  // Event code → Amount
     previous: Map<string, number>; // Event code → Amount
   };
+  crossStatementValues?: {
+    surplusDeficit?: number;           // TOTAL_REVENUE - TOTAL_EXPENSES from R&E
+    previousSurplusDeficit?: number;   // Previous period surplus/deficit
+  };
 }
 
 export interface FinancialStatement {

@@ -30,9 +30,9 @@ export function extractSectionFromCode(code: string): string | null {
   
   if (execIndex === -1) return null;
   
-  // Find the first single-letter part after 'EXEC' that matches A-G
+  // Find the first single-letter part after 'EXEC' that matches A-G or X
   for (let i = execIndex + 1; i < parts.length; i++) {
-    if (parts[i].length === 1 && /[A-G]/.test(parts[i])) {
+    if (parts[i].length === 1 && /[A-GX]/.test(parts[i])) {
       return parts[i];
     }
   }

@@ -525,8 +525,8 @@ export class AggregationService {
     for (const facilityId of facilityIds) {
       sectionTotals[facilityId] = {};
 
-      // Calculate section totals (A, B, D, E, G)
-      const sections = ['A', 'B', 'D', 'E', 'G'];
+      // Calculate section totals (A, B, X, D, E, G)
+      const sections = ['A', 'B', 'X', 'D', 'E', 'G'];
       for (const section of sections) {
         const sectionActivities = activityCatalog.filter(a =>
           a.category === section &&
@@ -705,7 +705,7 @@ export class AggregationService {
           // Add individual activities under subcategory
           for (const activity of subcategoryActivities) {
             // Skip total row activities
-            if (activity.name.match(/^[A-G]\.\s/)) continue;
+            if (activity.name.match(/^[A-GX]\.\s/)) continue;
 
             const activityValues: Record<string, number> = {};
             let activityTotal = 0;

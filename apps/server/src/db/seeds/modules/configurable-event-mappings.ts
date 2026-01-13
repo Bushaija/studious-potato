@@ -36,75 +36,66 @@ const executionEventMappings: EventMappingData[] = [
   // Asset mappings
   { projectType: 'HIV', activityName: 'Cash at bank', eventCode: 'CASH_EQUIVALENTS_END', mappingType: 'DIRECT' },
   { projectType: 'HIV', activityName: 'Petty cash', eventCode: 'CASH_EQUIVALENTS_END', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Receivables (VAT refund)', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Other Receivables (auto from Miscellaneous)', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'VAT Receivable: Communication - airtime', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'VAT Receivable: Communication - internet', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'VAT Receivable: Infrastructure support (maintenance)', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'VAT Receivable: Office supplies', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Other Receivables', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'VAT Receivable 1: Communication - All', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'VAT Receivable 2: Maintenance', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'VAT Receivable 3: Fuel', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'VAT Receivable 4: Office supplies', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
 
   { projectType: 'Malaria', activityName: 'Cash at bank', eventCode: 'CASH_EQUIVALENTS_END', mappingType: 'DIRECT' },
   { projectType: 'Malaria', activityName: 'Petty cash', eventCode: 'CASH_EQUIVALENTS_END', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'Receivables (VAT refund)', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'Other Receivables (auto from Miscellaneous)', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'VAT Receivable: Communication - airtime', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'VAT Receivable: Communication - internet', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'VAT Receivable: Infrastructure support', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'VAT Receivable: Office supplies', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'Malaria', activityName: 'Other Receivables', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'Malaria', activityName: 'VAT Receivable 1: Communication - All', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'Malaria', activityName: 'VAT Receivable 2: Maintenance', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'Malaria', activityName: 'VAT Receivable 3: Fuel', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'Malaria', activityName: 'VAT Receivable 4: Office supplies', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
 
   { projectType: 'TB', activityName: 'Cash at bank', eventCode: 'CASH_EQUIVALENTS_END', mappingType: 'DIRECT' },
   { projectType: 'TB', activityName: 'Petty cash', eventCode: 'CASH_EQUIVALENTS_END', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Receivables (VAT refund)', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Other Receivables (auto from Miscellaneous)', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'VAT Receivable: Communication - airtime', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'VAT Receivable: Communication - internet', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'VAT Receivable: Infrastructure support', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'VAT Receivable: Office supplies', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'TB', activityName: 'Other Receivables', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'TB', activityName: 'VAT Receivable 1: Communication - All', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'TB', activityName: 'VAT Receivable 2: Maintenance', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'TB', activityName: 'VAT Receivable 3: Fuel', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
+  { projectType: 'TB', activityName: 'VAT Receivable 4: Office supplies', eventCode: 'ADVANCE_PAYMENTS', mappingType: 'DIRECT' },
 
-  // HIV Payables - All 13 liability activities
+  // HIV Payables - All 15 liability activities
   { projectType: 'HIV', activityName: 'Payable 1: Salaries', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Payable 2: Supervision', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Payable 3: Meetings', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Payable 4: Sample transport', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Payable 5: Home visits', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Payable 6: Travel survellance', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Payable 7: Communication - airtime', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Payable 8: Communication - internet', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Payable 9: Infrastructure support (maintenance)', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Payable 10: Supplies', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Payable 11: Transport reporting', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Payable 12: Bank charges', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'HIV', activityName: 'Payable 13: VAT refund', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 2: Support group meetings', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 3: Conduct census training', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 4: Clinical mentorship', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 5: Annual cordination meeting', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 6: MDT meeting', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 7: Supervision DQA', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 8: Sample transportation', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 9: Home visit', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 10: Outreach for HIV testing', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 11: WAD celebration', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 12: Communication - All', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 13: Maintenance', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 14: Fuel', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'HIV', activityName: 'Payable 15: Office supplies', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
 
-  // Malaria Payables - All 13 liability activities
+  // Malaria Payables - All liability activities
   { projectType: 'Malaria', activityName: 'Payable 1: Salaries', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
   { projectType: 'Malaria', activityName: 'Payable 2: Supervision', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'Payable 3: Meetings', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'Payable 4: Sample transport', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'Payable 5: Home visits', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'Payable 6: Travel survellance', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'Payable 7: Communication - airtime', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'Payable 8: Communication - internet', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'Payable 9: Infrastructure support (maintenance) (maintenance)', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'Payable 10: Supplies', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'Payable 11: Transport reporting', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'Payable 12: Bank charges', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'Malaria', activityName: 'Payable 13: VAT refund', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'Malaria', activityName: 'Payable 3: Cordination meetings', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'Malaria', activityName: 'Payable 4: Car Hiring', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'Malaria', activityName: 'Payable 5: Consumable', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'Malaria', activityName: 'Payable 6: Transport & travel', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'Malaria', activityName: 'Payable 12: Communication - All', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'Malaria', activityName: 'Payable 13: Maintenance', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'Malaria', activityName: 'Payable 14: Fuel', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'Malaria', activityName: 'Payable 15: Office supplies', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
 
-  // TB Payables - All 13 liability activities
+  // TB Payables - All liability activities
   { projectType: 'TB', activityName: 'Payable 1: Salaries', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Payable 2: Supervision', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Payable 3: Meetings', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Payable 4: Sample transport', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Payable 5: Home visits', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Payable 6: Travel survellance', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Payable 7: Communication - airtime', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Payable 8: Communication - internet', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Payable 9: Infrastructure support (maintenance) (maintenance)', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Payable 10: Supplies', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Payable 11: Transport reporting', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Payable 12: Bank charges', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
-  { projectType: 'TB', activityName: 'Payable 13: VAT refund', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'TB', activityName: 'Payable 2: Mission', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'TB', activityName: 'Payable 3: Car hiring', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'TB', activityName: 'Payable 4: Transport for reporting', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'TB', activityName: 'Payable 12: Communication - All', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'TB', activityName: 'Payable 13: Maintenance', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'TB', activityName: 'Payable 14: Fuel', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
+  { projectType: 'TB', activityName: 'Payable 15: Office supplies', eventCode: 'PAYABLES', mappingType: 'DIRECT' },
 
   // Equity mappings
   { projectType: 'HIV', activityName: 'Accumulated Surplus/Deficit', eventCode: 'ACCUMULATED_SURPLUS_DEFICITS', mappingType: 'DIRECT' },
@@ -375,10 +366,10 @@ export async function seedExecutionEventMappings(
 
     console.log(`✓ Loaded ${categories.length} category definitions`);
 
-    // Step 4: Build activity lookup by (projectType, name) - case-insensitive
+    // Step 4: Build activity lookup by (projectType, name) - case-insensitive and trimmed
     const activityByProjectAndName = new Map<string, typeof activities>();
     activities.forEach(activity => {
-      const key = `${activity.projectType}|${activity.name.toLowerCase()}`;
+      const key = `${activity.projectType}|${activity.name.toLowerCase().trim()}`;
       if (!activityByProjectAndName.has(key)) {
         activityByProjectAndName.set(key, []);
       }
@@ -414,8 +405,8 @@ export async function seedExecutionEventMappings(
         continue;
       }
 
-      // Use case-insensitive matching for activity names
-      const key = `${mapping.projectType}|${mapping.activityName?.toLowerCase()}`;
+      // Use case-insensitive and trimmed matching for activity names
+      const key = `${mapping.projectType}|${mapping.activityName?.toLowerCase().trim()}`;
       const matchingActivities = activityByProjectAndName.get(key) || [];
 
       if (matchingActivities.length === 0) {

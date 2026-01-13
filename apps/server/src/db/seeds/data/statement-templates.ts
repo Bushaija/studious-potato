@@ -484,7 +484,7 @@ export const assetsAndLiabilitiesTemplates: TemplateLine[] = [
     displayOrder: 25,
     level: 2,
     isTotalLine: true,
-    calculationFormula: 'TOTAL_ASSETS - TOTAL_LIABILITIES',
+    calculationFormula: 'CROSS_STATEMENT_SURPLUS_DEFICIT',
     aggregationMethod: 'DIFF'
   },
   {

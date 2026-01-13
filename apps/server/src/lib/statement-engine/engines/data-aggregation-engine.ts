@@ -649,24 +649,54 @@ export class DataAggregationEngine implements EventDataProcessor {
       // CRITICAL FIX: Use cumulative_balance for stock sections (D, E) and sum quarters for flow sections (A, B, G)
       // Stock sections (D, E) represent balances at a point in time - use cumulative_balance
       // Flow sections (A, B, G) represent flows over time - sum all quarters
+      // EXCEPTION: "Accumulated Surplus/Deficit" in Section G is a stock item (same value all quarters)
       
       let totalAmount = 0;
       
       // Extract section from activity code (e.g., "HIV_EXEC_HOSPITAL_D_1" -> "D")
       const section = this.extractSectionFromCode(activityCode);
       
+      // Check if this is "Accumulated Surplus/Deficit" - a special case in Section G
+      // It's a stock item that stays the same across all quarters
+      // Detection methods:
+      // 1. Activity name contains "accumulated" AND ("surplus" OR "deficit")
+      // 2. Activity code pattern: _G_1 (not in G-01 subcategory) - e.g., HIV_EXEC_HOSPITAL_G_1
+      const activityName = (activity.name || '').toLowerCase();
+      const activityCodeLower = activityCode.toLowerCase();
+      
+      const isAccumulatedSurplusDeficitByName = 
+        activityName.includes('accumulated') && 
+        (activityName.includes('surplus') || activityName.includes('deficit'));
+      
+      // Check for _G_1 pattern (e.g., HIV_EXEC_HOSPITAL_G_1) but NOT _G_G-01_ (Prior Year Adjustments)
+      const isAccumulatedSurplusDeficitByCode = 
+        section === 'G' && 
+        activityCodeLower.includes('_g_1') && 
+        !activityCodeLower.includes('_g_g-01');
+      
+      const isAccumulatedSurplusDeficit = isAccumulatedSurplusDeficitByName || isAccumulatedSurplusDeficitByCode;
+      
       if (section === 'D' || section === 'E') {
         // Stock sections: Use cumulative_balance (represents balance at the latest reported quarter)
         // This ensures we get the correct balance sheet values for Financial Assets and Liabilities
         totalAmount = Number(activity.cumulative_balance) || 0;
+        console.log(`[DataAggregation] Section ${section} (stock): ${activityCode}, cumulative_balance: ${activity.cumulative_balance}, totalAmount: ${totalAmount}`);
+      } else if (isAccumulatedSurplusDeficit) {
+        // Accumulated Surplus/Deficit: Use Q1 value (same for all quarters, it's a stock item)
+        // This is the opening balance from the previous fiscal year's closing balance
+        totalAmount = Number(activity.q1) || Number(activity.cumulative_balance) || 0;
+        console.log(`[DataAggregation] Accumulated Surplus/Deficit detected: ${activityCode}, using Q1 value: ${totalAmount} (byName: ${isAccumulatedSurplusDeficitByName}, byCode: ${isAccumulatedSurplusDeficitByCode})`);
       } else {
         // Flow sections: Sum all quarters (represents total flow over the period)
-        // This is correct for Revenue (A), Expenditures (B), and Equity changes (G)
+        // This is correct for Revenue (A), Expenditures (B), and other Equity changes (G)
         totalAmount = (Number(activity.q1) || 0) + (Number(activity.q2) || 0) + 
                      (Number(activity.q3) || 0) + (Number(activity.q4) || 0);
       }
 
-      if (totalAmount !== 0) { // Include zero values for stock sections as they are meaningful
+      // For stock sections (D, E), include even zero values as they are meaningful balance sheet items
+      // For flow sections, only include non-zero values
+      const isStockSection = section === 'D' || section === 'E';
+      if (totalAmount !== 0 || isStockSection) {
         eventEntries.push({
           eventCode: eventMapping.eventCode,
           facilityId: jsonEntry.facilityId,
@@ -783,9 +813,9 @@ export class DataAggregationEngine implements EventDataProcessor {
     
     if (execIndex === -1) return null;
     
-    // Find the first single-letter part after 'EXEC' that matches A-G
+    // Find the first single-letter part after 'EXEC' that matches A-G or X
     for (let i = execIndex + 1; i < parts.length; i++) {
-      if (parts[i].length === 1 && /[A-G]/.test(parts[i])) {
+      if (parts[i].length === 1 && /[A-GX]/.test(parts[i])) {
         return parts[i];
       }
     }

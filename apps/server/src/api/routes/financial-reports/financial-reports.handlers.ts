@@ -1055,6 +1055,70 @@ export const generateStatement: AppRouteHandler<GenerateStatementRoute> = async 
       eventIdToCodeMap.set(event.id, event.code);
     }
 
+    // Step 10.5: Calculate cross-statement values for Balance Sheet (ASSETS_LIAB)
+    // The surplus/deficit in the equity section should come from Revenue & Expenditure (TOTAL_REVENUE - TOTAL_EXPENSES)
+    let crossStatementValues: { surplusDeficit?: number; previousSurplusDeficit?: number } | undefined;
+    
+    if (statementCode === 'ASSETS_LIAB') {
+      // Calculate TOTAL_REVENUE - TOTAL_EXPENSES from the same event data
+      // Revenue event codes (from revenueExpenditureTemplates TOTAL_REVENUE formula)
+      const revenueEventCodes = [
+        'TAX_REVENUE', 'GRANTS', 'TRANSFERS_CENTRAL_TREASURY', 'TRANSFERS_PUBLIC_ENTITIES',
+        'FINES_PENALTIES_LICENSES', 'PROPERTY_INCOME', 'SALES_GOODS_SERVICES',
+        'PROCEEDS_SALE_CAPITAL', 'OTHER_REVENUE', 'DOMESTIC_BORROWINGS', 'EXTERNAL_BORROWINGS'
+      ];
+      
+      // Expense event codes (from revenueExpenditureTemplates TOTAL_EXPENSES formula)
+      const expenseEventCodes = [
+        'COMPENSATION_EMPLOYEES', 'GOODS_SERVICES', 'GRANTS_TRANSFERS', 'SUBSIDIES',
+        'SOCIAL_ASSISTANCE', 'FINANCE_COSTS', 'ACQUISITION_FIXED_ASSETS',
+        'REPAYMENT_BORROWINGS', 'OTHER_EXPENSES'
+      ];
+      
+      // Calculate current period totals
+      let totalRevenue = 0;
+      let totalExpenses = 0;
+      
+      for (const eventCode of revenueEventCodes) {
+        totalRevenue += aggregatedData.eventTotals.get(eventCode) || 0;
+      }
+      
+      for (const eventCode of expenseEventCodes) {
+        totalExpenses += aggregatedData.eventTotals.get(eventCode) || 0;
+      }
+      
+      const currentSurplusDeficit = totalRevenue - totalExpenses;
+      
+      // Calculate previous period totals if comparison data available
+      let previousSurplusDeficit = 0;
+      if (periodComparison) {
+        let prevTotalRevenue = 0;
+        let prevTotalExpenses = 0;
+        
+        for (const eventCode of revenueEventCodes) {
+          prevTotalRevenue += periodComparison.previousPeriod.eventTotals.get(eventCode) || 0;
+        }
+        
+        for (const eventCode of expenseEventCodes) {
+          prevTotalExpenses += periodComparison.previousPeriod.eventTotals.get(eventCode) || 0;
+        }
+        
+        previousSurplusDeficit = prevTotalRevenue - prevTotalExpenses;
+      }
+      
+      crossStatementValues = {
+        surplusDeficit: currentSurplusDeficit,
+        previousSurplusDeficit: previousSurplusDeficit
+      };
+      
+      console.log(`[CrossStatement] Balance Sheet surplus/deficit calculated:`, {
+        totalRevenue,
+        totalExpenses,
+        currentSurplusDeficit,
+        previousSurplusDeficit
+      });
+    }
+
     // Step 11: Build statement lines from template
     const statementLines: StatementLine[] = [];
 
@@ -1139,7 +1203,8 @@ export const generateStatement: AppRouteHandler<GenerateStatementRoute> = async 
             lineValues: new Map(statementLines.map(line => [line.metadata.lineCode, line.currentPeriodValue])),
             previousPeriodValues: new Map(),
             customMappings,
-            balanceSheet: balanceSheetContext // Add balance sheet context for working capital calculations
+            balanceSheet: balanceSheetContext, // Add balance sheet context for working capital calculations
+            crossStatementValues // Add cross-statement values for Balance Sheet surplus/deficit
           };
 
           try {
@@ -1215,7 +1280,11 @@ export const generateStatement: AppRouteHandler<GenerateStatementRoute> = async 
               lineValues: previousPeriodLineValues,
               previousPeriodValues: new Map(),
               customMappings,
-              balanceSheet: balanceSheetContext // Add balance sheet context for working capital calculations
+              balanceSheet: balanceSheetContext, // Add balance sheet context for working capital calculations
+              crossStatementValues: crossStatementValues ? {
+                surplusDeficit: crossStatementValues.previousSurplusDeficit,
+                previousSurplusDeficit: undefined
+              } : undefined // Use previous period surplus/deficit for previous period context
             };
 
             try {

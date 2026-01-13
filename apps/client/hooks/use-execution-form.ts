@@ -2015,8 +2015,8 @@ export function useExecutionForm({
           // Example: MAL_EXEC_HEALTH_CENTER_D_1 or HIV_EXEC_HOSPITAL_B_B-01_1
           // The section is a single letter (A-G) that appears after the facility type
           const codeParts = activity.code?.split('_') || [];
-          // Find the part that is a single letter A-G (the section)
-          const sectionPart = codeParts.find((part: string) => /^[A-G]$/i.test(part));
+          // Find the part that is a single letter A-G or X (the section)
+          const sectionPart = codeParts.find((part: string) => /^[A-GX]$/i.test(part));
           const sectionCode = sectionPart?.toUpperCase() || '';
 
           // Special case: Accumulated Surplus/Deficit stays the SAME across all quarters

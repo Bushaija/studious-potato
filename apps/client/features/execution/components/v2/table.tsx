@@ -36,9 +36,9 @@ function formatVATReceivableValue(value: number | undefined | null): string {
 // Example: "MAL_EXEC_HEALTH_CENTER_D_1" -> "D"
 function extractSectionCode(activityId: string): string | null {
   const parts = activityId.split('_');
-  // Look for single letter sections (A, B, C, D, E, F, G)
+  // Look for single letter sections (A, B, C, D, E, F, G, X)
   for (const part of parts) {
-    if (part.length === 1 && /[A-G]/.test(part)) {
+    if (part.length === 1 && /[A-GX]/.test(part)) {
       return part;
     }
   }

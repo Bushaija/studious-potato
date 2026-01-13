@@ -102,7 +102,7 @@ const hivActivities: ActivityData[] = [
     { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 1: Communication - All', displayOrder: 1, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'COMMUNICATION_ALL', applicableTo: 'both' },
     { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 2: Maintenance ', displayOrder: 2, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'MAINTENANCE', applicableTo: 'both' },
     { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 3: Fuel', displayOrder: 3, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'FUEL', applicableTo: 'both' },
-    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 3: Office supplies', displayOrder: 4, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'SUPPLIES', applicableTo: 'both' },
+    { categoryCode: 'D', subCategoryCode: 'D-01', name: 'VAT Receivable 4: Office supplies', displayOrder: 4, isTotalRow: false, activityType: 'VAT_RECEIVABLE', vatCategory: 'SUPPLIES', applicableTo: 'both' },
     { categoryCode: 'D', subCategoryCode: 'D-01', name: 'Other Receivables', displayOrder: 5, isTotalRow: false, activityType: 'COMPUTED_ASSET', computationRules: { formula: 'X_OTHER_RECEIVABLE', description: 'Automatically calculated from Miscellaneous Adjustments' }, applicableTo: 'both' },
 
     { categoryCode: 'D', subCategoryCode: null, name: 'D. Financial Assets', displayOrder: 9, isTotalRow: true, activityType: 'ASSET_TOTAL', applicableTo: 'both' },

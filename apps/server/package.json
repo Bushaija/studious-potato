@@ -20,6 +20,7 @@
     "db:seed:execution": "cross-env DB_SEEDING=true tsx --require tsconfig-paths/register src/db/seeds/execution-activities-standalone.ts",
     "db:seed:events": "cross-env DB_SEEDING=true tsx --require tsconfig-paths/register src/db/seeds/events-standalone.ts",
     "db:seed:event-mapping": "cross-env DB_SEEDING=true tsx --require tsconfig-paths/register src/db/seeds/event-mappings-standalone.ts",
+    "db:seed:statement-templates": "cross-env DB_SEEDING=true tsx --require tsconfig-paths/register src/db/seeds/statement-templates-standalone.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:dashboard-indexes": "tsx --require tsconfig-paths/register src/db/migrations/run-dashboard-indexes.ts",
