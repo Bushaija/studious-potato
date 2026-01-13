@@ -393,8 +393,13 @@ export function getPlanningTableColumns({
                   View Details
                 </DropdownMenuItem>
 
-                {/* Hide Edit for DAF users, show for DRAFT or REJECTED (for accountants to revise) */}
-                {((isDraft && !isDaf) || (isRejected && isAccountant)) && (
+                {/* Edit visibility rules:
+                    - DRAFT: Show for non-DAF users (accountants, admins can edit drafts)
+                    - PENDING: Hide edit - plan is awaiting admin review
+                    - REJECTED: Show only for accountants to revise and resubmit
+                    - APPROVED: No edit allowed
+                */}
+                {((isDraft && !isDaf) || (isRejected && isAccountant)) && !isPending && (
                   <DropdownMenuItem
                     onClick={() => router.push(`/dashboard/planning/edit/${planning.id}`)}
                     disabled={isLoading}
