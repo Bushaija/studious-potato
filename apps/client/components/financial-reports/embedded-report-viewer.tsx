@@ -159,14 +159,18 @@ export function EmbeddedReportViewer({
 
   const status = report.status as ReportStatus;
   const isLocked = report.locked;
-  const isPending = status === 'pending_daf_approval';
+  
+  // Check if report is in a pending state that allows approval actions
+  // For DAF queue: pending_daf_approval
+  // For DG queue: approved_by_daf (pending DG approval)
+  const canShowActions = ['pending_daf_approval', 'approved_by_daf'].includes(status);
 
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="border-b bg-background p-4">
-        <div className="flex items-center justify-center gap-4">
-            <div className="space-y-1 min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-4">
+            <div className="flex gap-2 space-y-1 min-w-0">
               <h2 className="text-medium font-bold truncate">
                 {report.reportCode}
               </h2>
@@ -175,14 +179,14 @@ export function EmbeddedReportViewer({
                 <span>·</span>
                 <span>FY {report.fiscalYear}</span>
               </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <ApprovalStatusBadge status={status} />
-              {isLocked && <Lock className="h-4 w-4 text-muted-foreground" />}
+              <div className="flex items-center gap-2 shrink-0">
+                <ApprovalStatusBadge status={status} />
+                {isLocked && <Lock className="h-4 w-4 text-muted-foreground" />}
+              </div>
             </div>
         
             {/* Actions */}
-            <div className="flex items-center gap-2 mt-4">
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -197,7 +201,7 @@ export function EmbeddedReportViewer({
                 Download PDF
               </Button>
               
-              {showActions && isPending && onApprove && onReject && (
+              {showActions && canShowActions && onApprove && onReject && (
                 <>
                   <div className="flex-1" />
                   <Button

@@ -104,7 +104,7 @@ export default function DafApprovalQueuePage() {
               </p>
             </div>
             <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}>
-              <SelectTrigger className="h-9">
+              <SelectTrigger className="h-4 w-full">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -151,7 +151,7 @@ export default function DafApprovalQueuePage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-hidden bg-muted/5">
+      <div className="flex-1 overflow-hidden bg-muted/5 px-8">
         {selectedReportId ? (
           <EmbeddedReportViewer
             reportId={selectedReportId}

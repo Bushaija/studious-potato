@@ -171,6 +171,7 @@ HIV: [
     // Normal Grant
     { facilityType: 'health_center', categoryCode: 'NG', name: 'Supervision for CHW by HC in village per quarter', displayOrder: 1 },
     { facilityType: 'health_center', categoryCode: 'NG', name: 'Bank charges', displayOrder: 2 },
+    { facilityType: 'health_center', categoryCode: 'NG', name: 'Transport for reporting', displayOrder: 3 },
   ],
 
   // ---------------- TB PROGRAM ----------------
