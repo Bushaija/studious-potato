@@ -1,9 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, FileText, Building2, FolderOpen } from "lucide-react";
-import { ApprovalStatusBadge } from "./approval-status-badge";
+import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 
 interface DafReviewCardProps {
   report: {
@@ -28,92 +26,67 @@ interface DafReviewCardProps {
     };
   };
   onClick?: () => void;
+  isSelected?: boolean;
 }
 
-export function DafReviewCard({ report, onClick }: DafReviewCardProps) {
+// Map report codes to friendly names
+function getReportDisplayName(reportCode: string): string {
+  const mapping: Record<string, string> = {
+    'REV_EXP': 'Revenue and Expenditure',
+    'CASH_FLOW': 'Cash Flow Statement',
+    'BALANCE_SHEET': 'Balance Sheet',
+    'ASSETS': 'Assets Statement',
+    'LIABILITIES': 'Liabilities Statement',
+  };
+  
+  return mapping[reportCode] || reportCode;
+}
+
+// Format time ago
+function getTimeAgo(date: string | null): string {
+  if (!date) return '';
+  
+  try {
+    return formatDistanceToNow(new Date(date), { addSuffix: true })
+      .replace('about ', '')
+      .replace(' ago', '');
+  } catch {
+    return '';
+  }
+}
+
+export function DafReviewCard({ report, onClick, isSelected = false }: DafReviewCardProps) {
+  const displayName = getReportDisplayName(report.reportCode);
+  const timeAgo = getTimeAgo(report.submittedAt);
+  
+  // Safely extract submitter name
+  const submitterName = typeof report.submitter === 'string' 
+    ? report.submitter 
+    : report.submitter?.name || 'Unknown';
+  
   return (
-    <Card
-      className="max-w-[450px] cursor-pointer transition-all hover:shadow-md hover:border-primary/50"
+    <button
       onClick={onClick}
+      className={cn(
+        "w-full text-left p-4 rounded-none transition-all my-4 cursor-pointer",
+        "hover:bg-accent/50",
+        isSelected && "bg-accent border-l-4 border-l-[#39C3C0]"
+      )}
     >
-      <CardHeader>
-        <div className="flex items-start justify-between gap-2">
-          <div className="space-y-1 flex-1">
-            <CardTitle className="text-sm font-semibold">
-              {report.reportCode}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground line-clamp-1">
-              {report.project?.name}
-            </p>
-          </div>
-          <ApprovalStatusBadge status={report.status} />
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-0">
-        <div className="space-y-0">
-          {/* Facility Information with Hierarchy Context */}
-          {report.facility && (
-            <div className="space-y-1 flex gap-2">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-sm font-medium truncate">
-                  {report.facility.name}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 ml-6">
-                {report.facility.facilityType && (
-                  <Badge variant="outline" className="text-xs">
-                    {report.facility.facilityType === 'health_center' ? 'Health Center' : 'Hospital'}
-                  </Badge>
-                )}
-                {report.facility.district && (
-                  <span className="text-xs text-muted-foreground capitalize">
-                    {report.facility.district.name}{" district"}
-                  </span>
-                )}
-              </div>
-            </div>
+      <div className="space-y-1">
+        <h3 className="font-semibold text-sm leading-tight text-foreground">
+          {displayName}
+        </h3>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="capitalize">{submitterName}</span>
+          {timeAgo && (
+            <>
+              <span>·</span>
+              <span>{timeAgo}{" ago"}</span>
+            </>
           )}
-
-          {/* Submitter Information */}
-          {report.submitter && (
-            <div className="flex items-center gap-2 text-sm capitalize text-muted-foreground">
-              <span>Submitted by {report.submitter.name}</span>
-            </div>
-          )}
-
-          {/* Additional Details */}
-          <div className="flex gap-2 text-sm pt-2">
-            {/* {report.project && (
-              <div className="flex items-center gap-2">
-                <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-muted-foreground truncate text-xs">
-                  {report.project.name}
-                </span>
-              </div>
-            )} */}
-
-            <div className="flex items-center gap-2">
-              {/* <Calendar className="h-4 w-4 text-muted-foreground shrink-0" /> */}
-              {/* <span className="text-muted-foreground text-xs">FY {report.fiscalYear}</span> */}
-            </div>
-
-            {report.submittedAt && (
-              <div className="flex items-center gap-2 col-span-2">
-                {/* <FileText className="h-4 w-4 text-muted-foreground shrink-0" /> */}
-                <span className="text-muted-foreground text-sm">
-                  {new Date(report.submittedAt).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </span>
-              </div>
-            )}
-          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </button>
   );
 }

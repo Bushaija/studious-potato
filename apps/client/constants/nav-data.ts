@@ -102,7 +102,7 @@ const ALL_NAV_ITEMS: RoleNavItem[] = [
     items: [
       {
         title: 'DAF Queue',
-        url: '/dashboard/financial-reports/daf-queue',
+        url: '/dashboard/daf-queue',
         icon: 'clipboardCheck',
         shortcut: ['d', 'q'],
         roles: ['daf']
