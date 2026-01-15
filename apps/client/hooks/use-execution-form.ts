@@ -1474,6 +1474,11 @@ export function useExecutionForm({
    * Clear VAT receivable for a VAT-applicable expense
    * This function records when VAT refunds are received from RRA
    * Requirements: 3.2 (decrease VAT receivable), 3.3 (increase Cash at Bank)
+   * 
+   * Double-entry accounting:
+   * - Cash at Bank (D_1) increases by clearAmount
+   * - VAT Receivable (D_VAT_* or D-01_*) decreases by clearAmount
+   * - Net effect on Section D Total = 0 (balanced)
    */
   const clearVAT = useCallback(
     (activityCode: string, clearAmount: number) => {
@@ -1518,28 +1523,102 @@ export function useExecutionForm({
         const facilityPart = codeParts[2]; // HOSPITAL or HEALTH_CENTER (or HEALTH)
         const cashAtBankCode = `${projectPart}_EXEC_${facilityPart}_D_1`;
 
-        console.log('🔍 [DIAGNOSTIC] clearVAT - Looking for Cash at Bank:', {
+        // Find the VAT receivable code in Section D based on the expense name
+        // We need to determine which VAT category this expense belongs to
+        // First, search for the expense in activities to get its name
+        const hierarchicalData = activitiesQuery.data ?? {};
+        let foundExpenseName = '';
+        
+        const sectionB = (hierarchicalData as any).B;
+        if (sectionB?.subCategories) {
+          Object.values(sectionB.subCategories).forEach((subCat: any) => {
+            const found = subCat.items?.find((item: any) => item.code === activityCode);
+            if (found) foundExpenseName = found.name.toLowerCase();
+          });
+        }
+        
+        // Determine VAT category based on expense name
+        let vatCategory = '';
+        if (foundExpenseName.includes('communication') && foundExpenseName.includes('all')) {
+          vatCategory = 'communication_all';
+        } else if (foundExpenseName.includes('maintenance')) {
+          vatCategory = 'maintenance';
+        } else if (foundExpenseName === 'fuel' || (foundExpenseName.includes('fuel') && !foundExpenseName.includes('refund'))) {
+          vatCategory = 'fuel';
+        } else if (foundExpenseName.includes('office supplies') || foundExpenseName.includes('supplies')) {
+          vatCategory = 'office_supplies';
+        }
+        
+        // Find the actual VAT receivable code from Section D schema
+        // This handles both new format (_D_VAT_*) and old format (_D_D-01_*)
+        let vatReceivableCode: string | null = null;
+        const sectionD = (hierarchicalData as any).D;
+        if (sectionD?.subCategories?.['D-01']?.items && vatCategory) {
+          const categoryPatterns: Record<string, string[]> = {
+            'communication_all': ['VAT_COMMUNICATION_ALL', 'D-01_1', 'communication'],
+            'maintenance': ['VAT_MAINTENANCE', 'D-01_2', 'maintenance'],
+            'fuel': ['VAT_FUEL', 'D-01_3', 'fuel'],
+            'office_supplies': ['VAT_SUPPLIES', 'D-01_4', 'supplies', 'office']
+          };
+          
+          const patterns = categoryPatterns[vatCategory] || [];
+          const foundItem = sectionD.subCategories['D-01'].items.find((item: any) => {
+            const codeLower = item.code?.toLowerCase() || '';
+            const nameLower = item.name?.toLowerCase() || '';
+            return patterns.some(p => codeLower.includes(p.toLowerCase()) || nameLower.includes(p.toLowerCase()));
+          });
+          
+          if (foundItem) {
+            vatReceivableCode = foundItem.code;
+          }
+        }
+        
+        // Fallback: try to find VAT receivable code directly in formData
+        if (!vatReceivableCode && vatCategory) {
+          const categoryPatterns: Record<string, string[]> = {
+            'communication_all': ['VAT_COMMUNICATION_ALL', 'D-01_1'],
+            'maintenance': ['VAT_MAINTENANCE', 'D-01_2'],
+            'fuel': ['VAT_FUEL', 'D-01_3'],
+            'office_supplies': ['VAT_SUPPLIES', 'D-01_4']
+          };
+          
+          const patterns = categoryPatterns[vatCategory] || [];
+          const foundCode = Object.keys(prev).find(code => {
+            if (!code.includes('_D_')) return false;
+            return patterns.some(p => code.includes(p));
+          });
+          
+          if (foundCode) {
+            vatReceivableCode = foundCode;
+          }
+        }
+
+        console.log('🔍 [DIAGNOSTIC] clearVAT - Looking for Cash at Bank and VAT Receivable:', {
           activityCode,
+          foundExpenseName,
+          vatCategory,
           cashAtBankCode,
+          vatReceivableCode,
           existsInFormData: !!prev[cashAtBankCode],
-          formDataKeys: Object.keys(prev).filter(k => k.includes('_D_')),
-          allFormDataKeys: Object.keys(prev).length
+          vatReceivableExists: vatReceivableCode ? !!prev[vatReceivableCode] : false,
+          allDCodes: Object.keys(prev).filter(k => k.includes('_D_'))
         });
 
         // Get current Cash at Bank value for this quarter
         const cashAtBank = prev[cashAtBankCode];
         const currentCashBalance = Number(cashAtBank?.[quarterKey]) || 0;
+        const newCashBalance = currentCashBalance + clearAmount;
         
         console.log('🔍 [DIAGNOSTIC] clearVAT - Cash at Bank data:', {
           cashAtBankCode,
           found: !!cashAtBank,
           currentCashBalance,
           clearAmount,
-          newBalance: currentCashBalance + clearAmount
+          newBalance: newCashBalance
         });
-        const newCashBalance = currentCashBalance + clearAmount;
 
-        const next = {
+        // Build the next state
+        const next: Record<string, any> = {
           ...prev,
           [activityCode]: {
             q1: existing?.q1 ?? 0,
@@ -1554,7 +1633,7 @@ export function useExecutionForm({
             vatCleared: vatClearedObj,
             priorYearAdjustment: existing?.priorYearAdjustment ?? {},
           },
-          // Update Cash at Bank (Requirement 3.3)
+          // Update Cash at Bank (Requirement 3.3) - INCREASE
           [cashAtBankCode]: {
             q1: cashAtBank?.q1 ?? 0,
             q2: cashAtBank?.q2 ?? 0,
@@ -1571,6 +1650,42 @@ export function useExecutionForm({
           },
         };
 
+        // CRITICAL FIX: Also update the VAT receivable in Section D - DECREASE
+        // This ensures the Section D total remains balanced (Cash + VAT Receivable - clearAmount + clearAmount = no change)
+        if (vatReceivableCode && prev[vatReceivableCode]) {
+          const vatReceivable = prev[vatReceivableCode];
+          const currentVATReceivableBalance = Number(vatReceivable?.[quarterKey]) || 0;
+          const newVATReceivableBalance = Math.max(0, currentVATReceivableBalance - clearAmount);
+          
+          console.log('🔍 [DIAGNOSTIC] clearVAT - VAT Receivable update:', {
+            vatReceivableCode,
+            currentVATReceivableBalance,
+            clearAmount,
+            newVATReceivableBalance
+          });
+          
+          next[vatReceivableCode] = {
+            q1: vatReceivable?.q1 ?? 0,
+            q2: vatReceivable?.q2 ?? 0,
+            q3: vatReceivable?.q3 ?? 0,
+            q4: vatReceivable?.q4 ?? 0,
+            [quarterKey]: newVATReceivableBalance,
+            comment: vatReceivable?.comment ?? "",
+            paymentStatus: vatReceivable?.paymentStatus,
+            amountPaid: vatReceivable?.amountPaid,
+            netAmount: vatReceivable?.netAmount ?? {},
+            vatAmount: vatReceivable?.vatAmount ?? {},
+            vatCleared: vatReceivable?.vatCleared ?? {},
+            priorYearAdjustment: vatReceivable?.priorYearAdjustment ?? {},
+          };
+        } else {
+          console.warn('⚠️ [clearVAT] VAT Receivable code not found in formData:', {
+            vatReceivableCode,
+            vatCategory,
+            foundExpenseName
+          });
+        }
+
         onDataChange?.(next);
         return next;
       });
@@ -1583,7 +1698,7 @@ export function useExecutionForm({
       const newTotalClearedForForm = previousClearedForForm + clearAmount;
       form.setValue(`${activityCode}.vatCleared.${quarterKey}`, newTotalClearedForForm, { shouldDirty: true });
     },
-    [form, onDataChange, quarter, formData]
+    [form, onDataChange, quarter, formData, activitiesQuery.data]
   );
 
   /**

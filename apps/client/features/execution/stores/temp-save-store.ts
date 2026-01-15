@@ -13,6 +13,7 @@ export interface TempSaveMetadata {
   mode: ExecutionFormMode
   district?: string
   facilityType: string
+  quarter?: string  // Quarter identifier (Q1, Q2, Q3, Q4)
 }
 
 export interface TempSaveData {
@@ -70,8 +71,19 @@ export interface TempSaveState {
 }
 
 // Helper function to generate unique save ID
-export const generateSaveId = (metadata: TempSaveMetadata): string => {
-  return `${metadata.facilityId}_${metadata.reportingPeriod}_${metadata.programName}_${metadata.mode}`.replace(/\s+/g, '_')
+// Includes all differentiating factors: project, quarter, facility, facility type, and reporting period
+export const generateSaveId = (metadata: TempSaveMetadata & { quarter?: string }): string => {
+  // Build a comprehensive ID that differentiates by all key factors
+  const parts = [
+    metadata.facilityId,
+    metadata.reportingPeriod,
+    metadata.programName,
+    metadata.facilityType,
+    metadata.quarter || '',
+    metadata.mode
+  ].filter(Boolean);
+  
+  return parts.join('_').replace(/\s+/g, '_').toLowerCase();
 }
 
 // Helper function to check if a save is expired
@@ -324,7 +336,7 @@ export const useTempSaveStore = create<TempSaveState>()(
 )
 
 // Custom hook for easier usage with specific form context
-export const useTempSaveForForm = (metadata: TempSaveMetadata | null) => {
+export const useTempSaveForForm = (metadata: (TempSaveMetadata & { quarter?: string }) | null) => {
   const store = useTempSaveStore()
   
   if (!metadata) {

@@ -93,8 +93,9 @@ export function EnhancedExecutionForm({ projectType, facilityType, quarter, mode
       fiscalYear: "",
       mode: effectiveMode as any,
       facilityType: qpFacilityType as any,
+      quarter: quarter,  // Include quarter for proper differentiation
     };
-  }, [searchParams, facilityType, projectType, effectiveMode, currentReportingPeriod?.id, facilityIdProp, facilityNameProp, programNameProp, reportingPeriodIdProp]);
+  }, [searchParams, facilityType, projectType, effectiveMode, currentReportingPeriod?.id, facilityIdProp, facilityNameProp, programNameProp, reportingPeriodIdProp, quarter]);
 
   // Generate a stable draft ID - use consistent identifiers from URL params
   // Format: exec_{facilityId}_{reportingPeriodId}_{facilityType}_{quarter}
