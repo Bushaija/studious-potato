@@ -12,6 +12,8 @@ import {
 } from "@/features/execution/utils/form-validation";
 import { useExecutionFormLoader } from "@/features/execution/hooks/use-execution-form-loader";
 import { usePlanningDataSummary } from "./queries/planning/use-planning-data-summary";
+import { getVATReceivableCode } from "@/features/execution/utils/vat-to-section-d-mapping";
+import { VAT_APPLICABLE_CATEGORIES, type VATApplicableCategory } from "@/features/execution/utils/vat-applicable-expenses";
 
 type ProjectType = "HIV" | "MAL" | "TB"; // Changed from "Malaria" to "MAL" for consistency with activity codes
 type FacilityType = "hospital" | "health_center";
@@ -1335,9 +1337,16 @@ export function useExecutionForm({
 
         // Find Cash at Bank activity code (D_1) to decrease it
         // Activity code format: {PROJECT}_EXEC_{FACILITY}_D_1
+        // Note: HEALTH_CENTER contains underscore, so we need to handle it specially
         const codeParts = payableCode.split('_');
         const projectPart = codeParts[0]; // HIV, MAL, or TB
-        const facilityPart = codeParts[2]; // HOSPITAL or HEALTH_CENTER (or HEALTH)
+        // Determine facility part - handle HEALTH_CENTER which contains underscore
+        let facilityPart: string;
+        if (payableCode.includes('HEALTH_CENTER')) {
+          facilityPart = 'HEALTH_CENTER';
+        } else {
+          facilityPart = codeParts[2]; // HOSPITAL
+        }
         const cashAtBankCode = `${projectPart}_EXEC_${facilityPart}_D_1`;
 
         console.log('🔍 [DIAGNOSTIC] clearPayable - Looking for Cash at Bank:', {
@@ -1401,9 +1410,15 @@ export function useExecutionForm({
       form.setValue(`${payableCode}.payableCleared.${quarterKey}`, clearAmount, { shouldDirty: true });
       
       // Also update Cash at Bank in the form
+      // Note: HEALTH_CENTER contains underscore, so we need to handle it specially
       const codeParts = payableCode.split('_');
       const projectPart = codeParts[0];
-      const facilityPart = codeParts[2];
+      let facilityPart: string;
+      if (payableCode.includes('HEALTH_CENTER')) {
+        facilityPart = 'HEALTH_CENTER';
+      } else {
+        facilityPart = codeParts[2]; // HOSPITAL
+      }
       const cashAtBankCode = `${projectPart}_EXEC_${facilityPart}_D_1`;
       const currentCashBalance = Number(formData[cashAtBankCode]?.[quarterKey]) || 0;
       form.setValue(`${cashAtBankCode}.${quarterKey}`, currentCashBalance - clearAmount, { shouldDirty: true });
@@ -1516,12 +1531,23 @@ export function useExecutionForm({
           expenseNetAmount: existing?.netAmount?.[quarterKey] || 0
         });
 
-        // Find Cash at Bank activity code (D_1) to increase it
-        // Activity code format: {PROJECT}_EXEC_{FACILITY}_D_1
+        // Extract project and facility type from activity code
+        // Activity code format: {PROJECT}_EXEC_{FACILITY}_B_...
+        // Note: HEALTH_CENTER contains underscore, so we need to handle it specially
         const codeParts = activityCode.split('_');
-        const projectPart = codeParts[0]; // HIV, MAL, or TB
-        const facilityPart = codeParts[2]; // HOSPITAL or HEALTH_CENTER (or HEALTH)
-        const cashAtBankCode = `${projectPart}_EXEC_${facilityPart}_D_1`;
+        const projectPart = codeParts[0] as 'HIV' | 'MAL' | 'TB';
+        
+        // Determine facility type - handle HEALTH_CENTER which contains underscore
+        let facilityTypePart: 'hospital' | 'health_center';
+        if (activityCode.includes('HEALTH_CENTER')) {
+          facilityTypePart = 'health_center';
+        } else {
+          facilityTypePart = 'hospital';
+        }
+        
+        // Generate Cash at Bank code
+        const facilityPartUpper = facilityTypePart === 'health_center' ? 'HEALTH_CENTER' : 'HOSPITAL';
+        const cashAtBankCode = `${projectPart}_EXEC_${facilityPartUpper}_D_1`;
 
         // Find the VAT receivable code in Section D based on the expense name
         // We need to determine which VAT category this expense belongs to
@@ -1538,43 +1564,31 @@ export function useExecutionForm({
         }
         
         // Determine VAT category based on expense name
-        let vatCategory = '';
+        let vatCategory: VATApplicableCategory | null = null;
         if (foundExpenseName.includes('communication') && foundExpenseName.includes('all')) {
-          vatCategory = 'communication_all';
+          vatCategory = VAT_APPLICABLE_CATEGORIES.COMMUNICATION_ALL;
         } else if (foundExpenseName.includes('maintenance')) {
-          vatCategory = 'maintenance';
+          vatCategory = VAT_APPLICABLE_CATEGORIES.MAINTENANCE;
         } else if (foundExpenseName === 'fuel' || (foundExpenseName.includes('fuel') && !foundExpenseName.includes('refund'))) {
-          vatCategory = 'fuel';
+          vatCategory = VAT_APPLICABLE_CATEGORIES.FUEL;
         } else if (foundExpenseName.includes('office supplies') || foundExpenseName.includes('supplies')) {
-          vatCategory = 'office_supplies';
+          vatCategory = VAT_APPLICABLE_CATEGORIES.OFFICE_SUPPLIES;
         }
         
-        // Find the actual VAT receivable code from Section D schema
-        // This handles both new format (_D_VAT_*) and old format (_D_D-01_*)
+        // Use the utility function to generate the correct VAT receivable code
+        // This handles HEALTH_CENTER correctly
         let vatReceivableCode: string | null = null;
-        const sectionD = (hierarchicalData as any).D;
-        if (sectionD?.subCategories?.['D-01']?.items && vatCategory) {
-          const categoryPatterns: Record<string, string[]> = {
-            'communication_all': ['VAT_COMMUNICATION_ALL', 'D-01_1', 'communication'],
-            'maintenance': ['VAT_MAINTENANCE', 'D-01_2', 'maintenance'],
-            'fuel': ['VAT_FUEL', 'D-01_3', 'fuel'],
-            'office_supplies': ['VAT_SUPPLIES', 'D-01_4', 'supplies', 'office']
-          };
-          
-          const patterns = categoryPatterns[vatCategory] || [];
-          const foundItem = sectionD.subCategories['D-01'].items.find((item: any) => {
-            const codeLower = item.code?.toLowerCase() || '';
-            const nameLower = item.name?.toLowerCase() || '';
-            return patterns.some(p => codeLower.includes(p.toLowerCase()) || nameLower.includes(p.toLowerCase()));
+        if (vatCategory) {
+          vatReceivableCode = getVATReceivableCode(projectPart, facilityTypePart, vatCategory);
+        }
+        
+        // Fallback: try to find VAT receivable code directly in formData if utility code not found
+        if (vatReceivableCode && !prev[vatReceivableCode]) {
+          console.log('🔍 [clearVAT] Utility-generated code not in formData, searching...', {
+            utilityCode: vatReceivableCode,
+            vatCategory
           });
           
-          if (foundItem) {
-            vatReceivableCode = foundItem.code;
-          }
-        }
-        
-        // Fallback: try to find VAT receivable code directly in formData
-        if (!vatReceivableCode && vatCategory) {
           const categoryPatterns: Record<string, string[]> = {
             'communication_all': ['VAT_COMMUNICATION_ALL', 'D-01_1'],
             'maintenance': ['VAT_MAINTENANCE', 'D-01_2'],
@@ -1582,10 +1596,13 @@ export function useExecutionForm({
             'office_supplies': ['VAT_SUPPLIES', 'D-01_4']
           };
           
-          const patterns = categoryPatterns[vatCategory] || [];
+          const patterns = vatCategory ? (categoryPatterns[vatCategory] || []) : [];
           const foundCode = Object.keys(prev).find(code => {
             if (!code.includes('_D_')) return false;
-            return patterns.some(p => code.includes(p));
+            // Also check facility type matches
+            if (facilityTypePart === 'health_center' && !code.includes('HEALTH_CENTER')) return false;
+            if (facilityTypePart === 'hospital' && code.includes('HEALTH_CENTER')) return false;
+            return patterns.some((p: string) => code.includes(p));
           });
           
           if (foundCode) {
@@ -1597,6 +1614,7 @@ export function useExecutionForm({
           activityCode,
           foundExpenseName,
           vatCategory,
+          facilityTypePart,
           cashAtBankCode,
           vatReceivableCode,
           existsInFormData: !!prev[cashAtBankCode],
@@ -1682,7 +1700,8 @@ export function useExecutionForm({
           console.warn('⚠️ [clearVAT] VAT Receivable code not found in formData:', {
             vatReceivableCode,
             vatCategory,
-            foundExpenseName
+            foundExpenseName,
+            facilityTypePart
           });
         }
 
